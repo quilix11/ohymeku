@@ -1,10 +1,9 @@
+import 'portrait_fixtures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:dialect_duel/models/game_state.dart';
-import 'package:dialect_duel/models/scenario.dart';
 import 'package:dialect_duel/screens/generation_screen.dart';
 import 'package:dialect_duel/services/learning_service.dart';
 import 'package:dialect_duel/services/settings_service.dart';
@@ -27,34 +26,22 @@ void main() {
     final settings = SettingsService();
     await settings.load();
     final service = LearningService(
+        portraits: fakePortraits,
         client: MockClient((_) async => reply(
             envelope('```json\n${jsonEncode(character)}\n```', finish: null))));
     await tester.pumpWidget(MaterialApp(
         home: Builder(
             builder: (context) => Scaffold(
                   body: TextButton(
-                      onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
+                      onPressed: () =>
+                          Navigator.of(context).push(MaterialPageRoute<void>(
                               builder: (_) => GenerationScreen(
                                   boss: true,
                                   service: service,
-                                  onSave: (result, topic, level, warm) =>
-                                      settings.addScenario(Scenario(
-                                        customId: 'test-cafe',
-                                        character: warm
-                                            ? GameCharacter.hr
-                                            : GameCharacter.officer,
-                                        name: result['name'],
-                                        role: result['role'],
-                                        title: topic,
-                                        goal: result['goal'],
-                                        opening: result['opening'],
-                                        personality: result['description'],
-                                        level: level,
-                                        winTitle: 'Вдало поговорили!',
-                                        color: Colors.green,
-                                        backdrop: Colors.white,
-                                      ))))),
+                                  onSave: (result, topic, level, warm) async {
+                                    await settings.addGeneratedScenario(
+                                        result, topic, level, warm);
+                                  }))),
                       child: const Text('Відкрити генерацію')),
                 ))));
     await tester.tap(find.text('Відкрити генерацію'));
@@ -93,16 +80,20 @@ void main() {
     expect(
         restored.customScenarios.single.personality, character['description']);
     expect(restored.customScenarios.single.level, 'A2');
+    expect(restored.customScenarios.single.portraits, fixturePortraits);
     expect(tester.takeException(), isNull);
   });
 
   testWidgets('failed generation retains the topic and can be retried',
       (tester) async {
     var calls = 0, saved = 0;
-    final service = LearningService(client: MockClient((_) async {
-      calls++;
-      return reply(envelope(calls <= 2 ? '{broken' : jsonEncode(character)));
-    }));
+    final service = LearningService(
+        portraits: fakePortraits,
+        client: MockClient((_) async {
+          calls++;
+          return reply(
+              envelope(calls <= 2 ? '{broken' : jsonEncode(character)));
+        }));
     await tester.pumpWidget(MaterialApp(
         home: GenerationScreen(
       boss: true,

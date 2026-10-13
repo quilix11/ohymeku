@@ -1,22 +1,24 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'api_credentials.dart';
 import 'package:http/http.dart' as http;
 import 'ai_service.dart';
 import 'gemini_transport.dart';
+import 'character_portrait_service.dart';
 
 class LearningService {
   final http.Client _client;
   late final _transport = GeminiTransport(_client);
-  LearningService({http.Client? client}) : _client = client ?? http.Client();
+  final PortraitGenerator? portraits;
+  LearningService({http.Client? client, this.portraits})
+      : _client = client ?? http.Client();
 
   Future<Map<String, dynamic>> request(String rules, Map<String, dynamic> input,
       {Map<String, dynamic>? schema, int maxOutputTokens = 4096}) async {
-    final key =
-        dotenv.isInitialized ? dotenv.env['GEMINI_API_KEY']?.trim() ?? '' : '';
+    final key = ApiCredentials.geminiKey;
     if (key.isEmpty) {
       throw const AiException(
-          'Для генерації потрібен ключ Gemini у конфігурації застосунку.');
+          'Додай ключ Gemini у налаштуваннях для генерації.');
     }
     // Retry an incomplete model output once. Network, quota and blocked replies
     // are separate failures; repeating those immediately cannot repair them.
@@ -205,6 +207,8 @@ class LearningService {
               'Неповний опис персонажа. Повтори генерацію.');
         }
       }
+      json['portraits'] =
+          await (portraits ?? CharacterPortraitService(_client).generate)(json);
     } else {
       final cards = json['cards'];
       if (cards is! List || cards.length != count) {

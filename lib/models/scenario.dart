@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'game_state.dart';
+import 'dart:convert';
 
 class Scenario {
   final String? customId;
   final String personality;
+  final Map<String, String> portraits;
   final GameCharacter character;
   final String name, role, title, goal, opening, level, winTitle;
   final Color color, backdrop;
   const Scenario(
       {this.customId,
       this.personality = '',
+      this.portraits = const {},
       required this.character,
       required this.name,
       required this.role,
@@ -28,7 +31,8 @@ class Scenario {
         'goal': goal,
         'opening': opening,
         'level': level,
-        'personality': personality
+        'personality': personality,
+        if (portraits.isNotEmpty) 'portraits': portraits,
       };
   factory Scenario.fromJson(Map<String, dynamic> json) => Scenario(
       customId: json['id'] as String,
@@ -40,9 +44,36 @@ class Scenario {
       opening: json['opening'] as String,
       level: json['level'] as String,
       personality: json['personality'] as String? ?? '',
+      portraits: parsePortraits(json['portraits']),
       winTitle: 'Вдало поговорили!',
       color: const Color(0xFF8F4856),
       backdrop: const Color(0xFFECD6D9));
+
+  static Map<String, String> parsePortraits(Object? value) {
+    if (value is! Map) return const {};
+    final images = <String, String>{};
+    for (final emotion in NpcEmotion.values) {
+      final image = value[emotion.name];
+      if (image is! String ||
+          image.length > 256000 ||
+          !image.startsWith('data:image/png;base64,')) {
+        continue;
+      }
+      try {
+        final bytes = base64Decode(image.substring(22));
+        if (bytes.length >= 8 &&
+            bytes[0] == 137 &&
+            bytes[1] == 80 &&
+            bytes[2] == 78 &&
+            bytes[3] == 71) {
+          images[emotion.name] = image;
+        }
+      } on FormatException {
+        /* Old or damaged artwork uses the bundled portrait. */
+      }
+    }
+    return Map.unmodifiable(images);
+  }
 
   String image(NpcEmotion emotion) {
     final folder = character.name;

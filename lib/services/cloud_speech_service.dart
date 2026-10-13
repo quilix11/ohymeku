@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'api_credentials.dart';
 import 'package:http/http.dart' as http;
 import 'ai_service.dart';
 import 'audio_cache_stub.dart' if (dart.library.io) 'audio_cache_io.dart'
@@ -32,8 +32,7 @@ class CloudSpeechService {
     final generation = _generation + 1;
     await stop();
     if (_disposed || generation != _generation) return;
-    final key =
-        dotenv.isInitialized ? dotenv.env['GEMINI_API_KEY']?.trim() ?? '' : '';
+    final key = ApiCredentials.geminiKey;
     final cacheKey = '$voice|$style|$text';
     Uint8List? wav = _cache[cacheKey] ?? await disk.readAudio(cacheKey);
     if (wav == null) {

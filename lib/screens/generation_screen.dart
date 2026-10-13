@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import '../widgets/interest_picker.dart';
 import '../services/learning_service.dart';
 import '../services/ai_service.dart';
+import '../models/scenario.dart';
+import '../models/game_state.dart';
+import '../widgets/scenario_portrait.dart';
 
 class GenerationScreen extends StatefulWidget {
   final bool boss;
@@ -96,6 +99,15 @@ class _GenerationScreenState extends State<GenerationScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context), c = theme.colorScheme;
+    final preview = widget.boss && _result != null
+        ? Scenario.fromJson({
+            ..._result!,
+            'id': 'preview',
+            'character': _generatedWarm ? 'hr' : 'officer',
+            'level': _generatedLevel,
+            'personality': _result!['description']
+          })
+        : null;
     return PopScope(
         canPop: !_saving,
         child: Scaffold(
@@ -171,7 +183,7 @@ class _GenerationScreenState extends State<GenerationScreen> {
                                       contentPadding: EdgeInsets.zero,
                                       title: const Text('М’яка манера голосу'),
                                       subtitle: const Text(
-                                          'Голосовий профіль Hannah. Вимкнено — профіль Vance. Портрет із наявної бібліотеки.'),
+                                          'Голосовий профіль Hannah. Вимкнено — профіль Vance. Нові портрети генеруються автоматично.'),
                                       value: _warm,
                                       onChanged: _busy || _saving
                                           ? null
@@ -203,7 +215,9 @@ class _GenerationScreenState extends State<GenerationScreen> {
                                               color: c.onPrimary))
                                       : const Icon(Icons.auto_awesome_outlined),
                                   label: Text(_busy
-                                      ? 'Генерую…'
+                                      ? widget.boss
+                                          ? 'Генерую персонажа та 9 портретів…'
+                                          : 'Генерую…'
                                       : _result == null
                                           ? 'Створити'
                                           : 'Інший варіант')),
@@ -235,6 +249,33 @@ class _GenerationScreenState extends State<GenerationScreen> {
                                             Text(_result!['goal']),
                                             const SizedBox(height: 12),
                                             Text(_result!['description']),
+                                            if (preview!
+                                                .portraits.isNotEmpty) ...[
+                                              const SizedBox(height: 16),
+                                              const Text(
+                                                  '9 емоцій · прозорі портрети'),
+                                              const SizedBox(height: 8),
+                                              Wrap(
+                                                  spacing: 8,
+                                                  runSpacing: 8,
+                                                  children: [
+                                                    for (final emotion
+                                                        in NpcEmotion.values)
+                                                      Tooltip(
+                                                          message: emotionLabel(
+                                                              emotion),
+                                                          child:
+                                                              ScenarioPortrait(
+                                                                  scenario:
+                                                                      preview,
+                                                                  emotion:
+                                                                      emotion,
+                                                                  width: 76,
+                                                                  height: 76,
+                                                                  cacheWidth:
+                                                                      160)),
+                                                  ]),
+                                            ],
                                             const Divider(),
                                             Text(_result!['opening'],
                                                 style:

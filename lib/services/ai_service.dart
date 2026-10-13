@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'api_credentials.dart';
 import 'package:http/http.dart' as http;
 import '../models/game_state.dart';
 import '../models/scenario.dart';
@@ -13,8 +13,7 @@ class AiService {
   String? learningLevel;
   AiService({http.Client? client, this.scenario})
       : _client = client ?? http.Client();
-  String get _apiKey =>
-      dotenv.isInitialized ? dotenv.env['GEMINI_API_KEY']?.trim() ?? '' : '';
+  String get _apiKey => ApiCredentials.geminiKey;
 
   Future<NpcResponse> getOpeningLine(GameCharacter character) async =>
       NpcResponse(
@@ -37,7 +36,7 @@ class AiService {
   }) async {
     if (_apiKey.isEmpty) {
       throw const AiException(
-          'Для AI-розмови потрібен ключ Gemini у конфігурації застосунку.');
+          'Додай ключ Gemini у налаштуваннях для AI-розмови.');
     }
     final scenario = this.scenario ?? Scenario.of(character);
     final interestsText = interests.isNotEmpty

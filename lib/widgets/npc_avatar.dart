@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/game_state.dart';
 import '../models/scenario.dart';
+import 'scenario_portrait.dart';
 
 class NpcAvatar extends StatelessWidget {
   final GameCharacter character;
@@ -52,13 +53,15 @@ class CharacterStage extends StatelessWidget {
               duration: MediaQuery.disableAnimationsOf(context)
                   ? Duration.zero
                   : const Duration(milliseconds: 180),
-              child: Image.asset(scenario.image(emotion),
-                  key: ValueKey(emotion),
-                  cacheWidth: 240,
-                  width: 52,
-                  height: 64,
-                  fit: BoxFit.contain,
-                  semanticLabel: '${scenario.name}: ${emotionLabel(emotion)}'),
+              child: ScenarioPortrait(
+                scenario: scenario,
+                emotion: emotion,
+                key: ValueKey(emotion),
+                cacheWidth: 240,
+                width: 52,
+                height: 64,
+                fit: BoxFit.contain,
+              ),
             )),
         const SizedBox(width: 16),
         Expanded(

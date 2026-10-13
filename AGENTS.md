@@ -18,6 +18,9 @@ Read this map before exploring; inspect target source before edits.
 
 
 ## Active architecture
+- `api_credentials.dart`: personal Gemini key in session memory; local dotenv fallback. Public Pages builds include no API key.
+- `character_portrait_service.dart`: Gemini Interactions image request with two style references; nine-emotion sheet, chroma removal and bounded transparent PNGs. `LearningService.generate` uses it for every new character, including Meku tools.
+- `Scenario.portraits` persists artwork; `ScenarioPortrait` renders generated emotion PNGs with legacy bundled fallback. Preserve portraits when editing/archiving/restoring a scenario.
 - `services/learning_service.dart`: separate Gemini JSON calls for language routing/tutor suggestions and generating vocabulary or characters. `screens/generation_screen.dart` previews before save.
 - `GameScreen._prepareInput`: validates language before starting a scored turn. Cyrillic/other scripts force tutor mode; Latin-script text is classified too. Tutor results only insert a draft, never auto-send. The explicit lightbulb requests help for any text.
 - Custom scenarios persist in SettingsService; optional Scenario customId/personality flow through GameScreen, GameSession, AiService. PracticeRecord stores scenarioId/scenarioName, and wins are scoped by ID. Old saves remain compatible.

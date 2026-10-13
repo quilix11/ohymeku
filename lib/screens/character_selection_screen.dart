@@ -1,3 +1,4 @@
+import '../widgets/scenario_portrait.dart';
 import 'package:flutter/material.dart';
 import '../models/game_state.dart';
 import '../models/scenario.dart';
@@ -46,21 +47,8 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                 level: widget.settings.effectiveLevel,
                 interests: widget.settings.interests,
                 onSave: (result, topic, level, warm) async {
-                  await widget.settings.addScenario(Scenario(
-                      customId:
-                          DateTime.now().microsecondsSinceEpoch.toString(),
-                      character:
-                          warm ? GameCharacter.hr : GameCharacter.officer,
-                      name: result['name'],
-                      role: result['role'],
-                      title: topic,
-                      goal: result['goal'],
-                      opening: result['opening'],
-                      personality: result['description'],
-                      level: level,
-                      winTitle: 'Вдало поговорили!',
-                      color: const Color(0xFF8F4856),
-                      backdrop: const Color(0xFFECD6D9)));
+                  await widget.settings
+                      .addGeneratedScenario(result, topic, level, warm);
                 })));
     if (mounted) {
       setState(() {
@@ -237,12 +225,13 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                       const SizedBox(width: 12),
                       ClipRRect(
                           borderRadius: BorderRadius.circular(16),
-                          child: Image.asset(s.image(NpcEmotion.neutral),
-                              width: 80,
-                              height: 96,
-                              fit: BoxFit.contain,
-                              cacheWidth: 240,
-                              semanticLabel: s.name)),
+                          child: ScenarioPortrait(
+                            scenario: s,
+                            width: 80,
+                            height: 96,
+                            fit: BoxFit.contain,
+                            cacheWidth: 240,
+                          )),
                     ]),
                     const SizedBox(height: 16),
                     Text(
@@ -345,7 +334,8 @@ class _SceneChoice extends StatelessWidget {
                   child: Row(children: [
                     ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.asset(scenario.image(NpcEmotion.neutral),
+                        child: ScenarioPortrait(
+                            scenario: scenario,
                             width: 40,
                             height: 48,
                             fit: BoxFit.contain,

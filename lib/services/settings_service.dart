@@ -211,6 +211,7 @@ class SettingsService extends ChangeNotifier {
         goal: result['goal'],
         opening: result['opening'],
         personality: result['description'],
+        portraits: Scenario.parsePortraits(result['portraits']),
         level: level,
         winTitle: 'Вдало поговорили!',
         color: const Color(0xFF8F4856),

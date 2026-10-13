@@ -43,7 +43,7 @@ continues to use its separate TTS model.
 
 - Non-English drafts go to a separate English tutor; suggestions never change game scores or enter NPC history. Latin-script input is also classified by Gemini, so spelling alone does not determine the language. Classification can be imperfect; the hint button is always available.
 - Words → Generate by topic: choose topic, CEFR level and 5/8/12/16 cards; preview before saving. Generated decks persist separately from manual words.
-- Character selection → Add person: generate a role, personality, objective and opening; preview/save, then play. Generated characters reuse an existing portrait; each has independently saved system/cloud voice settings. History stores their actual names and IDs.
+- Character selection → Add person: generate a role, personality, objective, opening and nine original emotion portraits; preview/save, then play. Meku uses the same portrait generation when creating a character. Old characters without artwork keep their bundled portrait. Each character has independently saved system/cloud voice settings. History stores their actual names and IDs.
 - Settings → Gemini voices: eight named choices, three speaking styles, speed and volume. System voices remain the default; cloud speech uses the existing GEMINI_API_KEY and its quota. Speech access must be enabled for that key. No silent fallback to a different voice provider.
 - Fonts Lora and Manrope are bundled locally with OFL licenses under assets/fonts.
 - API references: [Gemini speech generation](https://ai.google.dev/gemini-api/docs/speech-generation), [Gemini 2.5 Flash TTS model](https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-preview-tts), [audioplayers](https://pub.dev/packages/audioplayers).
@@ -90,3 +90,30 @@ Meku використовує наявний Gemini-ключ, отримує о�
 Ручна зміна рівня починає нове вікно адаптації, зберігаючи історію повторень і результати placement. Нові відповіді знову формують адаптацію. Уже розпочаті ігрові сесії не перебудовуються.
 
 Аудит і наступні кроки: [OHYMEKU_REVIEW.md](OHYMEKU_REVIEW.md).
+
+## GitHub Pages and personal Gemini access
+
+The Pages workflow builds Flutter 3.41.6 with base path `/ohymeku/` and deploys
+on pushes to `main`. GitHub Settings → Pages must use **GitHub Actions** as its
+source. The public build contains an empty `.env`; no repository or Actions
+secret is copied into the website. In the app, open Settings → Gemini and enter
+your own Google AI Studio key. It stays in memory for that browser session,
+is sent only to Google's API, and must be entered again after a reload.
+Local development can still use the ignored `.env` file.
+
+New characters use Gemini Nano-Banana 2 Lite (`gemini-3.1-flash-lite-image`) through
+the Interactions API. `GEMINI_IMAGE_MODEL` can override that model locally. Two
+bundled character portraits serve as style references. One request creates a
+3×3 sheet in this order: neutral, happy, angry, surprised, laughing, worried,
+proud, shocked, sad. The app removes a flat green backdrop, checks that each cell
+contains both foreground and transparency, and saves nine bounded 256px PNGs.
+Prompts request no visible labels, signatures or watermarks; Google's invisible
+provenance marking remains under Google's control. Actual image quality and
+identity consistency need review in the generation preview.
+
+Portraits persist with the character, including archive/restore and offline use.
+Browser storage is finite; a full store produces a save error instead of silently
+discarding the character. Generation requires a key with access to the image
+model, internet and available quota. Failures do not save a partial character.
+Automated tests use synthetic images and mocked API responses; they do not
+establish live Google model access or generate billable portraits.

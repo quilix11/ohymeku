@@ -11,15 +11,15 @@ import 'package:dialect_duel/widgets/word_clickable_text.dart';
 import 'widget_test.dart' as helpers;
 
 Future<void> reveal(WidgetTester tester, Finder target, double distance) async {
-    await tester.scrollUntilVisible(target, distance,
-        scrollable: find
-            .descendant(
-                of: find.byType(ListView).first,
-                matching: find.byType(Scrollable))
-            .first);
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(target);
-    await tester.pumpAndSettle();
+  await tester.scrollUntilVisible(target, distance,
+      scrollable: find
+          .descendant(
+              of: find.byType(ListView).first,
+              matching: find.byType(Scrollable))
+          .first);
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(target);
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -32,10 +32,7 @@ void main() {
           .load();
     }
     await (FontLoader('MaterialIcons')
-          ..addFont(File(
-                  'C:/flutter/bin/cache/artifacts/material_fonts/materialicons-regular.otf')
-              .readAsBytes()
-              .then(ByteData.sublistView)))
+          ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf')))
         .load();
   });
   testWidgets(
@@ -103,14 +100,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(settings.reading.results[article.id]?['correct'], 3);
     expect(progress.profile.xp, 10);
-    await reveal(tester,find.text('Спробувати ще раз'),250);
+    await reveal(tester, find.text('Спробувати ще раз'), 250);
     await tester.tap(find.text('Спробувати ще раз'));
     await tester.pumpAndSettle();
-    for(var i=0;i<3;i++) { await answer(i,article.authoredQuestions[i].answer); }
-    await reveal(tester,finish,350);
+    for (var i = 0; i < 3; i++) {
+      await answer(i, article.authoredQuestions[i].answer);
+    }
+    await reveal(tester, finish, 350);
     await tester.tap(finish);
     await tester.pumpAndSettle();
-    expect(progress.profile.xp,10);
+    expect(progress.profile.xp, 10);
     expect(tester.takeException(), isNull);
   });
   for (final dark in [false, true]) {

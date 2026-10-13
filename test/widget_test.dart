@@ -88,10 +88,7 @@ Future<void> capture(WidgetTester tester, String name) async {
 void main() {
   setUpAll(() async {
     final icons = FontLoader('MaterialIcons')
-      ..addFont(File(
-              'C:/flutter/bin/cache/artifacts/material_fonts/materialicons-regular.otf')
-          .readAsBytes()
-          .then(ByteData.sublistView));
+      ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
     await icons.load();
     for (final family in ['Manrope', 'Lora', 'NotoSans']) {
       final loader = FontLoader(family)

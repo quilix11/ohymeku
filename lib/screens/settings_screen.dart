@@ -12,6 +12,7 @@ import '../models/scenario.dart';
 import '../services/cloud_speech_service.dart';
 import '../services/ai_service.dart';
 import '../theme/app_theme.dart';
+import '../services/api_credentials.dart';
 
 class SettingsScreen extends StatefulWidget {
   final SettingsService settings;
@@ -27,6 +28,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _voicesLoading = true;
   Scenario _previewScenario = Scenario.of(GameCharacter.officer);
   bool _notificationBusy = false;
+  Future<void> _configureGemini() async {
+    final input = TextEditingController();
+    final key = await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+              title: const Text('Ключ Gemini'),
+              content: SingleChildScrollView(
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                const Text(
+                    'Введи власний ключ Google AI Studio. Він діє лише в цьому сеансі та не зберігається у профілі.'),
+                const SizedBox(height: 12),
+                TextField(
+                    controller: input,
+                    obscureText: true,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    maxLength: 512,
+                    decoration: const InputDecoration(
+                        labelText: 'API-ключ', counterText: ''),
+                    onSubmitted: (value) => Navigator.pop(context, value)),
+              ])),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Скасувати')),
+                FilledButton(
+                    onPressed: () => Navigator.pop(context, input.text),
+                    child: const Text('Застосувати')),
+              ],
+            ));
+    // The closing route may still be animating with the controller attached.
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    input.dispose();
+    if (key == null || !mounted) return;
+    setState(() => ApiCredentials.setGeminiKey(key));
+  }
+
   String? _notificationError;
   int _previewRequest = 0;
   Future<void> _previewAs(Scenario scenario) async {
@@ -275,6 +313,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   subtitle:
                                       '${settings.effectiveLevel} · ${settings.isDark ? "Темна тема" : "Світла тема"}',
                                   icon: Icons.tune_rounded),
+                              const SizedBox(height: 20),
+                              _Section(
+                                  icon: Icons.key_outlined,
+                                  title: 'Gemini',
+                                  children: [
+                                    ListTile(
+                                      title: Text(
+                                          ApiCredentials.geminiKey.isEmpty
+                                              ? 'Підключити Gemini'
+                                              : 'Gemini підключено'),
+                                      subtitle: const Text(
+                                          'Чат, генерація персонажів і 9 портретів із різними емоціями.'),
+                                      trailing: const Icon(
+                                          Icons.chevron_right_rounded),
+                                      onTap: _configureGemini,
+                                    ),
+                                    if (ApiCredentials.hasSessionKey)
+                                      TextButton(
+                                          onPressed: () =>
+                                              setState(ApiCredentials.clear),
+                                          child: const Text(
+                                              'Видалити ключ із цього сеансу')),
+                                  ]),
                               const SizedBox(height: 20),
                               _Section(
                                   icon: Icons.palette_outlined,
@@ -689,7 +750,7 @@ class _Section extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: ExpansionTile(
           key: PageStorageKey(title),
-          initiallyExpanded: title == 'Вигляд',
+          initiallyExpanded: title == 'Вигляд' || title == 'Gemini',
           shape: const Border(),
           collapsedShape: const Border(),
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
