@@ -4,6 +4,8 @@ import 'api_credentials.dart';
 import 'package:http/http.dart' as http;
 import 'ai_service.dart';
 import 'gemini_transport.dart';
+import '../models/language_help.dart';
+export '../models/language_help.dart';
 
 class LearningService {
   final http.Client _client;
@@ -112,24 +114,12 @@ class LearningService {
         'If force_help is true or is_english is false, give 3 distinct natural ways to express the intended meaning at the requested level using the conversation context. '
         'For an English reply with force_help false suggestions may be empty. Never answer as the character or assign scores.',
         {'text': text, 'context': context, 'force_help': help, 'level': level});
-    if (json['is_english'] is! bool) {
-      throw const AiException('Не вдалося визначити мову. Спробуй ще раз.');
-    }
-    final suggestions = <({String english, String translation})>[];
-    for (final s in json['suggestions'] is List ? json['suggestions'] : []) {
-      if (s is Map &&
-          s['english'] is String &&
-          s['translation'] is String &&
-          (s['english'] as String).trim().isNotEmpty) {
-        suggestions.add((english: s['english'], translation: s['translation']));
-      }
-    }
-    if ((help || json['is_english'] != true) && suggestions.isEmpty) {
+    try {
+      return LanguageHelp.fromJson(json, requireSuggestions: help);
+    } on FormatException {
       throw const AiException(
-          'Не вдалося скласти підказки. Уточни, що хочеш сказати.');
+          'Не вдалося визначити мову або скласти підказки. Спробуй ще раз.');
     }
-    return LanguageHelp(json['is_english'],
-        json['explanation'] as String? ?? '', suggestions.take(3).toList());
   }
 
   Future<Map<String, dynamic>> generate(
@@ -224,11 +214,4 @@ class LearningService {
   }
 
   void dispose() => _client.close();
-}
-
-class LanguageHelp {
-  final bool isEnglish;
-  final String explanation;
-  final List<({String english, String translation})> suggestions;
-  const LanguageHelp(this.isEnglish, this.explanation, this.suggestions);
 }

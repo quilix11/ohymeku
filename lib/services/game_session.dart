@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import '../models/game_state.dart';
 import '../models/practice_record.dart';
 import '../models/scenario.dart';
+import '../models/language_help.dart';
 import 'ai_service.dart';
 import 'progress_service.dart';
 import 'learner_service.dart';
@@ -16,6 +17,7 @@ class GameSession extends ChangeNotifier {
   late String _id;
   bool _disposed = false, _saved = false;
   String? error, saveError;
+  LanguageHelp? tutorHelp;
   bool saving = false;
   String? _failedMessage;
   List<ChatMessage> _confirmed = [];
@@ -67,6 +69,7 @@ class GameSession extends ChangeNotifier {
     state = GameState(
         character: character, messages: List.unmodifiable(_confirmed));
     error = null;
+    tutorHelp = null;
     saveError = null;
     _failedMessage = null;
     _saved = false;
@@ -84,6 +87,7 @@ class GameSession extends ChangeNotifier {
   Future<void> send(String input) async {
     final text = input.trim();
     if (_disposed || text.isEmpty || state.isLoading || finished) return;
+    tutorHelp = null;
     if (text.length > 2000) {
       error = 'Скороти відповідь до 2000 символів.';
       notifyListeners();
@@ -140,6 +144,13 @@ class GameSession extends ChangeNotifier {
       if (_disposed) return;
       notifyListeners();
       if (finished) await save();
+    } on TutorRequired catch (result) {
+      if (_disposed) return;
+      tutorHelp = result.help;
+      // Discard the unscored draft; confirmed history, meters and XP stay intact.
+      state = state.copyWith(
+          messages: List.unmodifiable(_confirmed), isLoading: false);
+      notifyListeners();
     } catch (exception) {
       if (_disposed) return;
       _failedMessage = text;

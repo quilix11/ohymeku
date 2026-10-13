@@ -42,7 +42,6 @@ class _GameScreenState extends State<GameScreen> {
   final _tts = TtsService();
   late final _tutor = widget.tutor ?? LearningService();
   bool _routing = false;
-  String? _approvedDraft;
   final _speech = SpeechService();
   final _input = TextEditingController();
   final _scroll = ScrollController();
@@ -146,9 +145,8 @@ class _GameScreenState extends State<GameScreen> {
         _routing) {
       return;
     }
-    if (text != _approvedDraft && !await _prepareInput(text)) return;
+    if (!await _prepareInput(text)) return;
     if (!mounted) return;
-    _approvedDraft = null;
     _capture++;
     setState(() {
       _listening = false;
@@ -162,6 +160,21 @@ class _GameScreenState extends State<GameScreen> {
       await _speech.cancel();
     } catch (_) {}
     await send;
+    await _presentSessionTutor(text);
+  }
+
+  Future<void> _presentSessionTutor(String original) async {
+    final help = _session.tutorHelp;
+    if (!mounted || help == null) return;
+    _input.text = original;
+    await _showTutor(help);
+  }
+
+  Future<void> _retryTurn() async {
+    final original = _session.state.messages.last.text;
+    if (!await _prepareInput(original) || !mounted) return;
+    await _session.retry();
+    await _presentSessionTutor(original);
   }
 
   Future<bool> _prepareInput(String text, {bool help = false}) async {
@@ -175,6 +188,8 @@ class _GameScreenState extends State<GameScreen> {
         RegExp(r'[\u0400-\u052f\u0370-\u03ff\u0590-\u08ff\u0900-\u0fff\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]')
             .hasMatch(text);
     if (_routing || _session.state.isLoading || _session.finished) return false;
+    // Latin-script drafts are classified in the same request as the NPC reply.
+    if (!help) return true;
     setState(() => _routing = true);
     _capture++;
     unawaited(_stopVoice());
@@ -188,54 +203,8 @@ class _GameScreenState extends State<GameScreen> {
           help: help, level: widget.settings.effectiveLevel);
       if (!mounted) return false;
       if (result.isEnglish && !help) return true;
-      final phrase = await showModalBottomSheet<String>(
-          context: context,
-          isScrollControlled: true,
-          showDragHandle: true,
-          builder: (context) => SafeArea(
-              child: SizedBox(
-                  height: MediaQuery.sizeOf(context).height * .72,
-                  child: ListView(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                      children: [
-                        Text('Як сказати англійською',
-                            style: Theme.of(context).textTheme.headlineMedium),
-                        const SizedBox(height: 12),
-                        const Text(
-                            'Це запит до помічника. Персонаж його не отримав, шкали не змінилися.'),
-                        if (result.explanation.isNotEmpty)
-                          Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Text(result.explanation)),
-                        ...result.suggestions.map((s) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: Card(
-                                child: Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          SelectableText(s.english,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleMedium),
-                                          const SizedBox(height: 8),
-                                          Text(s.translation),
-                                          const SizedBox(height: 8),
-                                          TextButton(
-                                              onPressed: () => Navigator.pop(
-                                                  context, s.english),
-                                              child: const Text(
-                                                  'Вставити у відповідь')),
-                                        ])))))
-                      ]))));
-      if (mounted && phrase != null) {
-        _approvedDraft = phrase;
-        _input.value = TextEditingValue(
-            text: phrase,
-            selection: TextSelection.collapsed(offset: phrase.length));
-      }
+      setState(() => _routing = false);
+      await _showTutor(result);
       return false;
     } catch (e) {
       if (mounted) {
@@ -247,6 +216,56 @@ class _GameScreenState extends State<GameScreen> {
       return false;
     } finally {
       if (mounted) setState(() => _routing = false);
+    }
+  }
+
+  Future<void> _showTutor(LanguageHelp result) async {
+    final phrase = await showModalBottomSheet<String>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (context) => SafeArea(
+            child: SizedBox(
+                height: MediaQuery.sizeOf(context).height * .72,
+                child: ListView(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                    children: [
+                      Text('Як сказати англійською',
+                          style: Theme.of(context).textTheme.headlineMedium),
+                      const SizedBox(height: 12),
+                      const Text(
+                          'Це запит до помічника. Персонаж його не отримав, шкали не змінилися.'),
+                      if (result.explanation.isNotEmpty)
+                        Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            child: Text(result.explanation)),
+                      ...result.suggestions.map((s) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Card(
+                              child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        SelectableText(s.english,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleMedium),
+                                        const SizedBox(height: 8),
+                                        Text(s.translation),
+                                        const SizedBox(height: 8),
+                                        TextButton(
+                                            onPressed: () => Navigator.pop(
+                                                context, s.english),
+                                            child: const Text(
+                                                'Вставити у відповідь')),
+                                      ])))))
+                    ]))));
+    if (mounted && phrase != null) {
+      _input.value = TextEditingValue(
+          text: phrase,
+          selection: TextSelection.collapsed(offset: phrase.length));
     }
   }
 
@@ -511,8 +530,7 @@ class _GameScreenState extends State<GameScreen> {
                           _Notice(
                               text: _session.error!,
                               action: 'Повторити',
-                              onAction:
-                                  _session.canRetry ? _session.retry : null),
+                              onAction: _session.canRetry ? _retryTurn : null),
                         if (_audioError != null)
                           _Notice(
                               text: _audioError!,

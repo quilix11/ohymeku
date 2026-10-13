@@ -45,7 +45,7 @@ a shared API key.
 
 ### AI learning tools
 
-- Non-English drafts go to a separate English tutor; suggestions never change game scores or enter NPC history. Latin-script input is also classified by Gemini, so spelling alone does not determine the language. Classification can be imperfect; the hint button is always available.
+- Ordinary Latin-script turns classify language and generate the NPC reply in one Gemini request. A tutor result rolls back the unscored draft and shows suggestions without changing history, meters or XP. Cyrillic/other scripts and the explicit hint button use the dedicated tutor. Inserting a suggestion never auto-sends it; offline mode is checked on every send. Classification can be imperfect. See [the first-commit comparison](docs/gemini-latency-review.md).
 - Words → Generate by topic: choose topic, CEFR level and 5/8/12/16 cards; preview before saving. Generated decks persist separately from manual words.
 - Character selection → Add person: generate a role, personality, objective, opening and nine original emotion portraits; preview/save, then play. Meku uses the same portrait generation when creating a character. Old characters without artwork keep their bundled portrait. Each character has independently saved system/cloud voice settings. History stores their actual names and IDs.
 - Settings → Gemini voices: eight named choices, three speaking styles, speed and volume. System voices remain the default; cloud speech uses the existing GEMINI_API_KEY and its quota. Speech access must be enabled for that key. No silent fallback to a different voice provider.
@@ -89,7 +89,7 @@ See [IMPLEMENTATION.md](IMPLEMENTATION.md) for storage and adaptation details. N
 
 Головний екран — огляд навчання з практикою та історіями розмов. Чотири розділи: Головна, Слова, Прогрес, Профіль. Meku — маскот і центральна кнопка-лисичка нижньої панелі; відкриває чат поверх поточного розділу, окремої вкладки немає. Палітра: Silk Milk `#F4ECEB`, Kiss Rose `#B76E79`; темніший рожевий використовується для читабельних кнопок і тексту. Маскот — наданий користувачем аркуш поз у `assets/images/meku.png`.
 
-Meku використовує наявний Gemini-ключ, отримує останні 20 повідомлень і навчальний контекст. Локально зберігаються до 60 повідомлень. У режимі офлайн мережеві запити заблоковані. Команди можуть змінювати рівень, тему, параметри навчання/озвучення, інтереси, ім’я, нагадування, додавати слова та відкривати розділи. Кожна дія проходить перевірку типу й допустимих значень; результат показує застосунок. Доступу до файлової системи, довільного коду або редагування XP у моделі немає.
+Meku використовує наявний Gemini-ключ, отримує останні 12 повідомлень і навчальний контекст. Локально зберігаються до 60 повідомлень. У режимі офлайн мережеві запити заблоковані. Команди можуть змінювати рівень, тему, параметри навчання/озвучення, інтереси, ім’я, нагадування, додавати слова та відкривати розділи. Кожна дія проходить перевірку типу й допустимих значень; результат показує застосунок. Доступу до файлової системи, довільного коду або редагування XP у моделі немає.
 
 Ручна зміна рівня починає нове вікно адаптації, зберігаючи історію повторень і результати placement. Нові відповіді знову формують адаптацію. Уже розпочаті ігрові сесії не перебудовуються.
 
