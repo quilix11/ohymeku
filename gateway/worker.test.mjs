@@ -38,9 +38,9 @@ test('text, portraits and speech select server models and keep the key upstream'
       assert.equal(calls.at(-1).options.headers['x-goog-api-key'], 'synthetic-server-secret');
     }
     const text = JSON.parse(calls[0].options.body);
-    assert.ok(calls[0].url.endsWith('models/gemini-3.5-flash-lite:generateContent'));
+    assert.ok(calls[0].url.endsWith('models/gemini-2.5-flash-lite:generateContent'));
     assert.equal(text.generationConfig.maxOutputTokens, 8192);
-    assert.deepEqual(text.generationConfig.thinkingConfig, { thinkingLevel: 'MINIMAL' });
+    assert.deepEqual(text.generationConfig.thinkingConfig, { thinkingBudget: 0 });
     const images = JSON.parse(calls[1].options.body);
     assert.equal(images.model, 'gemini-3.1-flash-lite-image'); assert.equal(images.store, false);
     assert.ok(calls[2].url.endsWith('models/gemini-2.5-flash-preview-tts:generateContent'));
@@ -53,7 +53,7 @@ test('provider errors preserve cause while redacting secret and status', async (
     const response = await worker.fetch(request(), env()); const body = await response.text();
     assert.equal(response.status, 403); assert.ok(body.includes('PERMISSION_DENIED'));
     assert.ok(!body.includes('synthetic-server-secret')); assert.ok(body.includes('[redacted]'));
-    assert.equal(response.headers.get('X-Gemini-Model'), 'gemini-3.5-flash-lite');
+    assert.equal(response.headers.get('X-Gemini-Model'), 'gemini-2.5-flash-lite');
   } finally { globalThis.fetch = old; }
 });
 test('malformed, oversized and unknown requests do not reach provider', async () => {

@@ -1,6 +1,6 @@
 const upstream = 'https://generativelanguage.googleapis.com/v1beta/';
 const routes = {
-  text: { model: 'gemini-3.5-flash-lite', timeout: 20000, limit: 24, window: 60000, daily: 200 },
+  text: { model: 'gemini-2.5-flash-lite', timeout: 20000, limit: 24, window: 60000, daily: 200 },
   portraits: { model: 'gemini-3.1-flash-lite-image', timeout: 120000, limit: 3, window: 3600000, daily: 20 },
   speech: { model: 'gemini-2.5-flash-preview-tts', timeout: 35000, limit: 10, window: 60000, daily: 80 },
 };
@@ -66,7 +66,7 @@ export default {
         generationConfig: route === 'text' ? {
           responseFormat: inputConfig.responseFormat ?? { text: { mimeType: 'APPLICATION_JSON' } },
           maxOutputTokens: Math.min(8192, Math.max(1, Number(inputConfig.maxOutputTokens) || 2048)),
-          thinkingConfig: { thinkingLevel: 'MINIMAL' },
+          thinkingConfig: { thinkingBudget: 0 },
         } : { responseModalities: ['AUDIO'], maxOutputTokens: 2048,
           speechConfig: inputConfig.speechConfig },
       };

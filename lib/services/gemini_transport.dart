@@ -33,7 +33,7 @@ class GeminiTransport {
         (configured != null &&
                 RegExp(r'^gemini-[a-z0-9.-]+$').hasMatch(configured)
             ? configured
-            : 'gemini-3.5-flash-lite');
+            : 'gemini-2.5-flash-lite');
     final clock = Stopwatch()..start();
     for (var attempt = 0; attempt < 2; attempt++) {
       final config =

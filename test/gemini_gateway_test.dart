@@ -22,7 +22,7 @@ void main() {
         expect(r.headers.containsKey('x-goog-api-key'), false);
         final body = jsonDecode(r.body);
         expect(body['payload']['contents'], isNotNull);
-        expect(body['model'], 'gemini-3.5-flash-lite');
+        expect(body['model'], 'gemini-2.5-flash-lite');
       } else {
         expect(r.url.host, 'generativelanguage.googleapis.com');
         expect(r.headers['x-goog-api-key'], 'synthetic-personal-key');

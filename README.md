@@ -19,7 +19,7 @@ GEMINI_API_KEY=your_key_here
 
 `.env` is git-ignored. The app can show a fixed opening line without a key, but sending a player turn requires Gemini. Since this is a client app and `.env` is declared as a Flutter asset, a bundled API key can be extracted; use a backend proxy for a production release.
 
-Text requests default to `gemini-3.5-flash-lite` with minimal thinking and a
+Text requests default to `gemini-2.5-flash-lite` with thinking disabled and a
 20-second deadline that cancels the request. `GEMINI_MODEL` in `.env` overrides
 the default. Only a missing model (404) retries once with `gemini-flash-lite-latest`;
 quota, permission and overload errors are shown immediately with HTTP code,

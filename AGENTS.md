@@ -36,7 +36,7 @@ Read this map before exploring; inspect target source before edits.
 - `screens/character_selection_screen.dart`: swipe carousel, remembered selection, start button and settings entry.
 - `models/scenario.dart`: Officer Vance / Hannah metadata, authored opening, portrait asset mapping.
 - `services/game_session.dart`: match state, locked sends, confirmed history, retry, locally computed outcome, idempotent save/XP, restart/dispose.
-- `services/ai_service.dart`: Gemini 3.5 Flash-Lite via cancellable HTTP with a 20-second text budget and redacted provider errors, JSON parsing, bounded deltas, emotion and Ukrainian feedback; key in request header.
+- `services/ai_service.dart`: Gemini 2.5 Flash-Lite via cancellable HTTP with a 20-second text budget and redacted provider errors, JSON parsing, bounded deltas, emotion and Ukrainian feedback; key in request header.
 - `screens/game_screen.dart`: chat, input, persistent character stage, audio/mic controls, inline results.
 - `models/practice_record.dart`, `services/progress_service.dart`: local JSON records, profile name/avatar, XP and calendar streak from actual practice dates.
 - `services/settings_service.dart`: persisted light/dark, animation toggle, TTS enabled/rate/volume, US/UK speech locale, pause and auto-send.

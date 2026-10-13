@@ -29,7 +29,7 @@ Unsuccessful provider attempts consume quota as well. IP addresses are hashed
 before storage and counters expire at midnight UTC. Limits are intentionally
 fixed in server code; client input cannot select expensive models or disable them.
 
-Text uses `gemini-3.5-flash-lite` with minimal thinking and a 20-second deadline.
+Text uses `gemini-2.5-flash-lite` with thinking disabled and a 20-second deadline.
 A missing text model (404) falls back once to `gemini-flash-lite-latest` within
 the same deadline; quota and permission failures never retry.
 Portraits use `gemini-3.1-flash-lite-image` with a 120-second deadline.

@@ -81,12 +81,13 @@ void main() {
       client.close();
     }
   });
-  test('default uses fast Lite with minimal thinking', () async {
+  test('default uses requested Gemini 2.5 Flash-Lite with thinking disabled',
+      () async {
     final client = MockClient((request) async {
       expect(
-          request.url.path, contains('gemini-3.5-flash-lite:generateContent'));
+          request.url.path, contains('gemini-2.5-flash-lite:generateContent'));
       expect(jsonDecode(request.body)['generationConfig']['thinkingConfig'],
-          {'thinkingLevel': 'MINIMAL'});
+          {'thinkingBudget': 0});
       return http.Response('{}', 200);
     });
     addTearDown(client.close);
