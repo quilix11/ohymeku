@@ -19,6 +19,12 @@ GEMINI_API_KEY=your_key_here
 
 `.env` is git-ignored. The app can show a fixed opening line without a key, but sending a player turn requires Gemini. Since this is a client app and `.env` is declared as a Flutter asset, a bundled API key can be extracted; use a backend proxy for a production release.
 
+Text requests default to `gemini-flash-lite-latest` for faster responses. Set
+`GEMINI_MODEL` in `.env` to override the default. If the selected model is
+unavailable or temporarily overloaded, requests try the alternate Flash alias
+once and remember the working model for that service instance. Cloud speech
+continues to use its separate TTS model.
+
 ## Project map
 
 - `lib/main.dart` — startup, portrait lock, dotenv/settings/progress initialization, theme.

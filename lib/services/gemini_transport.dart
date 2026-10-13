@@ -30,7 +30,7 @@ class GeminiTransport {
         (configured != null &&
                 RegExp(r'^gemini-[a-z0-9.-]+$').hasMatch(configured)
             ? configured
-            : 'gemini-flash-latest');
+            : 'gemini-flash-lite-latest');
     for (var attempt = 0; attempt < 2; attempt++) {
       final config =
           Map<String, dynamic>.from(payload['generationConfig'] as Map? ?? {});
@@ -61,7 +61,7 @@ class GeminiTransport {
         return response;
       }
       if (attempt == 0 && [404, 429, 503].contains(response.statusCode)) {
-        model = response.statusCode == 404 && model != 'gemini-flash-latest'
+        model = model != 'gemini-flash-latest'
             ? 'gemini-flash-latest'
             : 'gemini-flash-lite-latest';
         continue;

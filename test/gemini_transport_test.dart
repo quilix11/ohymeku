@@ -62,10 +62,31 @@ void main() {
       final response = await GeminiTransport(client).post({}, 'synthetic-key');
       expect(response.statusCode, code);
       expect(paths.length, [429, 503].contains(code) ? 2 : 1);
+      expect(paths.first, contains('gemini-flash-lite-latest'));
       if (paths.length == 2) {
-        expect(paths.last, contains('gemini-flash-lite-latest'));
+        expect(paths.last, contains('gemini-flash-latest'));
       }
       client.close();
     }
+  });
+  test('default uses Flash-Lite without adding thinking and remembers fallback',
+      () async {
+    dotenv.testLoad(fileInput: '');
+    final paths = <String>[];
+    final client = MockClient((request) async {
+      paths.add(request.url.path);
+      final config = jsonDecode(request.body)['generationConfig'] as Map;
+      if (paths.length == 1) {
+        expect(config.containsKey('thinkingConfig'), isFalse);
+        return http.Response('{}', 503);
+      }
+      return http.Response('{}', 200);
+    });
+    addTearDown(client.close);
+    final transport = GeminiTransport(client);
+    await transport.post({}, 'synthetic-key');
+    await transport.post({}, 'synthetic-key');
+    expect(paths.first, contains('gemini-flash-lite-latest'));
+    expect(paths.sublist(1), everyElement(contains('gemini-flash-latest')));
   });
 }

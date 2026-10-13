@@ -47,6 +47,7 @@ class _MekuScreenState extends State<MekuScreen> {
       maxLength: 2000,
       decoration: const InputDecoration(
           hintText: 'Твоє запитання…',
+          hintMaxLines: 1,
           labelText: 'Повідомлення Meku',
           counterText: ''),
       textInputAction: TextInputAction.send,
@@ -85,22 +86,25 @@ class _MekuScreenState extends State<MekuScreen> {
             c = theme.colorScheme,
             meku = widget.meku;
         final keyboard = MediaQuery.viewInsetsOf(context).bottom > 0;
+        final compact = keyboard ||
+            MediaQuery.sizeOf(context).height < 600 ||
+            MediaQuery.textScalerOf(context).scale(16) > 21;
         return Column(children: [
           Padding(
               padding: EdgeInsets.symmetric(
-                  horizontal: 16, vertical: keyboard ? 8 : 16),
+                  horizontal: 16, vertical: compact ? 8 : 16),
               child: Row(children: [
-                MekuAvatar(size: keyboard ? 40 : 56, emotion: meku.emotion),
+                MekuAvatar(size: compact ? 40 : 56, emotion: meku.emotion),
                 const SizedBox(width: 12),
                 Expanded(
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                       Text('Meku',
-                          style: keyboard
+                          style: compact
                               ? theme.textTheme.titleMedium
                               : theme.textTheme.titleLarge),
-                      if (!keyboard)
+                      if (!compact)
                         Text(
                             '${meku.emotion.label} · ${meku.settings.effectiveLevel}',
                             style: theme.textTheme.bodySmall),
@@ -251,23 +255,28 @@ class _MekuScreenState extends State<MekuScreen> {
                 top: false,
                 child: Padding(
                     padding: EdgeInsets.symmetric(
-                        horizontal: 16, vertical: keyboard ? 8 : 16),
-                    child: keyboard
-                        ? Row(
+                        horizontal: 16, vertical: compact ? 8 : 16),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Keep the field under the same parents when the
+                          // keyboard opens so EditableText retains focus.
+                          Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                                Expanded(child: _messageField(true)),
+                              Expanded(child: _messageField(compact)),
+                              if (compact) ...[
                                 const SizedBox(width: 8),
                                 _sendButton(true),
-                              ])
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                                _messageField(false),
-                                const SizedBox(height: 10),
-                                _sendButton(false),
-                              ])),
+                              ],
+                            ],
+                          ),
+                          if (!compact) ...[
+                            const SizedBox(height: 10),
+                            _sendButton(false),
+                          ],
+                        ])),
               )),
         ]);
       });
