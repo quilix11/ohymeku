@@ -1,8 +1,19 @@
+import 'learning_exercise.dart';
 // lib/models/game_state.dart
 
 enum GameCharacter { officer, hr }
 
-enum NpcEmotion { neutral, happy, angry, surprised, laughing, worried, proud, shocked, sad }
+enum NpcEmotion {
+  neutral,
+  happy,
+  angry,
+  surprised,
+  laughing,
+  worried,
+  proud,
+  shocked,
+  sad
+}
 
 enum GameStatus { inProgress, win, lose }
 
@@ -26,16 +37,19 @@ class ChatMessage {
 class Feedback {
   final String grammarCorrection;
   final String tacticalAdvice;
+  final LearningExercise? exercise;
 
   const Feedback({
     required this.grammarCorrection,
     required this.tacticalAdvice,
+    this.exercise,
   });
 
   factory Feedback.empty() =>
       const Feedback(grammarCorrection: '', tacticalAdvice: '');
 
   factory Feedback.fromJson(Map<String, dynamic> json) => Feedback(
+        exercise: LearningExercise.parse(json['exercise']),
         grammarCorrection: json['grammar_correction'] as String? ?? '',
         tacticalAdvice: json['tactical_advice'] as String? ?? '',
       );
@@ -63,12 +77,9 @@ class NpcResponse {
   });
 
   factory NpcResponse.fromJson(Map<String, dynamic> json) {
-    final statChanges =
-        json['stat_changes'] as Map<String, dynamic>? ?? {};
-    final currentStats =
-        json['current_stats'] as Map<String, dynamic>? ?? {};
-    final feedbackJson =
-        json['feedback'] as Map<String, dynamic>? ?? {};
+    final statChanges = json['stat_changes'] as Map<String, dynamic>? ?? {};
+    final currentStats = json['current_stats'] as Map<String, dynamic>? ?? {};
+    final feedbackJson = json['feedback'] as Map<String, dynamic>? ?? {};
 
     NpcEmotion emotion;
     switch (json['npc_emotion'] as String? ?? 'neutral') {
@@ -118,8 +129,7 @@ class NpcResponse {
       trustDelta: (statChanges['trust'] as num?)?.toInt() ?? 0,
       patienceDelta: (statChanges['patience'] as num?)?.toInt() ?? 0,
       currentTrust: (currentStats['trust'] as num?)?.toInt() ?? 50,
-      currentPatience:
-          (currentStats['patience'] as num?)?.toInt() ?? 50,
+      currentPatience: (currentStats['patience'] as num?)?.toInt() ?? 50,
       gameStatus: status,
       feedback: Feedback.fromJson(feedbackJson),
     );

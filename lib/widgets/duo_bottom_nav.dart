@@ -17,7 +17,8 @@ class DuoBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bgColor = isDark ? const Color(0xFF111827) : AppColors.background;
-    final borderColor = isDark ? const Color(0xFF374151) : AppColors.borderDefault;
+    final borderColor =
+        isDark ? const Color(0xFF374151) : AppColors.borderDefault;
 
     return Container(
       decoration: BoxDecoration(
@@ -67,8 +68,8 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeColor = AppColors.primary;
-    final inactiveColor = const Color(0xFFB3B3B3);
+    const activeColor = AppColors.primary;
+    const inactiveColor = Color(0xFFB3B3B3);
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -77,9 +78,13 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? activeColor.withValues(alpha: 0.15) : Colors.transparent,
+          color: isSelected
+              ? activeColor.withValues(alpha: 0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
-          border: isSelected ? Border.all(color: activeColor.withValues(alpha: 0.3), width: 2) : Border.all(color: Colors.transparent, width: 2),
+          border: isSelected
+              ? Border.all(color: activeColor.withValues(alpha: 0.3), width: 2)
+              : Border.all(color: Colors.transparent, width: 2),
         ),
         child: Icon(
           icon,

@@ -1,5 +1,5 @@
 name: dialect_duel
-description: "DialectDuel - Conversational RPG for English speaking practice"
+description: "Ohymeku - English learning with Meku"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -24,6 +24,15 @@ dependencies:
   shared_preferences: ^2.3.2
   # JSON
   json_annotation: ^4.9.0
+  # Fonts
+  google_fonts: ^6.2.1
+  audioplayers: ^6.7.1
+  path_provider: ^2.1.6
+  crypto: ^3.0.7
+  flutter_local_notifications: ^22.3.1
+  uuid: ^4.6.0
+  timezone: ^0.11.1
+  url_launcher: ^6.3.3
 
 dev_dependencies:
   flutter_test:
@@ -34,7 +43,22 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Manrope
+      fonts:
+        - asset: assets/fonts/Manrope.ttf
+    - family: Lora
+      fonts:
+        - asset: assets/fonts/Lora.ttf
+    - family: NotoSans
+      fonts:
+        - asset: assets/fonts/NotoSans.ttf
   assets:
     - .env
     - assets/images/
+    - assets/images/officer/
+    - assets/images/hr/
+    - assets/images/meku/
+    - assets/images/officer_cutout/
+    - assets/images/hr_cutout/
     - assets/sounds/

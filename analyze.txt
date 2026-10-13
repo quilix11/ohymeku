@@ -1,0 +1,25 @@
+Analyzing dialect_duel...                                       
+
+   info - Use 'const' with the constructor to improve performance - lib\screens\character_selection_screen.dart:55:15 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\character_selection_screen.dart:70:15 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\character_selection_screen.dart:198:74 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\screens\game_screen.dart:83:20 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\game_screen.dart:146:20 - curly_braces_in_flow_control_structures
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\game_screen.dart:273:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\game_screen.dart:364:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\leaderboard_screen.dart:75:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\leaderboard_screen.dart:106:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\profile_screen.dart:60:62 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\screens\profile_screen.dart:82:28 - prefer_const_constructors
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\profile_screen.dart:109:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\profile_screen.dart:214:28 - deprecated_member_use
+   info - Use 'const' with the constructor to improve performance - lib\screens\settings_screen.dart:50:27 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\settings_screen.dart:129:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\settings_screen.dart:135:25 - prefer_const_constructors
+   info - Use 'const' with the constructor to improve performance - lib\screens\settings_screen.dart:157:30 - prefer_const_constructors
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeTrackColor instead. This feature was deprecated after v3.24.0-0.2.pre - lib\screens\settings_screen.dart:212:13 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\splash_screen.dart:61:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\chat_bubble.dart:59:44 - deprecated_member_use
+   info - Use 'const' for final variables initialized to a constant value - lib\widgets\duo_bottom_nav.dart:70:5 - prefer_const_declarations
+   info - Use 'const' for final variables initialized to a constant value - lib\widgets\duo_bottom_nav.dart:71:5 - prefer_const_declarations
+

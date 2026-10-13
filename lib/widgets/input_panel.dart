@@ -65,13 +65,16 @@ class _InputPanelState extends State<InputPanel> {
   @override
   Widget build(BuildContext context) {
     final bg = widget.isDark ? const Color(0xFF111827) : Colors.white;
-    final textBg = widget.isDark ? const Color(0xFF1F2937) : const Color(0xFFF7F7F7);
-    final borderColor = widget.isDark ? const Color(0xFF374151) : AppColors.borderDefault;
+    final textBg =
+        widget.isDark ? const Color(0xFF1F2937) : const Color(0xFFF7F7F7);
+    final borderColor =
+        widget.isDark ? const Color(0xFF374151) : AppColors.borderDefault;
     final hintColor = widget.isDark ? Colors.white54 : AppColors.textHint;
-    
+
     final bool disabled = widget.isLoading || _controller.text.trim().isEmpty;
     final fillBtn = disabled ? const Color(0xFFE5E5E5) : AppColors.primary;
-    final shadowBtn = disabled ? const Color(0xFFCCCCCC) : AppColors.primaryDark;
+    final shadowBtn =
+        disabled ? const Color(0xFFCCCCCC) : AppColors.primaryDark;
     final textBtn = disabled ? const Color(0xFFAAAAAA) : Colors.white;
 
     return Container(
@@ -88,21 +91,25 @@ class _InputPanelState extends State<InputPanel> {
                   color: textBg,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: _focusNode.hasFocus ? AppColors.primary : borderColor,
+                    color:
+                        _focusNode.hasFocus ? AppColors.primary : borderColor,
                     width: 2,
                   ),
                 ),
                 child: TextField(
                   controller: _controller,
                   focusNode: _focusNode,
-                  style: AppTextStyles.bodyLarge.copyWith(color: widget.isDark ? Colors.white : Colors.black),
+                  style: AppTextStyles.bodyLarge.copyWith(
+                      color: widget.isDark ? Colors.white : Colors.black),
                   maxLines: 4,
                   minLines: 1,
                   enabled: !widget.isLoading,
                   textCapitalization: TextCapitalization.sentences,
                   onChanged: (_) => setState(() {}),
                   decoration: InputDecoration(
-                    hintText: widget.isListening ? '🎙️ Listening...' : 'Your answer......',
+                    hintText: widget.isListening
+                        ? '🎙️ Listening...'
+                        : 'Your answer......',
                     hintStyle: AppTextStyles.bodyLarge.copyWith(
                       color: hintColor,
                       fontWeight: FontWeight.w500,
@@ -113,7 +120,10 @@ class _InputPanelState extends State<InputPanel> {
                       vertical: 16,
                     ),
                     suffixIcon: IconButton(
-                      icon: Icon(Icons.mic, color: widget.isListening ? AppColors.primary : hintColor),
+                      icon: Icon(Icons.mic,
+                          color: widget.isListening
+                              ? AppColors.primary
+                              : hintColor),
                       onPressed: widget.onMicTap,
                     ),
                   ),

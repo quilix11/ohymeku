@@ -9,7 +9,8 @@ import 'main_screen.dart';
 class SplashScreen extends StatefulWidget {
   final SettingsService settings;
   final ProgressService progress;
-  const SplashScreen({super.key, required this.settings, required this.progress});
+  const SplashScreen(
+      {super.key, required this.settings, required this.progress});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -42,8 +43,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = widget.settings.isDark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
@@ -62,9 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: const Center(
                   child: Text('🛂', style: TextStyle(fontSize: 90)),
                 ),
-              )
-                  .animate()
-                  .scale(
+              ).animate().scale(
                     begin: const Offset(0.3, 0.3),
                     end: const Offset(1, 1),
                     duration: 700.ms,
@@ -79,8 +80,6 @@ class _SplashScreenState extends State<SplashScreen> {
                 style: AppTextStyles.displayLarge.copyWith(
                   color: AppColors.primary,
                   fontSize: 42,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1,
                 ),
               )
                   .animate()
@@ -125,9 +124,9 @@ class _StartButtonState extends State<_StartButton> {
       onTapCancel: () => setState(() => _pressed = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 80),
-        margin: EdgeInsets.only(top: _pressed ? 5 : 0),
+        margin: EdgeInsets.only(top: _pressed ? 6 : 0),
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 18),
+        padding: const EdgeInsets.symmetric(vertical: 20),
         decoration: BoxDecoration(
           color: AppColors.primary,
           borderRadius: BorderRadius.circular(16),
@@ -137,19 +136,14 @@ class _StartButtonState extends State<_StartButton> {
               : const [
                   BoxShadow(
                     color: AppColors.primaryDark,
-                    offset: Offset(0, 5),
+                    offset: Offset(0, 6),
                     blurRadius: 0,
                   ),
                 ],
         ),
-        child: const Text(
-          'GET STARTED',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1,
-          ),
+        child: Text(
+          'ПОЧАТИ',
+          style: AppTextStyles.buttonText.copyWith(color: Colors.white),
           textAlign: TextAlign.center,
         ),
       ),

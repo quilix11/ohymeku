@@ -1,226 +1,799 @@
-// lib/screens/settings_screen.dart
-import 'package:flutter/cupertino.dart';
+import '../widgets/ohymeku_design.dart';
+import 'dart:async';
+import '../widgets/interest_picker.dart';
+import '../services/notification_service.dart';
+
 import 'package:flutter/material.dart';
 import '../services/settings_service.dart';
+import '../services/tts_service.dart';
+import '../services/speech_service.dart';
+import '../models/game_state.dart';
+import '../models/scenario.dart';
+import '../services/cloud_speech_service.dart';
+import '../services/ai_service.dart';
 import '../theme/app_theme.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   final SettingsService settings;
   const SettingsScreen({super.key, required this.settings});
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final _tts = TtsService();
+  final _speech = SpeechService();
+  List<CharacterVoice> _voices = [];
+  bool _voicesLoading = true;
+  Scenario _previewScenario = Scenario.of(GameCharacter.officer);
+  bool _notificationBusy = false;
+  String? _notificationError;
+  int _previewRequest = 0;
+  Future<void> _previewAs(Scenario scenario) async {
+    _previewRequest++;
+    await _tts.stop();
+    if (!mounted) return;
+    setState(() {
+      _previewing = false;
+      _previewScenario = scenario;
+    });
+    await _preview();
+  }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // TOP BAR
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textSecondary, size: 20),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  const Expanded(
-                    child: Center(
-                      child: Text(
-                        'НАЛАШТУВАННЯ', // SETTINGS
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 48), // balance back button
+  void initState() {
+    super.initState();
+    unawaited(_loadVoices());
+  }
+
+  Future<void> _loadVoices() async {
+    setState(() => _voicesLoading = true);
+    try {
+      final voices = await _tts.voices(refresh: true);
+      if (mounted) setState(() => _voices = voices);
+    } catch (_) {/* The platform voice can still be used. */} finally {
+      if (mounted) setState(() => _voicesLoading = false);
+    }
+  }
+
+  Widget _voicePicker(Scenario scenario) {
+    final character = scenario.character;
+    final saved = widget.settings.scenarioVoice(scenario);
+    final selected = _voices.any((v) => v.id == saved) ? saved! : '';
+    return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: Column(children: [
+          if (widget.settings.cloudVoices)
+            DropdownButtonFormField<String>(
+                key: ValueKey(
+                    'cloud_${scenario.customId ?? character.name}_${widget.settings.scenarioCloudVoice(scenario)}'),
+                initialValue: widget.settings.scenarioCloudVoice(scenario),
+                isExpanded: true,
+                decoration:
+                    InputDecoration(labelText: 'Gemini: ${scenario.name}'),
+                items: cloudVoiceNames
+                    .map((v) => DropdownMenuItem(value: v, child: Text(v)))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) {
+                    _previewRequest++;
+                    unawaited(_tts.stop());
+                    setState(() => _previewing = false);
+                    widget.settings.setScenarioVoice(scenario, v, cloud: true);
+                  }
+                })
+          else
+            DropdownButtonFormField<String>(
+                key: ValueKey(
+                    '${scenario.customId ?? character.name}_$selected'),
+                initialValue: selected,
+                isExpanded: true,
+                decoration:
+                    InputDecoration(labelText: 'Голос: ${scenario.name}'),
+                items: [
+                  const DropdownMenuItem(
+                      value: '', child: Text('Підібрати автоматично')),
+                  ..._voices.map((v) => DropdownMenuItem(
+                      value: v.id,
+                      child: Text(v.label, overflow: TextOverflow.ellipsis)))
                 ],
-              ),
-            ),
-            
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                children: [
-                  const Text('ЗАГАЛЬНІ', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
-                  const SizedBox(height: 12),
-                  
-                  // GENERAL SETTINGS CARD
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.borderDefault, width: 2),
-                    ),
-                    child: Column(
-                      children: [
-                        _SettingsToggleRow(
-                          iconPath: Icons.volume_up_rounded,
-                          iconBg: AppColors.secondary,
-                          label: 'Звукові ефекти',
-                          value: true,
-                          onChanged: (_) {},
-                        ),
-                        const Divider(height: 1, color: AppColors.borderDefault),
-                        _SettingsToggleRow(
-                          iconPath: Icons.vibration,
-                          iconBg: AppColors.bossPurple,
-                          label: 'Вібрація',
-                          value: true,
-                          onChanged: (_) {},
-                        ),
-                        const Divider(height: 1, color: AppColors.borderDefault),
-                        _SettingsToggleRow(
-                          iconPath: Icons.notifications,
-                          iconBg: AppColors.bossRed,
-                          label: 'Сповіщення',
-                          value: false,
-                          onChanged: (_) {},
-                        ),
-                        const Divider(height: 1, color: AppColors.borderDefault),
-                        _SettingsToggleRow(
-                          iconPath: Icons.dark_mode,
-                          iconBg: const Color(0xFF333333),
-                          label: 'Темна тема',
-                          value: settings.isDark,
-                          onChanged: (val) {
-                            settings.setTheme(val ? AppThemeMode.dark : AppThemeMode.light);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  const Text('АКАУНТ', style: TextStyle(color: AppColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
-                  const SizedBox(height: 12),
-                  
-                  // ACCOUNT CARD
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: AppColors.borderDefault, width: 2),
-                    ),
-                    child: Column(
-                      children: [
-                        _SettingsTextRow(
-                          iconPath: Icons.person,
-                          label: "Ім'я",
-                          value: 'Олена К.',
-                        ),
-                        const Divider(height: 1, color: AppColors.borderDefault),
-                        _SettingsTextRow(
-                          iconPath: Icons.email,
-                          label: 'Пошта',
-                          value: 'olena@mail.com',
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // EXIT LOGOUT BUTTON
-                  GestureDetector(
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      decoration: BoxDecoration(
-                        color: AppColors.bossRed,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppColors.bossRedDark, width: 2),
-                        boxShadow: const [BoxShadow(color: AppColors.bossRedDark, offset: Offset(0, 5), blurRadius: 0)],
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.logout, color: Colors.white, size: 20),
-                          SizedBox(width: 8),
-                          Text(
-                            'ВИЙТИ',
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.5),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 48),
-                ],
-              ),
-            ),
-          ],
+                onChanged: _voicesLoading
+                    ? null
+                    : (value) {
+                        _previewRequest++;
+                        unawaited(_tts.stop());
+                        setState(() => _previewing = false);
+                        widget.settings.setScenarioVoice(
+                            scenario, value == '' ? null : value);
+                      }),
+          Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                  onPressed: _listening || _micBusy
+                      ? null
+                      : () => _previewAs(scenario),
+                  icon: const Icon(Icons.volume_up_outlined),
+                  label: Text('Послухати ${scenario.name}'))),
+        ]));
+  }
+
+  bool _previewing = false, _listening = false, _micBusy = false;
+  String _transcript = '',
+      _micStatus = 'Скажи кілька слів англійською, щоб перевірити запис.';
+  @override
+  void dispose() {
+    _tts.dispose();
+    _speech.dispose();
+    super.dispose();
+  }
+
+  Future<void> _preview() async {
+    final request = ++_previewRequest;
+    if (_previewing) {
+      await _tts.stop();
+      if (mounted) setState(() => _previewing = false);
+      return;
+    }
+    setState(() => _previewing = true);
+    try {
+      await _tts.speak(_previewScenario.opening,
+          character: _previewScenario.character,
+          voiceId: widget.settings.scenarioVoice(_previewScenario),
+          cloudVoice: widget.settings.cloudVoices
+              ? widget.settings.scenarioCloudVoice(_previewScenario)
+              : null,
+          offline: widget.settings.offlineMode,
+          style: widget.settings.voiceStyle,
+          pitch: widget.settings.voicePitch,
+          speed: widget.settings.ttsSpeed,
+          volume: widget.settings.ttsVolume);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e is AiException
+                ? e.message
+                : 'Озвучення недоступне на цьому пристрої.')));
+      }
+    } finally {
+      if (mounted && request == _previewRequest) {
+        setState(() => _previewing = false);
+      }
+    }
+  }
+
+  Future<void> _testMic() async {
+    setState(() => _micBusy = true);
+    try {
+      if (_listening) {
+        await _speech.stopListening();
+      } else {
+        await _tts.stop();
+        if (!mounted) return;
+        setState(() {
+          _previewing = false;
+          _transcript = '';
+          _micStatus = 'Очікуємо доступ до мікрофона…';
+        });
+        await _speech.startListening(
+          locale: widget.settings.speechLocale,
+          pauseSeconds: widget.settings.pauseSeconds,
+          onResult: (text, finalResult) {
+            if (mounted) {
+              setState(() {
+                _transcript = text;
+                _micStatus =
+                    'Мікрофон працює. Текст не надсилається персонажу.';
+              });
+            }
+          },
+          onStatusChange: (value) {
+            if (mounted) {
+              setState(() {
+                _listening = value;
+                if (value) _micStatus = 'Слухаю. Говори англійською…';
+              });
+            }
+          },
+          onError: (error) {
+            if (mounted) {
+              setState(() {
+                _micStatus = error;
+                _listening = false;
+              });
+            }
+          },
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _listening = false;
+          _micStatus =
+              'Мікрофон недоступний. Перевір дозвіл у налаштуваннях пристрою.';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _micBusy = false);
+    }
+  }
+
+  Future<void> _toggleReminder(bool value) async {
+    setState(() {
+      _notificationBusy = true;
+      _notificationError = null;
+    });
+    try {
+      await widget.settings.setPushNotifications(value);
+    } catch (e) {
+      if (mounted) {
+        setState(() => _notificationError = e is StateError
+            ? e.message.toString()
+            : 'Не вдалося налаштувати нагадування. Перевір дозволи телефона.');
+      }
+    } finally {
+      if (mounted) setState(() => _notificationBusy = false);
+    }
+  }
+
+  Future<void> _chooseReminderTime() async {
+    final value = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay(
+            hour: widget.settings.reminderHour,
+            minute: widget.settings.reminderMinute));
+    if (value == null || !mounted) return;
+    setState(() => _notificationBusy = true);
+    try {
+      await widget.settings.setReminderTime(value.hour, value.minute);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _notificationError =
+            'Не вдалося змінити час. Попереднє нагадування збережене.');
+      }
+    } finally {
+      if (mounted) setState(() => _notificationBusy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => ListenableBuilder(
+      listenable: widget.settings,
+      builder: (context, _) {
+        final settings = widget.settings;
+        final theme = Theme.of(context);
+        return Scaffold(
+            appBar: AppBar(title: const Text('Налаштування')),
+            body: SilkBackground(
+                child: Center(
+                    child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 680),
+                        child: ListView(
+                            padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+                            children: [
+                              ScreenIntro(
+                                  title: 'Зроби зручно',
+                                  subtitle:
+                                      '${settings.effectiveLevel} · ${settings.isDark ? "Темна тема" : "Світла тема"}',
+                                  icon: Icons.tune_rounded),
+                              const SizedBox(height: 20),
+                              _Section(
+                                  icon: Icons.palette_outlined,
+                                  title: 'Вигляд',
+                                  children: [
+                                    Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Row(children: [
+                                          Expanded(
+                                              child: _ThemeChoice(
+                                                  dark: false,
+                                                  selected: !settings.isDark,
+                                                  onTap: () =>
+                                                      settings.setTheme(
+                                                          AppThemeMode.light))),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                              child: _ThemeChoice(
+                                                  dark: true,
+                                                  selected: settings.isDark,
+                                                  onTap: () =>
+                                                      settings.setTheme(
+                                                          AppThemeMode.dark))),
+                                        ])),
+                                  ]),
+                              const SizedBox(height: 20),
+                              _Section(
+                                  icon: Icons.school_outlined,
+                                  title: 'Навчання',
+                                  children: [
+                                    Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: DropdownButtonFormField<String>(
+                                            initialValue:
+                                                settings.learningLevel,
+                                            decoration: const InputDecoration(
+                                                labelText:
+                                                    'Базовий рівень навчання'),
+                                            items: [
+                                              'A1',
+                                              'A2',
+                                              'B1',
+                                              'B2',
+                                              'C1'
+                                            ]
+                                                .map((v) => DropdownMenuItem(
+                                                    value: v, child: Text(v)))
+                                                .toList(),
+                                            onChanged: (v) {
+                                              if (v != null) {
+                                                settings.setExtra(
+                                                    'learning_level', v);
+                                              }
+                                            })),
+                                    Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: DropdownButtonFormField<int>(
+                                            initialValue: settings.cardCount,
+                                            decoration: const InputDecoration(
+                                                labelText:
+                                                    'Карток у новому наборі'),
+                                            items: [5, 8, 12, 16]
+                                                .map((v) => DropdownMenuItem(
+                                                    value: v,
+                                                    child: Text('$v карток')))
+                                                .toList(),
+                                            onChanged: (v) {
+                                              if (v != null) {
+                                                settings.setExtra(
+                                                    'card_count', v);
+                                              }
+                                            })),
+                                    SwitchListTile(
+                                        title:
+                                            const Text('Адаптивна складність'),
+                                        subtitle: Text(
+                                            'Поточна складність: ${settings.effectiveLevel}. Зміна після щонайменше 8 відповідей у вправах.'),
+                                        value: settings.adaptiveLearning,
+                                        onChanged: (v) => settings.setExtra(
+                                            'adaptive_learning', v)),
+                                    SwitchListTile(
+                                        title: const Text('Офлайн-режим'),
+                                        subtitle: const Text(
+                                            'Слова, тест, граматика й історія. Нові розмови та генерація потребують інтернету.'),
+                                        value: settings.offlineMode,
+                                        onChanged: (v) {
+                                          unawaited(_tts.stop());
+                                          settings.setExtra('offline_mode', v);
+                                        }),
+                                    ListTile(
+                                        title: const Text('Завантажені голоси'),
+                                        subtitle: const Text(
+                                            'Озвучення автоматично кешуються до 20 МБ на телефоні.'),
+                                        trailing: IconButton(
+                                            tooltip:
+                                                'Очистити завантажені озвучення',
+                                            icon: const Icon(
+                                                Icons.delete_outline),
+                                            onPressed: () async {
+                                              await _tts.stop();
+                                              await _tts.clearCache();
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(const SnackBar(
+                                                        content: Text(
+                                                            'Завантажені озвучення очищено.')));
+                                              }
+                                            })),
+                                    SwitchListTile(
+                                        title: const Text(
+                                            'Показувати поради після відповіді'),
+                                        value: settings.showCoaching,
+                                        onChanged: (v) => settings.setExtra(
+                                            'show_coaching', v)),
+                                    _SettingSlider(
+                                        title: 'Розмір тексту',
+                                        display:
+                                            '${(settings.textScale * 100).round()}%',
+                                        start: 'Менший',
+                                        end: 'Більший',
+                                        value: settings.textScale,
+                                        min: .9,
+                                        max: 1.3,
+                                        divisions: 4,
+                                        onChanged: (v) =>
+                                            settings.setExtra('text_scale', v)),
+                                  ]),
+                              const SizedBox(height: 28),
+                              _Section(
+                                  icon: Icons.person_outline_rounded,
+                                  title: 'Твої інтереси й нагадування',
+                                  children: [
+                                    Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child:
+                                            InterestPicker(settings: settings)),
+                                    SwitchListTile(
+                                        title:
+                                            const Text('Щоденне нагадування'),
+                                        subtitle: Text(NotificationService()
+                                                .supported
+                                            ? 'Працює без інтернету на телефоні'
+                                            : 'Доступно в Android та iPhone застосунку'),
+                                        value: settings.pushNotifications,
+                                        onChanged: _notificationBusy ||
+                                                !NotificationService().supported
+                                            ? null
+                                            : _toggleReminder),
+                                    ListTile(
+                                        title: const Text('Час нагадування'),
+                                        subtitle: const Text(
+                                            'Місцевий час телефона. Android може трохи відкласти доставку.'),
+                                        trailing: Text(
+                                            '${settings.reminderHour.toString().padLeft(2, "0")}:${settings.reminderMinute.toString().padLeft(2, "0")}'),
+                                        onTap: _notificationBusy
+                                            ? null
+                                            : _chooseReminderTime),
+                                    if (_notificationError != null ||
+                                        settings.notificationError != null)
+                                      Padding(
+                                          padding: const EdgeInsets.all(16),
+                                          child: Text(
+                                              _notificationError ??
+                                                  settings.notificationError!,
+                                              style: TextStyle(
+                                                  color: theme
+                                                      .colorScheme.error))),
+                                  ]),
+                              const SizedBox(height: 28),
+                              _Section(
+                                  icon: Icons.graphic_eq_rounded,
+                                  title: 'Голос і звук',
+                                  children: [
+                                    SwitchListTile(
+                                        title: const Text('Голоси Gemini'),
+                                        subtitle: const Text(
+                                            '8 голосів через інтернет. Текст надсилається Gemini; діють квоти й тариф твого API. Вимкнено — системні голоси.'),
+                                        value: settings.cloudVoices,
+                                        onChanged: (v) {
+                                          _previewRequest++;
+                                          unawaited(_tts.stop());
+                                          setState(() => _previewing = false);
+                                          settings.setExtra('cloud_voices', v);
+                                        }),
+                                    if (settings.cloudVoices)
+                                      Padding(
+                                          padding: const EdgeInsets.all(16),
+                                          child: DropdownButtonFormField<
+                                                  String>(
+                                              initialValue: settings.voiceStyle,
+                                              decoration: const InputDecoration(
+                                                  labelText: 'Манера мовлення'),
+                                              items: const [
+                                                DropdownMenuItem(
+                                                    value: 'calm',
+                                                    child: Text('Спокійна')),
+                                                DropdownMenuItem(
+                                                    value: 'friendly',
+                                                    child: Text('Дружня')),
+                                                DropdownMenuItem(
+                                                    value: 'expressive',
+                                                    child: Text('Виразна'))
+                                              ],
+                                              onChanged: (v) {
+                                                if (v != null) {
+                                                  settings.setExtra(
+                                                      'voice_style', v);
+                                                }
+                                              })),
+                                    if (!settings.cloudVoices)
+                                      _SettingSlider(
+                                          title: 'Висота системного голосу',
+                                          display: settings.voicePitch
+                                              .toStringAsFixed(1),
+                                          start: 'Нижче',
+                                          end: 'Вище',
+                                          value: settings.voicePitch,
+                                          min: .7,
+                                          max: 1.3,
+                                          divisions: 6,
+                                          onChanged: (v) => settings.setExtra(
+                                              'voice_pitch', v)),
+                                    _voicePicker(
+                                        Scenario.of(GameCharacter.officer)),
+                                    _voicePicker(Scenario.of(GameCharacter.hr)),
+                                    ...settings.customScenarios
+                                        .map(_voicePicker),
+                                    Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Text(settings.cloudVoices
+                                            ? 'Обери голос і натисни «Послухати». Перше озвучення може потребувати кількох секунд.'
+                                            : _voicesLoading
+                                                ? 'Завантаження голосів…'
+                                                : _voices.length < 2
+                                                    ? 'На телефоні менше двох англійських голосів: персонажі можуть звучати однаково. Встанови додаткові системні голоси або ввімкни хмарні.'
+                                                    : 'Список залежить від пристрою. Вибрані голоси зберігаються окремо для кожного персонажа.')),
+                                    Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: TextButton(
+                                            onPressed: _voicesLoading
+                                                ? null
+                                                : _loadVoices,
+                                            child: const Text(
+                                                'Оновити список голосів'))),
+                                    SwitchListTile(
+                                        title:
+                                            const Text('Озвучувати персонажа'),
+                                        value: settings.ttsEnabled,
+                                        onChanged: (value) {
+                                          settings.setTtsEnabled(value);
+                                          if (!value) unawaited(_tts.stop());
+                                        }),
+                                    _SettingSlider(
+                                        key: const Key('volume_setting'),
+                                        title: 'Гучність голосу',
+                                        value: settings.ttsVolume,
+                                        min: 0,
+                                        max: 1,
+                                        divisions: 10,
+                                        display:
+                                            '${(settings.ttsVolume * 100).round()}%',
+                                        onChanged: settings.setTtsVolume,
+                                        start: 'Тихо',
+                                        end: 'Гучно'),
+                                    _SettingSlider(
+                                        key: const Key('speed_setting'),
+                                        title: 'Темп мовлення',
+                                        value: settings.ttsSpeed,
+                                        min: 0.25,
+                                        max: 0.8,
+                                        divisions: 11,
+                                        display:
+                                            '${(settings.ttsSpeed / 0.5).toStringAsFixed(1)}×',
+                                        onChanged: settings.setTtsSpeed,
+                                        start: 'Повільно',
+                                        end: 'Швидко'),
+                                    Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            16, 0, 16, 16),
+                                        child: SizedBox(
+                                            width: double.infinity,
+                                            child: OutlinedButton.icon(
+                                                onPressed:
+                                                    _listening || _micBusy
+                                                        ? null
+                                                        : _preview,
+                                                icon: Icon(_previewing
+                                                    ? Icons.stop_rounded
+                                                    : Icons.play_arrow_rounded),
+                                                label: Text(_previewing
+                                                    ? 'Зупинити приклад'
+                                                    : 'Перевірити звучання')))),
+                                  ]),
+                              const SizedBox(height: 20),
+                              _Section(
+                                  icon: Icons.mic_none_rounded,
+                                  title: 'Мікрофон',
+                                  children: [
+                                    Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: DropdownButtonFormField<String>(
+                                            initialValue: settings.speechLocale,
+                                            decoration: const InputDecoration(
+                                                labelText:
+                                                    'Англійська для розпізнавання'),
+                                            isExpanded: true,
+                                            items: const [
+                                              DropdownMenuItem(
+                                                  value: 'en_US',
+                                                  child: Text(
+                                                      'Американська · US')),
+                                              DropdownMenuItem(
+                                                  value: 'en_GB',
+                                                  child:
+                                                      Text('Британська · UK')),
+                                            ],
+                                            onChanged: _listening
+                                                ? null
+                                                : (value) {
+                                                    if (value != null) {
+                                                      settings.setSpeechLocale(
+                                                          value);
+                                                    }
+                                                  })),
+                                    _SettingSlider(
+                                        title: 'Пауза перед завершенням',
+                                        value: settings.pauseSeconds.toDouble(),
+                                        min: 2,
+                                        max: 5,
+                                        divisions: 3,
+                                        display: '${settings.pauseSeconds} с',
+                                        onChanged: (v) =>
+                                            settings.setPauseSeconds(v.round()),
+                                        start: 'Коротка',
+                                        end: 'Довга'),
+                                    Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16),
+                                        child: Text(
+                                            'Фактична пауза залежить від служби розпізнавання на пристрої.',
+                                            style: theme.textTheme.bodySmall)),
+                                    SwitchListTile(
+                                        title: const Text(
+                                            'Надсилати голос автоматично'),
+                                        subtitle: const Text(
+                                            'Вимкни, щоб спочатку переглянути й відредагувати текст.'),
+                                        value: settings.autoSend,
+                                        onChanged: settings.setAutoSend),
+                                    Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: Container(
+                                            padding: const EdgeInsets.all(16),
+                                            decoration: BoxDecoration(
+                                                color: theme.colorScheme
+                                                    .surfaceContainerHighest,
+                                                borderRadius:
+                                                    BorderRadius.circular(18)),
+                                            child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.stretch,
+                                                children: [
+                                                  Text(_micStatus,
+                                                      style: theme.textTheme
+                                                          .bodyMedium),
+                                                  if (_transcript
+                                                      .isNotEmpty) ...[
+                                                    const SizedBox(height: 10),
+                                                    Text(_transcript,
+                                                        style: theme.textTheme
+                                                            .bodyLarge)
+                                                  ],
+                                                  const SizedBox(height: 14),
+                                                  FilledButton.tonalIcon(
+                                                      onPressed: _micBusy
+                                                          ? null
+                                                          : _testMic,
+                                                      icon: Icon(_listening
+                                                          ? Icons.stop_rounded
+                                                          : Icons
+                                                              .mic_none_rounded),
+                                                      label: Text(_micBusy
+                                                          ? 'Підключення…'
+                                                          : _listening
+                                                              ? 'Зупинити запис'
+                                                              : 'Перевірити мікрофон')),
+                                                ]))),
+                                  ]),
+                              const SizedBox(height: 20),
+                              Text(
+                                  'Налаштування зберігаються автоматично на цьому пристрої.',
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodySmall),
+                            ])))));
+      });
+}
+
+class _Section extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final List<Widget> children;
+  const _Section(
+      {required this.icon, required this.title, required this.children});
+  @override
+  Widget build(BuildContext context) => Material(
+        color: Theme.of(context).colorScheme.surface,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+                width: 1.5)),
+        clipBehavior: Clip.antiAlias,
+        child: ExpansionTile(
+          key: PageStorageKey(title),
+          initiallyExpanded: title == 'Вигляд',
+          shape: const Border(),
+          collapsedShape: const Border(),
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          leading: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(10)),
+              child: Icon(icon, color: Theme.of(context).colorScheme.primary)),
+          title: Text(title,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w800)),
+          children: children,
         ),
-      ),
-    );
-  }
+      );
 }
 
-class _SettingsToggleRow extends StatelessWidget {
-  final IconData iconPath;
-  final Color iconBg;
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _SettingsToggleRow({
-    required this.iconPath,
-    required this.iconBg,
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-
+class _SettingSlider extends StatelessWidget {
+  final String title, display, start, end;
+  final double value, min, max;
+  final int divisions;
+  final ValueChanged<double> onChanged;
+  const _SettingSlider(
+      {super.key,
+      required this.title,
+      required this.display,
+      required this.start,
+      required this.end,
+      required this.value,
+      required this.min,
+      required this.max,
+      required this.divisions,
+      required this.onChanged});
   @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
-            child: Icon(iconPath, color: Colors.white, size: 16),
-          ),
-          const SizedBox(width: 16),
-          Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-          const Spacer(),
-          CupertinoSwitch(
-            value: value,
-            activeColor: AppColors.primary,
-            onChanged: onChanged,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SettingsTextRow extends StatelessWidget {
-  final IconData iconPath;
-  final String label;
-  final String value;
-  const _SettingsTextRow({required this.iconPath, required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Row(
-        children: [
-          Icon(iconPath, color: AppColors.textSecondary, size: 20),
-          const SizedBox(width: 14),
-          Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
-          const Spacer(),
-          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
+  Widget build(BuildContext context) => Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+      child: Column(children: [
+        Row(children: [
+          Expanded(
+              child:
+                  Text(title, style: Theme.of(context).textTheme.titleMedium)),
           const SizedBox(width: 8),
-          const Icon(Icons.arrow_forward_ios_rounded, color: AppColors.textHint, size: 12),
-        ],
-      ),
-    );
+          Text(display,
+              style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w800))
+        ]),
+        Slider(
+            value: value.clamp(min, max),
+            min: min,
+            max: max,
+            divisions: divisions,
+            label: display,
+            onChanged: onChanged),
+        Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text(start, style: Theme.of(context).textTheme.labelSmall),
+          Text(end, style: Theme.of(context).textTheme.labelSmall)
+        ]),
+      ]));
+}
+
+class _ThemeChoice extends StatelessWidget {
+  final bool dark, selected;
+  final VoidCallback onTap;
+  const _ThemeChoice(
+      {required this.dark, required this.selected, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    // Each swatch previews the actual theme even when the other theme is active.
+    final preview = dark ? buildDarkTheme() : buildAppTheme();
+    final c = preview.colorScheme;
+    return Semantics(
+        button: true,
+        selected: selected,
+        child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(12),
+            child: AnimatedContainer(
+                duration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 180),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                    color: preview.scaffoldBackgroundColor,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: selected ? c.primary : c.outline,
+                        width: selected ? 2 : 1)),
+                child: Column(children: [
+                  Icon(dark ? Icons.dark_mode_rounded : Icons.wb_sunny_rounded,
+                      color: c.primary, size: 26),
+                  const SizedBox(height: 12),
+                  Text(dark ? 'Темна' : 'Світла',
+                      style: TextStyle(
+                          color: c.onSurface, fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 8),
+                  Icon(
+                      selected
+                          ? Icons.check_circle_rounded
+                          : Icons.circle_outlined,
+                      size: 18,
+                      color: c.primary),
+                ]))));
   }
 }

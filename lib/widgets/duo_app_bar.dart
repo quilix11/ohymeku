@@ -22,7 +22,8 @@ class DuoAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final bgColor = isDark ? const Color(0xFF111827) : AppColors.background;
-    final borderColor = isDark ? const Color(0xFF374151) : AppColors.borderDefault;
+    final borderColor =
+        isDark ? const Color(0xFF374151) : AppColors.borderDefault;
 
     return Container(
       decoration: BoxDecoration(
@@ -45,7 +46,7 @@ class DuoAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 child: const Text('🇺🇸', style: TextStyle(fontSize: 18)),
               ),
-              
+
               // Stats
               Row(
                 children: [

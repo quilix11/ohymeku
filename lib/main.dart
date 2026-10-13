@@ -1,3 +1,4 @@
+import 'dart:async';
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -5,7 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'services/settings_service.dart';
 import 'services/progress_service.dart';
 import 'theme/app_theme.dart';
-import 'screens/splash_screen.dart';
+import 'screens/main_screen.dart';
+import 'screens/placement_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,9 +16,8 @@ Future<void> main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   // Load .env
-  await dotenv.load(fileName: '.env');
+  await dotenv.load(fileName: '.env', isOptional: true);
 
-  // Load settings
   // Load settings
   final settings = SettingsService();
   await settings.load();
@@ -31,23 +32,60 @@ Future<void> main() async {
 class DialectDuelApp extends StatefulWidget {
   final SettingsService settings;
   final ProgressService progress;
-  const DialectDuelApp({super.key, required this.settings, required this.progress});
+  const DialectDuelApp(
+      {super.key, required this.settings, required this.progress});
 
   @override
   State<DialectDuelApp> createState() => _DialectDuelAppState();
 }
 
-class _DialectDuelAppState extends State<DialectDuelApp> {
+class _DialectDuelAppState extends State<DialectDuelApp>
+    with WidgetsBindingObserver {
+  late bool _dark;
+  late bool _animations;
+  late double _textScale;
+  late bool _hasTakenPlacement;
+  final _lightTheme = buildAppTheme();
+  final _darkTheme = buildDarkTheme();
   @override
   void initState() {
     super.initState();
+    // Capture the initial values before the first settings notification.
+    // Lazy initializers would read the already changed value and skip it.
+    _dark = widget.settings.isDark;
+    _animations = widget.settings.animationsEnabled;
+    _textScale = widget.settings.textScale;
+    _hasTakenPlacement = widget.settings.hasTakenPlacement;
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(widget.settings.restoreReminder());
     widget.settings.addListener(_onSettingsChanged);
   }
 
-  void _onSettingsChanged() => setState(() {});
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(widget.settings.restoreReminder());
+    }
+  }
+
+  void _onSettingsChanged() {
+    if (_dark == widget.settings.isDark &&
+        _animations == widget.settings.animationsEnabled &&
+        _textScale == widget.settings.textScale &&
+        _hasTakenPlacement == widget.settings.hasTakenPlacement) {
+      return;
+    }
+    setState(() {
+      _dark = widget.settings.isDark;
+      _animations = widget.settings.animationsEnabled;
+      _textScale = widget.settings.textScale;
+      _hasTakenPlacement = widget.settings.hasTakenPlacement;
+    });
+  }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.settings.removeListener(_onSettingsChanged);
     super.dispose();
   }
@@ -60,18 +98,32 @@ class _DialectDuelAppState extends State<DialectDuelApp> {
       statusBarColor: Colors.transparent,
       statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
       systemNavigationBarColor:
-          isDark ? const Color(0xFF111827) : AppColors.background,
+          isDark ? AppColors.backgroundDark : AppColors.background,
       systemNavigationBarIconBrightness:
           isDark ? Brightness.light : Brightness.dark,
     ));
 
     return MaterialApp(
-      title: 'DialectDuel',
+      title: 'Ohymeku',
       debugShowCheckedModeBanner: false,
-      theme: buildAppTheme(),
-      darkTheme: buildDarkTheme(),
+      theme: _lightTheme,
+      darkTheme: _darkTheme,
       themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
-      home: SplashScreen(settings: widget.settings, progress: widget.progress),
+      themeAnimationDuration: widget.settings.animationsEnabled
+          ? const Duration(milliseconds: 220)
+          : Duration.zero,
+      themeAnimationCurve: Curves.easeInOutCubic,
+      builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+              textScaler: TextScaler.linear(
+                  MediaQuery.textScalerOf(context).scale(1) * _textScale),
+              disableAnimations: MediaQuery.disableAnimationsOf(context) ||
+                  !widget.settings.animationsEnabled),
+          child: child!),
+      home: widget.settings.hasTakenPlacement
+          ? MainScreen(settings: widget.settings, progress: widget.progress)
+          : PlacementScreen(
+              settings: widget.settings, progress: widget.progress),
     );
   }
 }

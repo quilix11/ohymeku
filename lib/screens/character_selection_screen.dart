@@ -1,377 +1,368 @@
-// lib/screens/character_selection_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../models/game_state.dart';
-import '../services/settings_service.dart';
+import '../models/scenario.dart';
 import '../services/progress_service.dart';
-import '../theme/app_theme.dart';
+import '../services/settings_service.dart';
 import 'game_screen.dart';
+import 'settings_screen.dart';
+import 'generation_screen.dart';
+import 'practice_screen.dart';
+import '../widgets/ohymeku_design.dart';
 
 class CharacterSelectionScreen extends StatefulWidget {
   final SettingsService settings;
   final ProgressService progress;
-
-  const CharacterSelectionScreen({
-    super.key,
-    required this.settings,
-    required this.progress,
-  });
-
+  final VoidCallback? onWords;
+  final VoidCallback? onReading;
+  const CharacterSelectionScreen(
+      {super.key,
+      required this.settings,
+      required this.progress,
+      this.onWords,
+      this.onReading});
   @override
-  State<CharacterSelectionScreen> createState() => _CharacterSelectionScreenState();
+  State<CharacterSelectionScreen> createState() =>
+      _CharacterSelectionScreenState();
 }
 
 class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
-  GameCharacter _selectedBoss = GameCharacter.officer;
-  bool _fightPressed = false;
-
-  void _startGame() {
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
-        pageBuilder: (_, anim, __) => GameScreen(
-          settings: widget.settings,
-          progress: widget.progress,
-          character: _selectedBoss,
-        ),
-        transitionsBuilder: (_, anim, __, child) =>
-            FadeTransition(opacity: anim, child: child),
-        transitionDuration: const Duration(milliseconds: 500),
-      ),
-    );
+  late int _index;
+  bool _opening = false;
+  List<Scenario> get _scenarios =>
+      [...Scenario.all, ...widget.settings.customScenarios];
+  Future<void> _create() async {
+    if (widget.settings.offlineMode) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Створення персонажа потребує інтернету. Вимкни офлайн-режим у налаштуваннях.')));
+      return;
+    }
+    final previousCount = _scenarios.length;
+    await Navigator.push(
+        context,
+        MaterialPageRoute<bool>(
+            builder: (_) => GenerationScreen(
+                boss: true,
+                level: widget.settings.effectiveLevel,
+                interests: widget.settings.interests,
+                onSave: (result, topic, level, warm) async {
+                  await widget.settings.addScenario(Scenario(
+                      customId:
+                          DateTime.now().microsecondsSinceEpoch.toString(),
+                      character:
+                          warm ? GameCharacter.hr : GameCharacter.officer,
+                      name: result['name'],
+                      role: result['role'],
+                      title: topic,
+                      goal: result['goal'],
+                      opening: result['opening'],
+                      personality: result['description'],
+                      level: level,
+                      winTitle: 'Вдало поговорили!',
+                      color: const Color(0xFF8F4856),
+                      backdrop: const Color(0xFFECD6D9)));
+                })));
+    if (mounted) {
+      setState(() {
+        if (_scenarios.length > previousCount) _index = _scenarios.length - 1;
+      });
+      widget.settings.setLastCharacter(_index);
+    }
   }
 
   @override
-  Widget build(BuildContext context) {
-    final profile = widget.progress.profile;
-    
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // TOP BAR (Matches "ВИБІР БОСА")
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-              child: Row(
-                children: [
-                  Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textSecondary, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'ВИБІР БОСА', // "CHOOSE BOSS" in UA
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w800,
-                      fontSize: 14,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const Spacer(),
-                  // Hearts
-                  Row(
-                    children: [
-                      Icon(Icons.favorite_rounded, color: AppColors.heartActive, size: 16),
-                      const SizedBox(width: 4),
-                      Text('${profile.hearts}', style: AppTextStyles.labelMedium.copyWith(color: AppColors.heartActive)),
-                    ],
-                  ),
-                  const SizedBox(width: 16),
-                  // Diamonds / XP
-                  Row(
-                    children: [
-                      const Icon(Icons.diamond_rounded, color: AppColors.secondary, size: 16),
-                      const SizedBox(width: 4),
-                      Text('${profile.xp}', style: AppTextStyles.labelMedium.copyWith(color: AppColors.secondary)),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                children: [
-                  // MAIN ACTIVE BOSS CARD (Red Card)
-                  _MainBossCard(
-                    character: _selectedBoss,
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // BOSS LIST
-                  _BossListItem(
-                    title: 'Венс', // Vance
-                    subtitle: 'Рівень 12',
-                    iconEmoji: '👮',
-                    iconColor: AppColors.bossRed,
-                    isSelected: _selectedBoss == GameCharacter.officer,
-                    onTap: () => setState(() => _selectedBoss = GameCharacter.officer),
-                  ),
-                  const SizedBox(height: 12),
-                  _BossListItem(
-                    title: 'Ханна', // Hannah HR
-                    subtitle: 'Рівень 18',
-                    iconEmoji: '👩‍💼',
-                    iconColor: AppColors.bossPurple,
-                    isSelected: _selectedBoss == GameCharacter.hr,
-                    onTap: () => setState(() => _selectedBoss = GameCharacter.hr),
-                  ),
-                ],
-              ),
-            ),
-            
-            // BOTTOM FIGHT BUTTON
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-              child: GestureDetector(
-                onTapDown: (_) => setState(() => _fightPressed = true),
-                onTapUp: (_) {
-                  setState(() => _fightPressed = false);
-                  _startGame();
-                },
-                onTapCancel: () => setState(() => _fightPressed = false),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 80),
-                  margin: EdgeInsets.only(top: _fightPressed ? 6 : 0),
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: AppColors.primaryDark, width: 2),
-                    boxShadow: _fightPressed
-                        ? []
-                        : [
-                            BoxShadow(
-                              color: AppColors.primaryDark,
-                              offset: const Offset(0, 6),
-                              blurRadius: 0,
-                            ),
-                          ],
-                  ),
-                  child: Center(
-                    child: Text(
-                      'БИТИСЯ', // "FIGHT"
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  void initState() {
+    super.initState();
+    widget.settings.addListener(_settingsChanged);
+    widget.settings.vocabulary.addListener(_settingsChanged);
+    widget.settings.learner.addListener(_settingsChanged);
+    _index = widget.settings.lastCharacter;
   }
-}
 
-class _MainBossCard extends StatelessWidget {
-  final GameCharacter character;
-  const _MainBossCard({required this.character});
+  void _settingsChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    widget.settings.removeListener(_settingsChanged);
+    widget.settings.vocabulary.removeListener(_settingsChanged);
+    widget.settings.learner.removeListener(_settingsChanged);
+    super.dispose();
+  }
+
+  Future<void> _start() async {
+    if (_opening) return;
+    if (widget.settings.offlineMode) {
+      await Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+              builder: (_) => PracticeScreen(
+                  settings: widget.settings, progress: widget.progress)));
+      return;
+    }
+    setState(() => _opening = true);
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => GameScreen(
+            settings: widget.settings,
+            progress: widget.progress,
+            character: _scenarios[_index].character,
+            scenario: _scenarios[_index])));
+    if (mounted) setState(() => _opening = false);
+  }
+
+  void _practice() => Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+          builder: (_) => PracticeScreen(
+              settings: widget.settings, progress: widget.progress)));
 
   @override
   Widget build(BuildContext context) {
-    final title = character == GameCharacter.officer ? 'Венс' : 'Ханна';
-    final subtitle = character == GameCharacter.officer ? 'Офіцер Кордону' : 'Директорка HR';
-    final emoji = character == GameCharacter.officer ? '👮' : '👩‍💼';
-    final mainColor = character == GameCharacter.officer ? AppColors.bossRed : AppColors.bossPurple;
-    final shadowColor = character == GameCharacter.officer ? AppColors.bossRedDark : Color(0xFF863DBE);
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: mainColor,
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: shadowColor, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor,
-            offset: const Offset(0, 8),
-            blurRadius: 0,
-          )
-        ],
-      ),
-      child: Column(
+    final theme = Theme.of(context), c = theme.colorScheme;
+    final scenarios = _scenarios;
+    _index = _index.clamp(0, scenarios.length - 1);
+    final s = scenarios[_index];
+    final large = MediaQuery.textScalerOf(context).scale(16) > 21;
+    final dueWords = widget.settings.vocabulary.cards
+        .where((card) => widget.settings.vocabulary.isDue(card.id))
+        .length;
+    return ListView(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 40)),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Stars
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.star_rounded, color: AppColors.winGold, size: 24),
-              Icon(Icons.star_rounded, color: AppColors.winGold, size: 24),
-              Icon(Icons.star_rounded, color: AppColors.winGold, size: 24),
-              Icon(Icons.star_rounded, color: Colors.white30, size: 24),
-              Icon(Icons.star_rounded, color: Colors.white30, size: 24),
-            ],
-          ),
-          const SizedBox(height: 24),
-          // Health bar
-          Row(
-            children: [
-              const Text(
-                'ЗДОРОВ\'Я БОСА',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1,
-                ),
-              ),
-              const Spacer(),
-              const Text(
-                '100%',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            height: 16,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(100),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                  ),
-                ),
-                // 100% means full white, but let's give a little empty space visually for effect if we wanted
-              ],
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1);
+          Row(children: [
+            Expanded(
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                  Text(
+                      widget.progress.editableName.isEmpty
+                          ? 'Твій навчальний день'
+                          : 'Привіт, ${widget.progress.editableName}',
+                      style: theme.textTheme.titleLarge),
+                  const SizedBox(height: 4),
+                  Text('Обери, що практикуватимемо.',
+                      style: theme.textTheme.bodyMedium),
+                ])),
+            IconButton(
+                tooltip: 'Налаштування',
+                onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                        builder: (_) =>
+                            SettingsScreen(settings: widget.settings))),
+                icon: const Icon(Icons.tune_rounded)),
+          ]),
+          const SizedBox(height: 16),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            _DayStat(
+                icon: Icons.school_outlined,
+                value: widget.settings.effectiveLevel,
+                label: 'Рівень'),
+            _DayStat(
+                icon: Icons.local_fire_department_outlined,
+                value: '${widget.progress.profile.streakDays}',
+                label: 'Серія днів'),
+            _DayStat(
+                icon: Icons.bolt_outlined,
+                value: '${widget.progress.profile.xp}',
+                label: 'XP'),
+          ]),
+          SectionTitle('Обери ситуацію',
+              trailing: IconButton(
+                  tooltip: 'Створити співрозмовника',
+                  onPressed: _create,
+                  icon: const Icon(Icons.add_rounded))),
+          if (large)
+            Column(key: const Key('character_carousel'), children: [
+              for (var i = 0; i < scenarios.length; i++)
+                Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: _SceneChoice(
+                        scenario: scenarios[i],
+                        selected: _index == i,
+                        onTap: () {
+                          setState(() => _index = i);
+                          widget.settings.setLastCharacter(i);
+                        })),
+            ])
+          else
+            SizedBox(
+                height: 88,
+                child: ListView.separated(
+                  key: const Key('character_carousel'),
+                  scrollDirection: Axis.horizontal,
+                  itemCount: scenarios.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (_, i) => SizedBox(
+                      width: 180,
+                      child: _SceneChoice(
+                          scenario: scenarios[i],
+                          selected: _index == i,
+                          onTap: () {
+                            setState(() => _index = i);
+                            widget.settings.setLastCharacter(i);
+                          })),
+                )),
+          const SizedBox(height: 16),
+          SilkPanel(
+              rose: s.character == GameCharacter.hr,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(children: [
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text(
+                                widget.settings.offlineMode
+                                    ? 'ОФЛАЙН-ПРАКТИКА'
+                                    : 'РОЗМОВНИЙ ТРЕНАЖЕР',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                    letterSpacing: 1,
+                                    color: c.onSurfaceVariant)),
+                            const SizedBox(height: 8),
+                            Text(
+                                s.customId != null
+                                    ? s.role
+                                    : s.character == GameCharacter.officer
+                                        ? 'Паспортний контроль'
+                                        : 'Твоя співбесіда',
+                                style: theme.textTheme.headlineMedium),
+                            const SizedBox(height: 6),
+                            Text(s.level, style: theme.textTheme.labelLarge),
+                          ])),
+                      const SizedBox(width: 12),
+                      ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.asset(s.image(NpcEmotion.neutral),
+                              width: 80,
+                              height: 96,
+                              fit: BoxFit.contain,
+                              cacheWidth: 240,
+                              semanticLabel: s.name)),
+                    ]),
+                    const SizedBox(height: 16),
+                    Text(
+                        s.customId != null
+                            ? s.goal
+                            : s.character == GameCharacter.officer
+                                ? 'Поясни мету подорожі та переконай офіцера пропустити тебе.'
+                                : 'Розкажи про свій досвід і покажи сильні сторони.',
+                        style: theme.textTheme.bodyMedium),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                        key: Key('start_${s.character.name}'),
+                        onPressed: _opening ? null : _start,
+                        icon: const Icon(Icons.play_arrow_rounded, size: 28),
+                        label: Text(widget.settings.offlineMode
+                            ? 'Практикувати офлайн'
+                            : 'Поговорити з ${s.name}')),
+                    const SizedBox(height: 10),
+                    Text(
+                        '${widget.progress.winsFor(s.character, scenarioId: s.customId)} успішних розмов',
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodySmall),
+                  ])),
+          const SectionTitle('Практика без інтернету'),
+          if (widget.onReading != null) ...[
+            LearningTile(
+                title: 'Читати тексти',
+                subtitle: 'Статті, переклад слів і запитання',
+                icon: Icons.menu_book_outlined,
+                onTap: widget.onReading!),
+            const SizedBox(height: 10),
+          ],
+          LearningTile(
+              title: 'Повторити слова',
+              subtitle: '$dueWords до повторення',
+              icon: Icons.style_outlined,
+              onTap: widget.onWords ?? _practice),
+          const SizedBox(height: 10),
+          LearningTile(
+              title: 'Потренувати граматику',
+              subtitle: 'Завдання твого рівня',
+              icon: Icons.edit_note_rounded,
+              onTap: _practice,
+              rose: true),
+        ]);
   }
 }
 
-class _BossListItem extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String iconEmoji;
-  final Color iconColor;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _BossListItem({
-    required this.title,
-    required this.subtitle,
-    required this.iconEmoji,
-    required this.iconColor,
-    required this.isSelected,
-    required this.onTap,
-  });
-
+class _DayStat extends StatelessWidget {
+  final IconData icon;
+  final String value, label;
+  const _DayStat(
+      {required this.icon, required this.value, required this.label});
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    final c = Theme.of(context).colorScheme;
+    return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.borderDefault,
-            width: 3,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(iconEmoji, style: const TextStyle(fontSize: 24)),
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
+            color: c.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: c.outlineVariant, width: 1.5)),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 20, color: c.primary),
+          const SizedBox(width: 8),
+          Flexible(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Stars indicator
-            Row(
-              children: const [
-                Icon(Icons.star_rounded, color: AppColors.winGold, size: 16),
-                Icon(Icons.star_rounded, color: AppColors.winGold, size: 16),
-                Icon(Icons.star_rounded, color: AppColors.winGold, size: 16),
-                Icon(Icons.star_rounded, color: AppColors.borderDefault, size: 16),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Text(value, style: Theme.of(context).textTheme.titleMedium),
+                Text(label, style: Theme.of(context).textTheme.labelSmall),
+              ])),
+        ]));
+  }
+}
+
+class _SceneChoice extends StatelessWidget {
+  final Scenario scenario;
+  final bool selected;
+  final VoidCallback onTap;
+  const _SceneChoice(
+      {required this.scenario, required this.selected, required this.onTap});
+  @override
+  Widget build(BuildContext context) {
+    final c = Theme.of(context).colorScheme;
+    return Semantics(
+        button: true,
+        selected: selected,
+        child: Material(
+            color: selected ? c.primary : c.surface,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                    color: selected ? c.primary : c.outlineVariant, width: 2)),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onTap,
+              child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(children: [
+                    ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(scenario.image(NpcEmotion.neutral),
+                            width: 40,
+                            height: 48,
+                            fit: BoxFit.contain,
+                            cacheWidth: 120,
+                            excludeFromSemantics: true)),
+                    const SizedBox(width: 10),
+                    Expanded(
+                        child: Text(scenario.name,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall
+                                ?.copyWith(
+                                    color: selected ? c.onPrimary : c.onSurface,
+                                    fontWeight: FontWeight.w800))),
+                  ])),
+            )));
   }
 }

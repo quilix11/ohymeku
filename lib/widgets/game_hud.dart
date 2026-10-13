@@ -12,9 +12,11 @@ class GameHud extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = isDark ? const Color(0xFF111827) : AppColors.background;
-    final borderColor = isDark ? const Color(0xFF374151) : AppColors.borderDefault;
+    final borderColor =
+        isDark ? const Color(0xFF374151) : AppColors.borderDefault;
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 60, 12), // right 60 for settings btn
+      padding:
+          const EdgeInsets.fromLTRB(16, 8, 60, 12), // right 60 for settings btn
       decoration: BoxDecoration(
         color: bg,
         border: Border(

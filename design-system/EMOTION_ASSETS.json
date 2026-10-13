@@ -1,0 +1,150 @@
+[
+  {
+    "name": "meku_excited",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-4a730126-cc86-4127-8872-234943a4d7ad.png",
+    "prompt": "Use case: precise-object-edit. Asset type: mobile app mascot emotion PNG. Edit target: attached eight-pose Meku fox sprite sheet. Extract ONLY the top row, second column: delighted fox with both paws at her cheeks and colorful little sparkles. Preserve this exact drawing, colors, facial expression, pose, tiny emotion ornaments, fur and eye whites, original flat soft illustration style. Remove all other seven foxes, the white background and the gray horizontal floor shadow. True transparent alpha background, never a checkerboard painting. One single full fox with all relevant ornaments, centered in a square canvas with 6% clear padding; never crop ears, paws, tail or decorations. No redesign, recoloring, added text, outline or extra objects.",
+    "destination": "assets/images/meku/meku_excited.png",
+    "originalPath": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-5605ec58-560e-4bae-bf03-a2bca76eac98.png",
+    "finalPrompt": "Use case: precise-object-edit. Edit target: this single transparent meku_excited character cutout. Polish ONLY the outer silhouette and alpha edge. The current image has stray white scraps, colored speckles and jagged bits outside the subject: erase those remnants, smooth the contour and remove all white halos. Preserve the exact character, expression, pose, proportions, clothing or fur colors, full ears, paws, cap or tail, and intentional emotion symbols. Clean anti-aliased sticker-quality edges with continuous flat contours. Opaque subject interior including pale/white regions; all empty areas fully transparent alpha. No fringe, detached crumbs, dithering, added outline, shadow, border, background or new decoration. Maintain current framing."
+  },
+  {
+    "name": "meku_smug",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-47d1f245-3ae3-4cba-a58b-c43a9fa2d6c4.png",
+    "prompt": "Use case: precise-object-edit. Asset type: mobile app mascot emotion PNG. Edit target: attached eight-pose Meku fox sprite sheet. Extract ONLY the top row, third column: standing unimpressed fox with half-lidded eyes, tail to her right. Preserve this exact drawing, colors, facial expression, pose, tiny emotion ornaments, fur and eye whites, original flat soft illustration style. Remove all other seven foxes, the white background and the gray horizontal floor shadow. True transparent alpha background, never a checkerboard painting. One single full fox with all relevant ornaments, centered in a square canvas with 6% clear padding; never crop ears, paws, tail or decorations. No redesign, recoloring, added text, outline or extra objects.",
+    "destination": "assets/images/meku/meku_smug.png"
+  },
+  {
+    "name": "meku_shy",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-0b4e118d-4a91-4233-9c70-5322fd3fd236.png",
+    "prompt": "Use case: precise-object-edit. Asset type: mobile app mascot emotion PNG. Edit target: attached eight-pose Meku fox sprite sheet. Extract ONLY the top row, fourth column: awkward shy fox with paw near mouth, pink tongue and blue sweat droplets. Preserve this exact drawing, colors, facial expression, pose, tiny emotion ornaments, fur and eye whites, original flat soft illustration style. Remove all other seven foxes, the white background and the gray horizontal floor shadow. True transparent alpha background, never a checkerboard painting. One single full fox with all relevant ornaments, centered in a square canvas with 6% clear padding; never crop ears, paws, tail or decorations. No redesign, recoloring, added text, outline or extra objects.",
+    "destination": "assets/images/meku/meku_shy.png"
+  },
+  {
+    "name": "meku_affectionate",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-ce7b84dc-75a5-445e-9839-a89509c3ae92.png",
+    "prompt": "Use case: precise-object-edit. Asset type: mobile app mascot emotion PNG. Edit target: attached eight-pose Meku fox sprite sheet. Extract ONLY the bottom row, first column: affectionate grinning fox with paws together and floating hearts. Preserve this exact drawing, colors, facial expression, pose, tiny emotion ornaments, fur and eye whites, original flat soft illustration style. Remove all other seven foxes, the white background and the gray horizontal floor shadow. True transparent alpha background, never a checkerboard painting. One single full fox with all relevant ornaments, centered in a square canvas with 6% clear padding; never crop ears, paws, tail or decorations. No redesign, recoloring, added text, outline or extra objects.",
+    "destination": "assets/images/meku/meku_affectionate.png"
+  },
+  {
+    "name": "meku_playful",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-6a11c326-97b1-4457-a374-2c5724044b4b.png",
+    "prompt": "Use case: precise-object-edit. Asset type: mobile app mascot emotion PNG. Edit target: attached eight-pose Meku fox sprite sheet. Extract ONLY the bottom row, second column: dancing playful fox with blue musical notes. Preserve this exact drawing, colors, facial expression, pose, tiny emotion ornaments, fur and eye whites, original flat soft illustration style. Remove all other seven foxes, the white background and the gray horizontal floor shadow. True transparent alpha background, never a checkerboard painting. One single full fox with all relevant ornaments, centered in a square canvas with 6% clear padding; never crop ears, paws, tail or decorations. No redesign, recoloring, added text, outline or extra objects.",
+    "destination": "assets/images/meku/meku_playful.png",
+    "originalPath": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-c6eca559-7689-4b73-841a-aed67c05777f.png",
+    "finalPrompt": "Use case: precise-object-edit. Edit target: this single transparent meku_playful character cutout. Polish ONLY the outer silhouette and alpha edge. The current image has stray white scraps, colored speckles and jagged bits outside the subject: erase those remnants, smooth the contour and remove all white halos. Preserve the exact character, expression, pose, proportions, clothing or fur colors, full ears, paws, cap or tail, and intentional emotion symbols. Clean anti-aliased sticker-quality edges with continuous flat contours. Opaque subject interior including pale/white regions; all empty areas fully transparent alpha. No fringe, detached crumbs, dithering, added outline, shadow, border, background or new decoration. Maintain current framing."
+  },
+  {
+    "name": "meku_annoyed",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-4b10e593-3560-4130-822a-7fa5abb38e04.png",
+    "prompt": "Use case: precise-object-edit. Asset type: mobile app mascot emotion PNG. Edit target: attached eight-pose Meku fox sprite sheet. Extract ONLY the bottom row, third column: angry offended fox with narrowed eyes, crossed posture and gray steam above head. Preserve this exact drawing, colors, facial expression, pose, tiny emotion ornaments, fur and eye whites, original flat soft illustration style. Remove all other seven foxes, the white background and the gray horizontal floor shadow. True transparent alpha background, never a checkerboard painting. One single full fox with all relevant ornaments, centered in a square canvas with 6% clear padding; never crop ears, paws, tail or decorations. No redesign, recoloring, added text, outline or extra objects.",
+    "destination": "assets/images/meku/meku_annoyed.png"
+  },
+  {
+    "name": "meku_sad",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-699461ac-2895-44d8-8b84-f36fb9a972ad.png",
+    "prompt": "Use case: precise-object-edit. Asset type: mobile app mascot emotion PNG. Edit target: attached eight-pose Meku fox sprite sheet. Extract ONLY the bottom row, fourth column: sitting sad fox with large blue tears. Preserve this exact drawing, colors, facial expression, pose, tiny emotion ornaments, fur and eye whites, original flat soft illustration style. Remove all other seven foxes, the white background and the gray horizontal floor shadow. True transparent alpha background, never a checkerboard painting. One single full fox with all relevant ornaments, centered in a square canvas with 6% clear padding; never crop ears, paws, tail or decorations. No redesign, recoloring, added text, outline or extra objects.",
+    "destination": "assets/images/meku/meku_sad.png"
+  },
+  {
+    "name": "officer_neutral",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-b257a67a-da2f-4ee1-979d-c3138a26c8e7.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied officer_neutral portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/officer_cutout/officer_neutral.png"
+  },
+  {
+    "name": "officer_happy",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-ab183bcb-4a1b-4399-92dd-5ed9bc3e324d.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied officer_happy portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/officer_cutout/officer_happy.png"
+  },
+  {
+    "name": "officer_laughing",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-9dffc711-3b1d-4567-b437-90747b5e3a28.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied officer_laughing portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/officer_cutout/officer_laughing.png"
+  },
+  {
+    "name": "officer_proud",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-3f10988f-5fd1-4ac0-b934-74e6c97e5bb8.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied officer_proud portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/officer_cutout/officer_proud.png"
+  },
+  {
+    "name": "officer_sad",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-54873149-e501-4446-b817-b4598835b2e4.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied officer_sad portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/officer_cutout/officer_sad.png"
+  },
+  {
+    "name": "officer_shocked",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-c3612291-9053-415d-8bc3-5cf8360729b3.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied officer_shocked portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/officer_cutout/officer_shocked.png"
+  },
+  {
+    "name": "officer_surprised",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-ba59ffd2-e9cb-49b4-b180-421b707f5dcc.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied officer_surprised portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/officer_cutout/officer_surprised.png"
+  },
+  {
+    "name": "officer_worried",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-f7038bb6-26be-4a69-90a5-f8ed31404dc8.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied officer_worried portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/officer_cutout/officer_worried.png"
+  },
+  {
+    "name": "hr_neutral",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-a9bb086b-f638-483e-a5fc-a0238b2ae5a3.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied hr_neutral portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/hr_cutout/hr_neutral.png"
+  },
+  {
+    "name": "hr_happy",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-fac3f4ef-50c4-4001-90c4-f3b5e6472398.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied hr_happy portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/hr_cutout/hr_happy.png"
+  },
+  {
+    "name": "hr_laughing",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-5a4379a9-d720-4ec1-b383-18d8e3d4b16f.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied hr_laughing portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/hr_cutout/hr_laughing.png"
+  },
+  {
+    "name": "hr_proud",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-02562da3-55ab-4472-b362-f29e9b03371e.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied hr_proud portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/hr_cutout/hr_proud.png"
+  },
+  {
+    "name": "hr_sad",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-a39f5b9f-18d6-482b-9034-0f05201d7ec4.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied hr_sad portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/hr_cutout/hr_sad.png"
+  },
+  {
+    "name": "hr_shocked",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-8fdd00ae-e346-4c03-bf20-a965b4611f0c.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied hr_shocked portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/hr_cutout/hr_shocked.png"
+  },
+  {
+    "name": "hr_surprised",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-121d8cda-0b83-4e1f-b8dc-b5e0ff2e8385.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied hr_surprised portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/hr_cutout/hr_surprised.png"
+  },
+  {
+    "name": "hr_worried",
+    "path": "C:\\Users\\Luchkiv\\.codex\\generated_images\\01a12fcd-26e0-7213-97f9-b3b090e29bd5\\exec-1352f6c4-a074-4735-abfa-dc1a066101e5.png",
+    "prompt": "Use case: precise-object-edit. Asset type: transparent NPC portrait for a mobile conversation app. Edit target: the supplied hr_worried portrait. Remove ONLY the white background and any gray ground shadow. Preserve the exact character silhouette, framing, proportions, facial expression, eye whites, skin, hair, clothing, badge, clipboard if present, and small emotion ornaments if present. Keep the same clay 3D rendering, lighting and original colors. No redesign and no added anatomy. Real transparent alpha around the entire character; never paint a checkerboard. Keep all ears, cap or hair bun, hands and ornaments intact with a narrow clear margin, centered in a portrait canvas. No white halo, floor, new border, new text, recoloring or extra objects.",
+    "destination": "assets/images/hr_cutout/hr_worried.png"
+  },
+  {
+    "name": "meku_happy",
+    "path": "C:/Projects/dialect_duel/assets/images/meku_cutout.png",
+    "destination": "assets/images/meku/meku_happy.png",
+    "prompt": "Reused approved transparent happy Meku cutout; exact original prompt in MEKU_ASSET.md."
+  }
+]

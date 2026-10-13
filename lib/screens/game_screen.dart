@@ -1,572 +1,660 @@
-// lib/screens/game_screen.dart
-import 'package:flutter/material.dart' hide Feedback;
-import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import '../widgets/ohymeku_design.dart';
+import 'dart:async';
+import '../widgets/dictionary_sheet.dart';
+import 'practice_screen.dart';
+import 'package:flutter/material.dart';
 import '../models/game_state.dart';
+import '../models/scenario.dart';
 import '../services/ai_service.dart';
-import '../services/settings_service.dart';
+import '../services/game_session.dart';
 import '../services/progress_service.dart';
+import '../services/settings_service.dart';
 import '../services/speech_service.dart';
 import '../services/tts_service.dart';
-import '../theme/app_theme.dart';
-import '../widgets/game_hud.dart';
 import '../widgets/chat_bubble.dart';
 import '../widgets/coaching_box.dart';
-import '../widgets/input_panel.dart';
-import 'settings_screen.dart';
+import '../widgets/npc_avatar.dart';
+import '../widgets/conversation_meters.dart';
+import '../services/learning_service.dart';
 
 class GameScreen extends StatefulWidget {
   final SettingsService settings;
   final ProgressService progress;
   final GameCharacter character;
-  const GameScreen({
-    super.key,
-    required this.settings,
-    required this.progress,
-    this.character = GameCharacter.officer,
-  });
-
+  final AiService? ai;
+  final LearningService? tutor;
+  final Scenario? scenario;
+  const GameScreen(
+      {super.key,
+      required this.settings,
+      required this.progress,
+      this.character = GameCharacter.officer,
+      this.ai,
+      this.tutor,
+      this.scenario});
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
 
 class _GameScreenState extends State<GameScreen> {
-  final AiService _aiService = AiService();
-  final SpeechService _speechService = SpeechService();
-  final TtsService _ttsService = TtsService();
-  final ScrollController _scrollController = ScrollController();
-
-  late GameState _state;
-  bool _isListening = false;
-  String _liveTranscript = '';
-  bool _speechAvailable = false;
-  String? _errorMessage;
-  int _newMessageIndex = -1;
-
-  SettingsService get _settings => widget.settings;
+  late final GameSession _session;
+  late int _previousWins;
+  final _tts = TtsService();
+  late final _tutor = widget.tutor ?? LearningService();
+  bool _routing = false;
+  String? _approvedDraft;
+  final _speech = SpeechService();
+  final _input = TextEditingController();
+  final _scroll = ScrollController();
+  bool _listening = false,
+      _speaking = false,
+      _micBusy = false,
+      _leaving = false;
+  int _capture = 0, _voiceRequest = 0, _messageCount = 0;
+  String? _audioError;
+  Scenario get _scenario => widget.scenario ?? Scenario.of(widget.character);
 
   @override
   void initState() {
     super.initState();
-    _state = GameState(character: widget.character);
-    _initialize();
+    _previousWins = widget.progress
+        .winsFor(widget.character, scenarioId: _scenario.customId);
+    _session = GameSession(
+        character: widget.character,
+        progress: widget.progress,
+        ai: widget.ai,
+        scenario: _scenario,
+        interests: widget.settings.interests,
+        learner: widget.settings.learner,
+        learningLevel: widget.settings.effectiveLevel);
+    _messageCount = _session.state.messages.length;
+    _session.addListener(_changed);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_speak(_session.state.messages.first.text));
+    });
   }
 
-  Future<void> _initialize() async {
-    await _ttsService.initialize();
-    _speechAvailable = await _speechService.initialize();
-    await _loadOpeningLine();
+  void _changed() {
+    if (!mounted) return;
+    final messages = _session.state.messages;
+    if (messages.length > _messageCount && !messages.last.isPlayer) {
+      unawaited(_speak(messages.last.text));
+    }
+    _messageCount = messages.length;
+    setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _scroll.hasClients) {
+        _scroll.animateTo(_scroll.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+      }
+    });
   }
 
-  Future<void> _loadOpeningLine() async {
-    setState(() => _state = _state.copyWith(isLoading: true));
+  Future<void> _speak(String text, {bool manual = false}) async {
+    if (!mounted || _listening || (!widget.settings.ttsEnabled && !manual)) {
+      return;
+    }
+    final token = ++_voiceRequest;
+    setState(() {
+      _speaking = true;
+      _audioError = null;
+    });
     try {
-      final npcResp = await _aiService.getOpeningLine(_state.character);
-      final npcMsg = ChatMessage(
-        text: npcResp.npcResponse,
-        isPlayer: false,
-        timestamp: DateTime.now(),
-      );
-      setState(() {
-        _state = _state.copyWith(
-          messages: [npcMsg],
-          npcEmotion: npcResp.npcEmotion,
-          isLoading: false,
-        );
-        _newMessageIndex = 0;
-      });
-      await _ttsService.speak(npcResp.npcResponse);
-    } catch (e) {
-      if (mounted) setState(() {
-        _state = _state.copyWith(isLoading: false);
-        _errorMessage = e.toString();
-      });
+      await _tts.speak(text,
+          speed: widget.settings.ttsSpeed,
+          volume: widget.settings.ttsVolume,
+          voiceId: widget.settings.scenarioVoice(_scenario),
+          cloudVoice: widget.settings.cloudVoices
+              ? widget.settings.scenarioCloudVoice(_scenario)
+              : null,
+          offline: widget.settings.offlineMode,
+          style: widget.settings.voiceStyle,
+          pitch: widget.settings.voicePitch,
+          character: widget.character);
+    } catch (_) {
+      if (mounted && token == _voiceRequest) {
+        setState(
+            () => _audioError = 'Голос недоступний. Можна продовжити текстом.');
+      }
+    } finally {
+      if (mounted && token == _voiceRequest) setState(() => _speaking = false);
     }
   }
 
-  Future<void> _handlePlayerMessage(String text) async {
-    if (text.trim().isEmpty || _state.isLoading) return;
-    final playerMsg = ChatMessage(
-      text: text.trim(),
-      isPlayer: true,
-      timestamp: DateTime.now(),
-    );
-    final updatedMessages = [..._state.messages, playerMsg];
+  Future<void> _stopVoice() async {
+    _voiceRequest++;
+    if (mounted) setState(() => _speaking = false);
+    await _tts.stop();
+  }
+
+  Future<void> _send() async {
+    final text = _input.text.trim();
+    if (text.isEmpty ||
+        _session.state.isLoading ||
+        _session.finished ||
+        _micBusy ||
+        _routing) {
+      return;
+    }
+    if (text != _approvedDraft && !await _prepareInput(text)) return;
+    if (!mounted) return;
+    _approvedDraft = null;
+    _capture++;
     setState(() {
-      _state = _state.copyWith(messages: updatedMessages, isLoading: true);
-      _newMessageIndex = updatedMessages.length - 1;
-      _liveTranscript = '';
-      _errorMessage = null;
+      _listening = false;
+      _audioError = null;
     });
-    _scrollToBottom();
+    _input.clear();
+    // Lock the turn synchronously before awaiting platform audio operations.
+    final send = _session.send(text);
+    unawaited(_stopVoice());
     try {
-      final npcResp = await _aiService.sendMessage(
-        character: _state.character,
-        chatHistory: _state.messages,
-        currentTrust: _state.trust,
-        currentPatience: _state.patience,
-        playerMessage: text.trim(),
-      );
-      final npcMsg = ChatMessage(
-        text: npcResp.npcResponse,
-        isPlayer: false,
-        timestamp: DateTime.now(),
-      );
-      final newMessages = [...updatedMessages, npcMsg];
+      await _speech.cancel();
+    } catch (_) {}
+    await send;
+  }
+
+  Future<bool> _prepareInput(String text, {bool help = false}) async {
+    if (widget.settings.offlineMode) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Для живої розмови потрібен інтернет. Офлайн доступні слова та граматичні вправи.')));
+      return false;
+    }
+    help = help ||
+        RegExp(r'[\u0400-\u052f\u0370-\u03ff\u0590-\u08ff\u0900-\u0fff\u3040-\u30ff\u3400-\u9fff\uac00-\ud7af]')
+            .hasMatch(text);
+    if (_routing || _session.state.isLoading || _session.finished) return false;
+    setState(() => _routing = true);
+    _capture++;
+    unawaited(_stopVoice());
+    try {
+      await _speech.cancel();
+      if (!mounted) return false;
+      setState(() => _listening = false);
+      final contextText =
+          _session.state.messages.where((m) => !m.isPlayer).last.text;
+      final result = await _tutor.prepare(text, contextText,
+          help: help, level: widget.settings.effectiveLevel);
+      if (!mounted) return false;
+      if (result.isEnglish && !help) return true;
+      final phrase = await showModalBottomSheet<String>(
+          context: context,
+          isScrollControlled: true,
+          showDragHandle: true,
+          builder: (context) => SafeArea(
+              child: SizedBox(
+                  height: MediaQuery.sizeOf(context).height * .72,
+                  child: ListView(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                      children: [
+                        Text('Як сказати англійською',
+                            style: Theme.of(context).textTheme.headlineMedium),
+                        const SizedBox(height: 12),
+                        const Text(
+                            'Це запит до помічника. Персонаж його не отримав, шкали не змінилися.'),
+                        if (result.explanation.isNotEmpty)
+                          Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              child: Text(result.explanation)),
+                        ...result.suggestions.map((s) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Card(
+                                child: Padding(
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          SelectableText(s.english,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleMedium),
+                                          const SizedBox(height: 8),
+                                          Text(s.translation),
+                                          const SizedBox(height: 8),
+                                          TextButton(
+                                              onPressed: () => Navigator.pop(
+                                                  context, s.english),
+                                              child: const Text(
+                                                  'Вставити у відповідь')),
+                                        ])))))
+                      ]))));
+      if (mounted && phrase != null) {
+        _approvedDraft = phrase;
+        _input.value = TextEditingValue(
+            text: phrase,
+            selection: TextSelection.collapsed(offset: phrase.length));
+      }
+      return false;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e is AiException
+                ? e.message
+                : 'Помічник недоступний. Текст залишився у полі.')));
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => _routing = false);
+    }
+  }
+
+  void _showDictionaryModal(String word) async {
+    await _stopVoice();
+    if (mounted) await showDictionary(context, widget.settings, word: word);
+  }
+
+  Future<void> _toggleMic() async {
+    if (_micBusy || _session.state.isLoading || _session.finished) return;
+    setState(() {
+      _micBusy = true;
+      _audioError = null;
+    });
+    if (_listening) {
+      try {
+        await _speech.stopListening();
+      } catch (_) {}
       if (!mounted) return;
       setState(() {
-        _state = _state.copyWith(
-          messages: newMessages,
-          trust: npcResp.currentTrust.clamp(0, 100),
-          patience: npcResp.currentPatience.clamp(0, 100),
-          npcEmotion: npcResp.npcEmotion,
-          lastFeedback: npcResp.feedback,
-          status: npcResp.gameStatus,
-          isLoading: false,
-        );
-        _newMessageIndex = newMessages.length - 1;
+        _micBusy = false;
+        _listening = false;
       });
-      await _ttsService.speak(npcResp.npcResponse);
-      _scrollToBottom();
-      if (npcResp.gameStatus == GameStatus.win) {
-        await Future.delayed(const Duration(milliseconds: 800));
-        if (mounted) _showWinDialog();
-      } else if (npcResp.gameStatus == GameStatus.lose) {
-        await Future.delayed(const Duration(milliseconds: 800));
-        if (mounted) _showLoseDialog(npcResp.feedback);
-      }
-    } catch (e) {
-      if (mounted) setState(() {
-        _state = _state.copyWith(isLoading: false);
-        _errorMessage = 'Error: $e';
-      });
+      if (widget.settings.autoSend) await _send();
+      return;
     }
+    await _stopVoice();
+    if (!mounted) return;
+    final capture = ++_capture;
+    await _speech.startListening(
+      locale: widget.settings.speechLocale,
+      pauseSeconds: widget.settings.pauseSeconds,
+      onResult: (text, finalResult) {
+        if (!mounted || capture != _capture || _session.state.isLoading) return;
+        _input.value = TextEditingValue(
+            text: text,
+            selection: TextSelection.collapsed(offset: text.length));
+        if (finalResult) {
+          setState(() {
+            _listening = false;
+            _micBusy = false;
+          });
+          if (widget.settings.autoSend) unawaited(_send());
+        }
+      },
+      onStatusChange: (listening) {
+        if (mounted && capture == _capture) {
+          setState(() => _listening = listening);
+        }
+      },
+      onError: (error) {
+        if (mounted && capture == _capture) {
+          setState(() {
+            _audioError = error;
+            _listening = false;
+          });
+        }
+      },
+    );
+    if (mounted) setState(() => _micBusy = false);
   }
 
-  void _toggleMic() async {
-    if (_isListening) {
-      await _speechService.stopListening(
-        onStatusChange: (v) => setState(() => _isListening = v),
-      );
-      if (_liveTranscript.isNotEmpty) _handlePlayerMessage(_liveTranscript);
-    } else {
-      await _speechService.startListening(
-        onResult: (text) => setState(() => _liveTranscript = text),
-        onStatusChange: (v) => setState(() => _isListening = v),
-      );
+  Future<void> _leave() async {
+    if (_leaving) return;
+    if (_session.saving) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Зберігаємо результат…')));
+      return;
     }
+    if (!_session.finished &&
+        (_session.turnCount > 0 || _session.state.isLoading)) {
+      final leave = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+                title: const Text('Завершити практику?'),
+                content: const Text(
+                    'Завершені ходи та поради залишаться в історії. Поточний AI-запит буде скасовано.'),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Продовжити')),
+                  FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Завершити')),
+                ],
+              ));
+      if (leave != true || !mounted) return;
+    }
+    setState(() => _leaving = true);
+    await _session.save();
+    if (!mounted) return;
+    if (_session.saveError != null) {
+      setState(() => _leaving = false);
+      return;
+    }
+    Navigator.of(context).pop();
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeOutCubic,
-        );
-      }
-    });
-  }
-
-  void _showWinDialog() {
-    _ttsService.stop();
-    final xp = 100 +
-        (_state.trust - 50).clamp(0, 50) * 2 +
-        (_state.patience - 50).clamp(0, 50);
-        
-    widget.progress.addXp(xp);
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => _EndDialog(
-        isWin: true,
-        xpEarned: xp,
-        trust: _state.trust,
-        patience: _state.patience,
-        onRestart: () { Navigator.pop(context); _restart(); },
-      ),
-    );
-  }
-
-  void _showLoseDialog(Feedback feedback) {
-    _ttsService.stop();
-    widget.progress.deductHeart();
-    
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => _EndDialog(
-        isWin: false,
-        xpEarned: 0,
-        trust: _state.trust,
-        patience: _state.patience,
-        feedback: feedback,
-        livesLeft: widget.progress.profile.hearts,
-        onRestart: () { Navigator.pop(context); _restart(loseLife: true); },
-      ),
-    );
-  }
-
-  void _restart({bool loseLife = false}) {
-    setState(() {
-      _liveTranscript = '';
-      _errorMessage = null;
-      _state = loseLife ? _state.reset() : const GameState();
-    });
-    _loadOpeningLine();
+  Future<void> _restart() async {
+    await _stopVoice();
+    await _session.restart();
+    if (mounted && !_session.finished) {
+      _previousWins = widget.progress
+          .winsFor(widget.character, scenarioId: _scenario.customId);
+      _input.clear();
+      _messageCount = _session.state.messages.length;
+      unawaited(_speak(_session.state.messages.first.text));
+    }
   }
 
   @override
   void dispose() {
-    _speechService.dispose();
-    _ttsService.dispose();
-    _scrollController.dispose();
+    _tutor.dispose();
+    _capture++;
+    _voiceRequest++;
+    _session.removeListener(_changed);
+    _session.dispose();
+    _tts.dispose();
+    _speech.dispose();
+    _input.dispose();
+    _scroll.dispose();
     super.dispose();
   }
 
-  void _openSettings() {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (_, anim, __) =>
-            SettingsScreen(settings: _settings),
-        transitionsBuilder: (_, anim, __, child) =>
-            SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1, 0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
-              child: child,
-            ),
-      ),
-    );
-  }
-
-  Widget _buildTopHeader() {
-    return Container(
-      width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(32),
-          bottomRight: Radius.circular(32),
-        ),
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 40), // extra padding for overlap
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20),
-                    onPressed: () => Navigator.of(context).pop(), // Will go back to MainScreen! Ah wait, requires MainScreen check
-                  ),
-                  Text(
-                    'Lesson - 01', // Matching styling from photo exactly
-                    style: AppTextStyles.titleMedium.copyWith(color: Colors.white, fontSize: 16),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.menu_rounded, color: Colors.white),
-                    onPressed: _openSettings,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              // Simplified HUD embedded inside the green header
-              GameHud(state: _state, isDark: false),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(statusBarIconBrightness: Brightness.light),
-    );
-
-    return Scaffold(
-      backgroundColor: widget.settings.isDark ? const Color(0xFF111827) : const Color(0xFFF9F9F9),
-      body: Column(
-        children: [
-          // Content Stack (Header overlapping Chat bubbles)
-          Expanded(
-            child: Stack(
-              children: [
-                _buildTopHeader(),
-                // Chat List positioned to overlap the header by 30px
-                Positioned(
-                  top: 150, // Enough to overlap the bottom curves
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.only(top: 0, bottom: 20),
-                    itemCount: _state.messages.length + (_state.lastFeedback != null ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (_state.lastFeedback != null && index == _state.messages.length) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                          child: CoachingBox(feedback: _state.lastFeedback!),
-                        );
-                      }
-                      return ChatBubble(
-                        message: _state.messages[index],
-                        isNew: index == _newMessageIndex,
-                        isDark: widget.settings.isDark,
-                      );
-                    },
-                  ),
-                ),
-                // Loading indicator
-                if (_state.isLoading)
-                  Positioned(
-                    top: 180,
-                    left: 20,
-                    right: 20,
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(50)),
-                        child: const CircularProgressIndicator(color: AppColors.primary),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          
-          if (_errorMessage != null)
-            Container(
-              padding: const EdgeInsets.all(12),
-              color: AppColors.loseRed,
-              width: double.infinity,
-              child: Text(_errorMessage!, style: const TextStyle(color: Colors.white)),
-            ),
-
-          InputPanel(
-            isListening: _isListening,
-            isLoading: _state.isLoading,
-            speechAvailable: _speechAvailable,
-            liveTranscript: _liveTranscript,
-            onSendText: _handlePlayerMessage,
-            onMicTap: _toggleMic,
-            isDark: widget.settings.isDark,
-          ),
-        ],
+    final state = _session.state;
+    final theme = Theme.of(context);
+    final busy = state.isLoading || _leaving || _routing;
+    final compact = MediaQuery.viewInsetsOf(context).bottom > 0 ||
+        MediaQuery.sizeOf(context).height < 780;
+    final largeText = MediaQuery.textScalerOf(context).scale(16) > 21;
+    final scrollingStage = largeText || MediaQuery.sizeOf(context).height < 600;
+    final activity = _routing
+        ? 'Перевіряю мову й готую підказку…'
+        : state.isLoading
+            ? 'Обмірковує відповідь…'
+            : _listening
+                ? 'Слухає тебе…'
+                : _speaking
+                    ? 'Говорить…'
+                    : _session.finished
+                        ? 'Розмову завершено'
+                        : 'Твоя черга';
+    return PopScope(
+      canPop: _leaving,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_leave());
+      },
+      child: Scaffold(
+        appBar: AppBar(
+            leading: IconButton(
+                tooltip: 'До персонажів',
+                onPressed: _leave,
+                icon: const Icon(Icons.arrow_back_rounded)),
+            title: Text(_scenario.name,
+                maxLines: 1, overflow: TextOverflow.ellipsis),
+            actions: [
+              IconButton(
+                  tooltip: _speaking
+                      ? 'Зупинити озвучення'
+                      : 'Прослухати останню репліку',
+                  onPressed: _speaking
+                      ? _stopVoice
+                      : () {
+                          final message =
+                              state.messages.lastWhere((m) => !m.isPlayer);
+                          _speak(message.text, manual: true);
+                        },
+                  icon: Icon(_speaking
+                      ? Icons.stop_circle_outlined
+                      : Icons.volume_up_outlined))
+            ]),
+        body: SilkBackground(
+            child: SafeArea(
+                top: false,
+                child: Center(
+                    child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
+                  child: Column(children: [
+                    if (_routing) const LinearProgressIndicator(minHeight: 2),
+                    if (!scrollingStage)
+                      CharacterStage(
+                          scenario: _scenario,
+                          emotion: state.npcEmotion,
+                          activity: activity,
+                          compact: compact),
+                    Expanded(
+                        child: ListView(
+                      key: const Key('conversation'),
+                      controller: _scroll,
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                      children: [
+                        if (scrollingStage)
+                          CharacterStage(
+                              scenario: _scenario,
+                              emotion: state.npcEmotion,
+                              activity: activity,
+                              compact: true),
+                        ConversationMeters(
+                            trust: state.trust,
+                            patience: state.patience,
+                            turns: _session.turnCount,
+                            words: _session.uniqueWords,
+                            previousWins: _previousWins,
+                            compact: compact),
+                        ...state.messages.asMap().entries.map((entry) {
+                          final message = entry.value;
+                          final feedbackIndex = (entry.key - 2) ~/ 2;
+                          return Column(
+                              key: ValueKey(
+                                  '${message.timestamp.microsecondsSinceEpoch}_${entry.key}'),
+                              children: [
+                                ChatBubble(
+                                    message: message,
+                                    onWordTap: _showDictionaryModal,
+                                    onSpeak: message.isPlayer || _listening
+                                        ? null
+                                        : () =>
+                                            _speak(message.text, manual: true)),
+                                if (widget.settings.showCoaching &&
+                                    !message.isPlayer &&
+                                    entry.key >= 2 &&
+                                    feedbackIndex < _session.feedback.length)
+                                  CoachingBox(
+                                      feedback:
+                                          _session.feedback[feedbackIndex],
+                                      onPractice: () async {
+                                        await _stopVoice();
+                                        if (context.mounted) {
+                                          await Navigator.push(
+                                              context,
+                                              MaterialPageRoute<void>(
+                                                  builder: (_) => PracticeScreen(
+                                                      settings: widget.settings,
+                                                      progress: widget.progress,
+                                                      focusQuestion: _session
+                                                          .feedback[
+                                                              feedbackIndex]
+                                                          .exercise
+                                                          ?.question)));
+                                        }
+                                      }),
+                              ]);
+                        }),
+                        if (state.isLoading)
+                          const Padding(
+                              padding: EdgeInsets.all(16),
+                              child: Row(children: [
+                                SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2)),
+                                SizedBox(width: 12),
+                                Expanded(
+                                    child:
+                                        Text('Співрозмовник готує відповідь…')),
+                              ])),
+                        if (_session.error != null)
+                          _Notice(
+                              text: _session.error!,
+                              action: 'Повторити',
+                              onAction:
+                                  _session.canRetry ? _session.retry : null),
+                        if (_audioError != null)
+                          _Notice(
+                              text: _audioError!,
+                              action: 'Зрозуміло',
+                              onAction: () =>
+                                  setState(() => _audioError = null)),
+                        if (_session.saveError != null)
+                          _Notice(
+                              text: _session.saveError!,
+                              action: 'Зберегти',
+                              onAction: _session.save),
+                        if (_session.finished)
+                          Card(
+                              color: theme.colorScheme.primaryContainer,
+                              child: Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(children: [
+                                    Icon(
+                                        state.status == GameStatus.win
+                                            ? Icons.emoji_events_rounded
+                                            : Icons.school_outlined,
+                                        size: 36),
+                                    const SizedBox(height: 10),
+                                    Text(
+                                        state.status == GameStatus.win
+                                            ? _scenario.winTitle
+                                            : 'Це теж досвід.',
+                                        style: theme.textTheme.titleLarge,
+                                        textAlign: TextAlign.center),
+                                    const SizedBox(height: 8),
+                                    Text(state.status == GameStatus.win
+                                        ? '+${_session.earnedXp} XP'
+                                        : 'Переглянь поради й спробуй новий підхід.'),
+                                    if (_session.saving)
+                                      const Padding(
+                                          padding: EdgeInsets.only(top: 8),
+                                          child: Text('Зберігаємо…')),
+                                  ]))),
+                      ],
+                    )),
+                    if (_session.finished)
+                      Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(children: [
+                            Expanded(
+                                child: OutlinedButton(
+                                    onPressed: _session.saving ? null : _leave,
+                                    child: const Text('До персонажів'))),
+                            const SizedBox(width: 10),
+                            Expanded(
+                                child: FilledButton(
+                                    onPressed:
+                                        _session.saving ? null : _restart,
+                                    child: const Text('Ще раз'))),
+                          ]))
+                    else
+                      Container(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                          color: theme.colorScheme.surface,
+                          child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                TextField(
+                                    key: const Key('message_input'),
+                                    controller: _input,
+                                    minLines: 1,
+                                    maxLines: largeText ? 1 : 3,
+                                    maxLength: 2000,
+                                    enabled: !busy,
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
+                                    decoration: InputDecoration(
+                                        hintText: _listening
+                                            ? 'Слухаю…'
+                                            : 'Напиши англійською…',
+                                        hintMaxLines: 1,
+                                        counterText: '',
+                                        contentPadding:
+                                            const EdgeInsets.all(14)),
+                                    onSubmitted: (_) => _send()),
+                                const SizedBox(height: 10),
+                                Row(children: [
+                                  if (largeText)
+                                    IconButton.filledTonal(
+                                        tooltip: _listening
+                                            ? 'Завершити запис'
+                                            : 'Говорити англійською',
+                                        onPressed: busy || _micBusy
+                                            ? null
+                                            : _toggleMic,
+                                        icon: Icon(_listening
+                                            ? Icons.stop_rounded
+                                            : Icons.mic_none_rounded))
+                                  else
+                                    OutlinedButton.icon(
+                                        onPressed: busy || _micBusy
+                                            ? null
+                                            : _toggleMic,
+                                        icon: Icon(_listening
+                                            ? Icons.stop_rounded
+                                            : Icons.mic_none_rounded),
+                                        label: Text(_listening
+                                            ? 'Зупинити'
+                                            : 'Говорити')),
+                                  const SizedBox(width: 8),
+                                  IconButton.filledTonal(
+                                      tooltip: 'Допоможи сказати англійською',
+                                      onPressed: busy || _session.finished
+                                          ? null
+                                          : () => _prepareInput(
+                                              _input.text.trim(),
+                                              help: true),
+                                      icon: const Icon(
+                                          Icons.lightbulb_outline_rounded)),
+                                  const Spacer(),
+                                  ValueListenableBuilder<TextEditingValue>(
+                                      valueListenable: _input,
+                                      builder: (context, input, _) =>
+                                          IconButton.filled(
+                                              key: const Key('send_message'),
+                                              tooltip: 'Надіслати відповідь',
+                                              onPressed: busy ||
+                                                      _micBusy ||
+                                                      input.text.trim().isEmpty
+                                                  ? null
+                                                  : _send,
+                                              icon: const Icon(
+                                                  Icons.send_rounded))),
+                                ]),
+                              ])),
+                  ]),
+                )))),
       ),
     );
   }
 }
 
-class _EndDialog extends StatelessWidget {
-  final bool isWin;
-  final int xpEarned;
-  final int trust;
-  final int patience;
-  final Feedback? feedback;
-  final int livesLeft;
-  final VoidCallback onRestart;
-
-  const _EndDialog({
-    required this.isWin,
-    required this.xpEarned,
-    required this.trust,
-    required this.patience,
-    this.feedback,
-    this.livesLeft = 3,
-    required this.onRestart,
-  });
-
+class _Notice extends StatelessWidget {
+  final String text, action;
+  final VoidCallback? onAction;
+  const _Notice({required this.text, required this.action, this.onAction});
   @override
-  Widget build(BuildContext context) {
-    final mainColor = isWin ? AppColors.winGold : AppColors.loseRed;
-    final mainShadow = isWin ? AppColors.winGoldDark : AppColors.loseRedDark;
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 360),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: mainColor, width: 3),
-          boxShadow: [
-            BoxShadow(
-              color: mainShadow,
-              offset: const Offset(0, 6),
-              blurRadius: 0,
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: mainColor.withValues(alpha: 0.1),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(21)),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    isWin ? '🎉' : '😞',
-                    style: const TextStyle(fontSize: 56),
-                  )
-                      .animate()
-                      .scale(
-                        begin: const Offset(0, 0),
-                        end: const Offset(1, 1),
-                        duration: 500.ms,
-                        curve: Curves.elasticOut,
-                      ),
-                  const SizedBox(height: 8),
-                  Text(
-                    isWin ? 'ENTRY APPROVED! 🛂' : 'ACCESS DENIED',
-                    style: AppTextStyles.titleLarge.copyWith(color: mainColor, fontSize: 22),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    isWin
-                        ? 'You convinced them!'
-                        : 'You failed to convince them.',
-                    style: AppTextStyles.bodyMedium,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _StatChip(label: 'Trust', value: '$trust', color: AppColors.trustFill),
-                      _StatChip(label: 'Patience', value: '$patience', color: AppColors.patienceFill),
-                      if (isWin) _StatChip(label: 'XP', value: '+$xpEarned', color: AppColors.winGold),
-                    ],
-                  ),
-                  if (!isWin && feedback != null) ...[  
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: AppColors.coachingBg,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.coachingBorder, width: 2),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (feedback!.grammarCorrection.isNotEmpty)
-                            Text(feedback!.grammarCorrection, style: AppTextStyles.coachingStyle),
-                          if (feedback!.tacticalAdvice.isNotEmpty)
-                            Text(feedback!.tacticalAdvice, style: AppTextStyles.coachingStyle),
-                        ],
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  _BigDuoButton(
-                    label: isWin ? 'Play Again' : 'Try Again',
-                    fillColor: mainColor,
-                    shadowColor: mainShadow,
-                    onTap: onRestart,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ).animate().scale(begin: const Offset(0.85, 0.85), end: const Offset(1, 1), duration: 400.ms),
-    );
-  }
-}
-
-class _StatChip extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  const _StatChip({required this.label, required this.value, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color, width: 2),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(value, style: AppTextStyles.titleMedium.copyWith(color: color)),
-          Text(label, style: AppTextStyles.labelMedium.copyWith(color: color.withValues(alpha: 0.8), fontSize: 11)),
-        ],
-      ),
-    );
-  }
-}
-
-class _BigDuoButton extends StatefulWidget {
-  final String label;
-  final Color fillColor;
-  final Color shadowColor;
-  final VoidCallback onTap;
-  const _BigDuoButton({
-    required this.label,
-    required this.fillColor,
-    required this.shadowColor,
-    required this.onTap,
-  });
-
-  @override
-  State<_BigDuoButton> createState() => _BigDuoButtonState();
-}
-
-class _BigDuoButtonState extends State<_BigDuoButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) { setState(() => _pressed = false); widget.onTap(); },
-      onTapCancel: () => setState(() => _pressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 80),
-        margin: EdgeInsets.only(top: _pressed ? 5 : 0),
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: BoxDecoration(
-          color: widget.fillColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: widget.shadowColor, width: 2),
-          boxShadow: _pressed
-              ? []
-              : [BoxShadow(color: widget.shadowColor, offset: const Offset(0, 5), blurRadius: 0)],
-        ),
-        child: Center(
-          child: Text(
-            widget.label.toUpperCase(),
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white, letterSpacing: 1.0),
-          ),
-        ),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Card(
+      color: Theme.of(context).colorScheme.errorContainer,
+      child: Padding(
+          padding: const EdgeInsets.all(12),
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(text,
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onErrorContainer)),
+            if (onAction != null)
+              TextButton(onPressed: onAction, child: Text(action)),
+          ])));
 }
