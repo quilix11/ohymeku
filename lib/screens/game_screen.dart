@@ -52,7 +52,16 @@ class _GameScreenState extends State<GameScreen> {
       _leaving = false;
   int _capture = 0, _voiceRequest = 0, _messageCount = 0;
   String? _audioError;
-  Scenario get _scenario => widget.scenario ?? Scenario.of(widget.character);
+  Scenario get _scenario {
+    final original = widget.scenario ?? Scenario.of(widget.character);
+    return widget.settings.customScenarios.firstWhere(
+        (s) => s.customId == original.customId,
+        orElse: () => original);
+  }
+
+  void _settingsChanged() {
+    if (mounted) setState(() {});
+  }
 
   @override
   void initState() {
@@ -69,6 +78,7 @@ class _GameScreenState extends State<GameScreen> {
         learningLevel: widget.settings.effectiveLevel);
     _messageCount = _session.state.messages.length;
     _session.addListener(_changed);
+    widget.settings.addListener(_settingsChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) unawaited(_speak(_session.state.messages.first.text));
     });
@@ -349,6 +359,7 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   void dispose() {
+    widget.settings.removeListener(_settingsChanged);
     _tutor.dispose();
     _capture++;
     _voiceRequest++;

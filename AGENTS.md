@@ -18,8 +18,8 @@ Read this map before exploring; inspect target source before edits.
 
 
 ## Active architecture
-- `api_credentials.dart`: personal Gemini key in session memory; local dotenv fallback. Public Pages builds include no API key.
-- `character_portrait_service.dart`: Gemini Interactions image request with two style references; nine-emotion sheet, chroma removal and bounded transparent PNGs. `LearningService.generate` uses it for every new character, including Meku tools.
+- `api_credentials.dart`: personal Gemini key in session memory; local dotenv fallback. Public Pages builds include no API key; optional compile-time GEMINI_GATEWAY_URL routes shared requests to gateway/worker.mjs. Personal keys take precedence.
+- `character_portrait_service.dart`: Gemini Interactions image request with two style references; nine-emotion sheet, chroma removal and bounded transparent PNGs. `SettingsService` owns a persisted serial background queue for all new characters, including Meku tools. `LearningService.generate` returns metadata immediately. Preserve portrait status/error as well as artwork; scenario writes are serialized.
 - `Scenario.portraits` persists artwork; `ScenarioPortrait` renders generated emotion PNGs with legacy bundled fallback. Preserve portraits when editing/archiving/restoring a scenario.
 - `services/learning_service.dart`: separate Gemini JSON calls for language routing/tutor suggestions and generating vocabulary or characters. `screens/generation_screen.dart` previews before save.
 - `GameScreen._prepareInput`: validates language before starting a scored turn. Cyrillic/other scripts force tutor mode; Latin-script text is classified too. Tutor results only insert a draft, never auto-send. The explicit lightbulb requests help for any text.
@@ -36,7 +36,7 @@ Read this map before exploring; inspect target source before edits.
 - `screens/character_selection_screen.dart`: swipe carousel, remembered selection, start button and settings entry.
 - `models/scenario.dart`: Officer Vance / Hannah metadata, authored opening, portrait asset mapping.
 - `services/game_session.dart`: match state, locked sends, confirmed history, retry, locally computed outcome, idempotent save/XP, restart/dispose.
-- `services/ai_service.dart`: Gemini 2.5 Flash via HTTP, JSON parsing, bounded deltas, emotion and Ukrainian feedback; key in request header.
+- `services/ai_service.dart`: Gemini 3.5 Flash-Lite via cancellable HTTP with a 20-second text budget and redacted provider errors, JSON parsing, bounded deltas, emotion and Ukrainian feedback; key in request header.
 - `screens/game_screen.dart`: chat, input, persistent character stage, audio/mic controls, inline results.
 - `models/practice_record.dart`, `services/progress_service.dart`: local JSON records, profile name/avatar, XP and calendar streak from actual practice dates.
 - `services/settings_service.dart`: persisted light/dark, animation toggle, TTS enabled/rate/volume, US/UK speech locale, pause and auto-send.

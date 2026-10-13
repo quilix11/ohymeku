@@ -4,22 +4,20 @@ import 'api_credentials.dart';
 import 'package:http/http.dart' as http;
 import 'ai_service.dart';
 import 'gemini_transport.dart';
-import 'character_portrait_service.dart';
 
 class LearningService {
   final http.Client _client;
   late final _transport = GeminiTransport(_client);
-  final PortraitGenerator? portraits;
-  LearningService({http.Client? client, this.portraits})
-      : _client = client ?? http.Client();
+  LearningService({http.Client? client}) : _client = client ?? http.Client();
 
   Future<Map<String, dynamic>> request(String rules, Map<String, dynamic> input,
       {Map<String, dynamic>? schema, int maxOutputTokens = 4096}) async {
     final key = ApiCredentials.geminiKey;
-    if (key.isEmpty) {
+    if (!ApiCredentials.available) {
       throw const AiException(
           'Додай ключ Gemini у налаштуваннях для генерації.');
     }
+    final clock = Stopwatch()..start();
     // Retry an incomplete model output once. Network, quota and blocked replies
     // are separate failures; repeating those immediately cannot repair them.
     for (var attempt = 0; attempt < 2; attempt++) {
@@ -48,18 +46,13 @@ class LearningService {
                 attempt == 0 ? maxOutputTokens : maxOutputTokens * 2,
             'thinkingConfig': {'thinkingBudget': 0}
           },
-        }, key).timeout(const Duration(seconds: 90));
-        if (response.statusCode != 200) {
-          throw AiException(response.statusCode == 429
-              ? 'Ліміт Gemini тимчасово вичерпано. Спробуй пізніше.'
-              : 'Gemini недоступний. Перевір підключення та доступ до моделі.');
-        }
+        }, key, budget: const Duration(seconds: 20) - clock.elapsed);
         final result = jsonDecode(utf8.decode(response.bodyBytes));
         if (result is! Map) throw const FormatException();
         final feedback = result['promptFeedback'];
         if (feedback is Map && feedback['blockReason'] != null) {
-          throw const AiException(
-              'Gemini не може створити відповідь для цієї теми. Спробуй переформулювати її.');
+          throw AiException(
+              'Gemini заблокував відповідь: ${feedback['blockReason']}. Спробуй переформулювати тему.');
         }
         final candidates = result['candidates'];
         if (candidates is! List ||
@@ -71,8 +64,8 @@ class LearningService {
         final finish = candidate['finishReason'];
         if (finish == 'MAX_TOKENS') throw const FormatException();
         if (finish != null && finish != 'STOP') {
-          throw const AiException(
-              'Gemini зупинив відповідь. Спробуй іншу тему або уточни запит.');
+          throw AiException(
+              'Gemini зупинив відповідь: $finish. Спробуй іншу тему або уточни запит.');
         }
         final content = candidate['content'];
         final parts = content is Map ? content['parts'] : null;
@@ -207,8 +200,6 @@ class LearningService {
               'Неповний опис персонажа. Повтори генерацію.');
         }
       }
-      json['portraits'] =
-          await (portraits ?? CharacterPortraitService(_client).generate)(json);
     } else {
       final cards = json['cards'];
       if (cards is! List || cards.length != count) {

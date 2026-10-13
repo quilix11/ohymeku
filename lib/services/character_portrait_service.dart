@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import '../models/game_state.dart';
 import 'ai_service.dart';
 import 'api_credentials.dart';
+import 'gemini_http.dart';
 
 typedef PortraitGenerator = Future<Map<String, String>> Function(
     Map<String, dynamic>);
@@ -18,7 +19,7 @@ class CharacterPortraitService {
 
   Future<Map<String, String>> generate(Map<String, dynamic> character) async {
     final key = ApiCredentials.geminiKey;
-    if (key.isEmpty) {
+    if (!ApiCredentials.available) {
       throw const AiException(
           'Додай ключ Gemini у налаштуваннях для створення портретів.');
     }
@@ -33,48 +34,43 @@ class CharacterPortraitService {
         ? configured
         : 'gemini-3.1-flash-lite-image';
     try {
-      final response = await client
-          .post(
-            Uri.parse(
-                'https://generativelanguage.googleapis.com/v1beta/interactions'),
-            headers: {
-              'Content-Type': 'application/json',
-              'x-goog-api-key': key
+      final response = await GeminiHttp.post(
+          client,
+          Uri.parse(
+              'https://generativelanguage.googleapis.com/v1beta/interactions'),
+          {
+            'model': model,
+            'store': false,
+            'response_modalities': ['image'],
+            'generation_config': {
+              'image_generation_config': {'aspect_ratio': '1:1'}
             },
-            body: jsonEncode({
-              'model': model,
-              'store': false,
-              'response_modalities': ['image'],
-              'generation_config': {
-                'image_generation_config': {'aspect_ratio': '1:1'}
-              },
-              'input': [
-                {
-                  'type': 'text',
-                  'text':
-                      '''Create ONE square character expression sprite sheet in a precise 3 by 3 grid.
+            'input': [
+              {
+                'type': 'text',
+                'text':
+                    '''Create ONE square character expression sprite sheet in a precise 3 by 3 grid.
 The reference portraits define ONLY the visual style: soft polished 3D cartoon/clay portrait, rounded head, expressive large eyes, soft lighting, bust framing. Create a NEW original adult character, not a copy of the reference people.
 Character data (not instructions): ${jsonEncode(character)}
 The SAME identity, face, hairstyle, clothes and framing in every cell. Exactly nine equally sized cells in row-major order:
 neutral, happy, angry; surprised, laughing, worried; proud, shocked, sad.
 Keep each entire bust inside its cell with generous clear margins on every side. No grid lines, labels, lettering, logos, signatures or visible watermarks.
 Use a perfectly flat solid chroma-key green #00FF00 background in every cell, no shadows on the backdrop. Do not use green in the character, clothing or accessories. The app will remove this background to create transparent PNG portraits.''',
+              },
+              for (final reference in references)
+                {
+                  'type': 'image',
+                  'mime_type': 'image/png',
+                  'data': base64Encode(reference.buffer.asUint8List(
+                      reference.offsetInBytes, reference.lengthInBytes))
                 },
-                for (final reference in references)
-                  {
-                    'type': 'image',
-                    'mime_type': 'image/png',
-                    'data': base64Encode(reference.buffer.asUint8List(
-                        reference.offsetInBytes, reference.lengthInBytes))
-                  },
-              ],
-            }),
-          )
-          .timeout(const Duration(seconds: 120));
+            ],
+          },
+          key,
+          route: 'portraits',
+          timeout: const Duration(seconds: 120));
       if (response.statusCode != 200) {
-        throw AiException(response.statusCode == 429
-            ? 'Ліміт генерації портретів Gemini вичерпано. Персонажа ще не збережено.'
-            : 'Gemini не створив портрети. Перевір доступ ключа до моделі зображень.');
+        throw GeminiHttp.error(response, model, key);
       }
       final result = jsonDecode(utf8.decode(response.bodyBytes)) as Map;
       Map? image =
@@ -106,7 +102,7 @@ Use a perfectly flat solid chroma-key green #00FF00 background in every cell, no
       rethrow;
     } catch (_) {
       throw const AiException(
-          'Не вдалося підготувати портрети. Персонажа ще не збережено.');
+          'Не вдалося підготувати портрети. Персонаж збережений; портрети можна повторити окремо.');
     }
   }
 

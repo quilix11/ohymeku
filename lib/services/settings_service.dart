@@ -3,6 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/game_state.dart';
 import '../models/scenario.dart';
 import 'dart:convert';
+import 'dart:async';
+import 'package:http/http.dart' as http;
+import 'api_credentials.dart';
+import 'ai_service.dart';
+import 'character_portrait_service.dart';
 import 'learner_service.dart';
 import 'vocabulary_service.dart';
 import 'notification_service.dart';
@@ -13,6 +18,136 @@ enum AppThemeMode { light, dark }
 
 class SettingsService extends ChangeNotifier {
   late SharedPreferences _prefs;
+  final PortraitGenerator? _portraitGenerator;
+  http.Client? _portraitClient;
+  bool _portraitBusy = false, _disposed = false;
+  int _scenarioSequence = 0;
+  Future<void> _scenarioWrites = Future.value();
+  SettingsService({PortraitGenerator? portraitGenerator})
+      : _portraitGenerator = portraitGenerator;
+
+  Future<T> _writeScenario<T>(Future<T> Function() operation) {
+    final result = _scenarioWrites.then((_) => operation());
+    _scenarioWrites =
+        result.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+    return result;
+  }
+
+  /// One image request at a time; persisted pending jobs resume after reopening.
+  void resumePortraits() {
+    if (_disposed ||
+        _portraitBusy ||
+        offlineMode ||
+        (_portraitGenerator == null && !ApiCredentials.available)) {
+      return;
+    }
+    unawaited(_drainPortraits());
+  }
+
+  Future<void> retryPortraits(String id) async {
+    if (offlineMode ||
+        (_portraitGenerator == null && !ApiCredentials.available)) {
+      throw const AiException(
+          'Для портретів потрібні інтернет і підключення Gemini.');
+    }
+    await _setArtwork(id, PortraitStatus.queued);
+    resumePortraits();
+  }
+
+  Future<void> _setArtwork(String id, PortraitStatus status,
+          {Map<String, String>? images, String? error}) =>
+      _writeScenario(() async {
+        if (_disposed) return;
+        final archived = !customScenarios.any((s) => s.customId == id);
+        // Save already requested artwork in the archive without restoring the character.
+        if (archived &&
+            status != PortraitStatus.ready &&
+            status != PortraitStatus.failed) {
+          return;
+        }
+        final collection = archived ? archivedScenarios : customScenarios;
+        final index = collection.indexWhere((s) => s.customId == id);
+        if (index < 0) return;
+        final updated =
+            collection[index].withArtwork(status, images: images, error: error);
+        final next = List<Scenario>.of(collection)..[index] = updated;
+        if (!await _prefs.setString(
+            'custom_scenarios_v1',
+            _scenarioJson(archived ? customScenarios : next,
+                archived ? next : archivedScenarios))) {
+          throw StateError(
+              'Не вдалося зберегти портрети. Звільни місце у сховищі браузера.');
+        }
+        collection[index] = updated;
+        if (!_disposed) notifyListeners();
+      });
+
+  Future<void> _drainPortraits() async {
+    _portraitBusy = true;
+    try {
+      while (!_disposed &&
+          !offlineMode &&
+          (_portraitGenerator != null || ApiCredentials.available)) {
+        final pending = customScenarios.where((s) =>
+            s.portraitStatus == PortraitStatus.queued ||
+            s.portraitStatus == PortraitStatus.generating);
+        if (pending.isEmpty) break;
+        final scenario = pending.first;
+        try {
+          await _setArtwork(scenario.customId!, PortraitStatus.generating);
+          if (_disposed) return;
+          if (!customScenarios.any((s) => s.customId == scenario.customId)) {
+            continue;
+          }
+          final generate = _portraitGenerator ??
+              CharacterPortraitService(_portraitClient ??= http.Client())
+                  .generate;
+          final images = Scenario.parsePortraits(await generate({
+            'name': scenario.name,
+            'role': scenario.role,
+            'description': scenario.personality,
+            'goal': scenario.goal,
+          }));
+          if (images.length != NpcEmotion.values.length) {
+            throw const AiException(
+                'Gemini не повернув усі 9 портретів. Спробуй ще раз.');
+          }
+          await _setArtwork(scenario.customId!, PortraitStatus.ready,
+              images: images);
+        } catch (e) {
+          if (_disposed) return;
+          final message = e is AiException
+              ? e.message
+              : e is StateError
+                  ? e.message.toString()
+                  : 'Не вдалося підготувати портрети. Спробуй ще раз.';
+          try {
+            await _setArtwork(scenario.customId!, PortraitStatus.failed,
+                error: message);
+          } catch (_) {
+            // Even when browser storage is full, keep the character and expose the failure.
+            final index = customScenarios
+                .indexWhere((s) => s.customId == scenario.customId);
+            if (index >= 0) {
+              customScenarios[index] = customScenarios[index]
+                  .withArtwork(PortraitStatus.failed, error: message);
+              if (!_disposed) notifyListeners();
+            }
+          }
+        }
+      }
+    } finally {
+      _portraitBusy = false;
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    _portraitClient?.close();
+    super.dispose();
+  }
+
   final learner = LearnerService();
   final vocabulary = VocabularyService();
   final reading = ReadingService();
@@ -68,6 +203,7 @@ class SettingsService extends ChangeNotifier {
         break;
       case 'offline_mode':
         offlineMode = value as bool;
+        if (!offlineMode) resumePortraits();
         break;
       case 'learning_level':
         learningLevel = value as String;
@@ -127,83 +263,91 @@ class SettingsService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> addScenario(Scenario scenario) async {
-    final next = [...customScenarios, scenario];
-    if (!await _prefs.setString(
-        'custom_scenarios_v1', _scenarioJson(next, archivedScenarios))) {
-      throw StateError('Не вдалося зберегти персонажа.');
-    }
-    customScenarios.add(scenario);
-    notifyListeners();
-  }
+  Future<void> addScenario(Scenario scenario) => _writeScenario(() async {
+        final next = [...customScenarios, scenario];
+        if (!await _prefs.setString(
+            'custom_scenarios_v1', _scenarioJson(next, archivedScenarios))) {
+          throw StateError('Не вдалося зберегти персонажа.');
+        }
+        customScenarios.add(scenario);
+        notifyListeners();
+      });
 
   String _scenarioJson(List<Scenario> active, List<Scenario> archive) =>
       jsonEncode([
         ...active.map((s) => s.toJson()),
         ...archive.map((s) => {...s.toJson(), 'deleted': true})
       ]);
-  Future<void> editScenario(Scenario replacement) async {
-    final index =
-        customScenarios.indexWhere((s) => s.customId == replacement.customId);
-    if (index < 0) {
-      throw StateError('Редагувати можна лише власних персонажів.');
-    }
-    final next = List<Scenario>.of(customScenarios);
-    next[index] = replacement;
-    if (!await _prefs.setString(
-        'custom_scenarios_v1', _scenarioJson(next, archivedScenarios))) {
-      throw StateError('Не вдалося зберегти персонажа.');
-    }
-    customScenarios[index] = replacement;
-    notifyListeners();
-  }
+  Future<void> editScenario(Scenario replacement) => _writeScenario(() async {
+        final index = customScenarios
+            .indexWhere((s) => s.customId == replacement.customId);
+        if (index < 0) {
+          throw StateError('Редагувати можна лише власних персонажів.');
+        }
+        final next = List<Scenario>.of(customScenarios);
+        replacement = replacement.withArtwork(
+            customScenarios[index].portraitStatus,
+            images: customScenarios[index].portraits,
+            error: customScenarios[index].portraitError);
+        next[index] = replacement;
+        if (!await _prefs.setString(
+            'custom_scenarios_v1', _scenarioJson(next, archivedScenarios))) {
+          throw StateError('Не вдалося зберегти персонажа.');
+        }
+        customScenarios[index] = replacement;
+        notifyListeners();
+      });
 
-  Future<void> archiveScenario(String id) async {
-    final matches = customScenarios.where((s) => s.customId == id).toList();
-    if (matches.isEmpty) {
-      throw StateError('Видаляти можна лише власних персонажів.');
-    }
-    if (archivedScenarios.length >= 30) {
-      throw StateError(
-          'Архів персонажів заповнений. Спочатку віднови потрібного.');
-    }
-    final next = customScenarios.where((s) => s.customId != id).toList(),
-        archive = [...archivedScenarios, matches.single];
-    if (!await _prefs.setString(
-        'custom_scenarios_v1', _scenarioJson(next, archive))) {
-      throw StateError('Не вдалося прибрати персонажа.');
-    }
-    customScenarios
-      ..clear()
-      ..addAll(next);
-    archivedScenarios
-      ..clear()
-      ..addAll(archive);
-    notifyListeners();
-  }
+  Future<void> archiveScenario(String id) => _writeScenario(() async {
+        final matches = customScenarios.where((s) => s.customId == id).toList();
+        if (matches.isEmpty) {
+          throw StateError('Видаляти можна лише власних персонажів.');
+        }
+        if (archivedScenarios.length >= 30) {
+          throw StateError(
+              'Архів персонажів заповнений. Спочатку віднови потрібного.');
+        }
+        final next = customScenarios.where((s) => s.customId != id).toList(),
+            archive = [...archivedScenarios, matches.single];
+        if (!await _prefs.setString(
+            'custom_scenarios_v1', _scenarioJson(next, archive))) {
+          throw StateError('Не вдалося прибрати персонажа.');
+        }
+        customScenarios
+          ..clear()
+          ..addAll(next);
+        archivedScenarios
+          ..clear()
+          ..addAll(archive);
+        notifyListeners();
+      });
 
   Future<void> restoreScenario(String id) async {
-    final matches = archivedScenarios.where((s) => s.customId == id).toList();
-    if (matches.isEmpty) throw StateError('Персонажа немає в архіві.');
-    final next = [...customScenarios, matches.single],
-        archive = archivedScenarios.where((s) => s.customId != id).toList();
-    if (!await _prefs.setString(
-        'custom_scenarios_v1', _scenarioJson(next, archive))) {
-      throw StateError('Не вдалося відновити персонажа.');
-    }
-    customScenarios
-      ..clear()
-      ..addAll(next);
-    archivedScenarios
-      ..clear()
-      ..addAll(archive);
-    notifyListeners();
+    await _writeScenario(() async {
+      final matches = archivedScenarios.where((s) => s.customId == id).toList();
+      if (matches.isEmpty) throw StateError('Персонажа немає в архіві.');
+      final next = [...customScenarios, matches.single],
+          archive = archivedScenarios.where((s) => s.customId != id).toList();
+      if (!await _prefs.setString(
+          'custom_scenarios_v1', _scenarioJson(next, archive))) {
+        throw StateError('Не вдалося відновити персонажа.');
+      }
+      customScenarios
+        ..clear()
+        ..addAll(next);
+      archivedScenarios
+        ..clear()
+        ..addAll(archive);
+      notifyListeners();
+    });
+    resumePortraits();
   }
 
   Future<Scenario> addGeneratedScenario(Map<String, dynamic> result,
       String topic, String level, bool warm) async {
     final scenario = Scenario(
-        customId: DateTime.now().microsecondsSinceEpoch.toString(),
+        customId:
+            '${DateTime.now().microsecondsSinceEpoch}_${_scenarioSequence++}',
         character: warm ? GameCharacter.hr : GameCharacter.officer,
         name: result['name'],
         role: result['role'],
@@ -212,11 +356,15 @@ class SettingsService extends ChangeNotifier {
         opening: result['opening'],
         personality: result['description'],
         portraits: Scenario.parsePortraits(result['portraits']),
+        portraitStatus: Scenario.parsePortraits(result['portraits']).isEmpty
+            ? PortraitStatus.queued
+            : PortraitStatus.ready,
         level: level,
         winTitle: 'Вдало поговорили!',
         color: const Color(0xFF8F4856),
         backdrop: const Color(0xFFECD6D9));
     await addScenario(scenario);
+    resumePortraits();
     return scenario;
   }
 
@@ -339,6 +487,7 @@ class SettingsService extends ChangeNotifier {
     pushNotifications = _prefs.getBool('push_notifications') ?? false;
     hasTakenPlacement = _prefs.getBool('has_taken_placement') ?? false;
     notifyListeners();
+    resumePortraits();
   }
 
   Future<void> setTheme(AppThemeMode value) async {

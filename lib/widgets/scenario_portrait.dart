@@ -10,9 +10,11 @@ class ScenarioPortrait extends StatelessWidget {
   final int cacheWidth;
   final bool excludeFromSemantics;
   final BoxFit fit;
+  final Future<void> Function()? onRetry;
   const ScenarioPortrait(
       {super.key,
       required this.scenario,
+      this.onRetry,
       this.emotion = NpcEmotion.neutral,
       required this.width,
       required this.height,
@@ -31,6 +33,51 @@ class ScenarioPortrait extends StatelessWidget {
         fit: fit,
         semanticLabel: '${scenario.name}: ${emotionLabel(emotion)}',
         excludeFromSemantics: excludeFromSemantics);
+    if (image == null && scenario.portraitStatus != PortraitStatus.legacy) {
+      final failed = scenario.portraitStatus == PortraitStatus.failed;
+      final label = failed
+          ? scenario.portraitError ?? 'Не вдалося створити портрети.'
+          : scenario.portraitStatus == PortraitStatus.queued
+              ? 'Портрети в черзі'
+              : 'Портрети генеруються у фоні';
+      return SizedBox(
+          width: width,
+          height: height,
+          child: Tooltip(
+              message: label,
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                        child: Center(
+                            child: Icon(Icons.person_outline,
+                                size:
+                                    (height * .55).clamp(16, 64).toDouble()))),
+                    if (failed && onRetry != null)
+                      IconButton(
+                          tooltip: '$label Натисни, щоб повторити.',
+                          constraints:
+                              const BoxConstraints(minWidth: 32, minHeight: 32),
+                          padding: const EdgeInsets.all(4),
+                          icon: const Icon(Icons.refresh),
+                          onPressed: () async {
+                            try {
+                              await onRetry!();
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(e.toString())));
+                              }
+                            }
+                          })
+                    else if (scenario.portraitStatus == PortraitStatus.queued ||
+                        scenario.portraitStatus == PortraitStatus.generating)
+                      const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2)),
+                  ])));
+    }
     if (image == null) return fallback();
     return Image.memory(base64Decode(image.substring(22)),
         width: width,

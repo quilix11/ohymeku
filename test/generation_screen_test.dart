@@ -23,10 +23,10 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final settings = SettingsService();
+    final settings = SettingsService(portraitGenerator: fakePortraits);
+    addTearDown(settings.dispose);
     await settings.load();
     final service = LearningService(
-        portraits: fakePortraits,
         client: MockClient((_) async => reply(
             envelope('```json\n${jsonEncode(character)}\n```', finish: null))));
     await tester.pumpWidget(MaterialApp(
@@ -69,6 +69,8 @@ void main() {
             .descendant(
                 of: find.byType(ListView), matching: find.byType(Scrollable))
             .first);
+    await tester.ensureVisible(find.text('Додати співрозмовника'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Додати співрозмовника'));
     await tester.pumpAndSettle();
     expect(find.text('Відкрити генерацію'), findsOneWidget);
@@ -87,13 +89,10 @@ void main() {
   testWidgets('failed generation retains the topic and can be retried',
       (tester) async {
     var calls = 0, saved = 0;
-    final service = LearningService(
-        portraits: fakePortraits,
-        client: MockClient((_) async {
-          calls++;
-          return reply(
-              envelope(calls <= 2 ? '{broken' : jsonEncode(character)));
-        }));
+    final service = LearningService(client: MockClient((_) async {
+      calls++;
+      return reply(envelope(calls <= 2 ? '{broken' : jsonEncode(character)));
+    }));
     await tester.pumpWidget(MaterialApp(
         home: GenerationScreen(
       boss: true,

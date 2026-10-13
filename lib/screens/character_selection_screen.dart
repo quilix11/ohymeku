@@ -221,12 +221,26 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                                 style: theme.textTheme.headlineMedium),
                             const SizedBox(height: 6),
                             Text(s.level, style: theme.textTheme.labelLarge),
+                            if (s.portraitStatus == PortraitStatus.queued ||
+                                s.portraitStatus == PortraitStatus.generating)
+                              Text(s.portraitStatus == PortraitStatus.queued
+                                  ? 'Портрети в черзі'
+                                  : 'Портрети генеруються у фоні'),
+                            if (s.portraitStatus == PortraitStatus.failed)
+                              Text(
+                                  s.portraitError ??
+                                      'Не вдалося створити портрети.',
+                                  style: TextStyle(color: c.error)),
                           ])),
                       const SizedBox(width: 12),
                       ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: ScenarioPortrait(
                             scenario: s,
+                            onRetry: s.customId == null
+                                ? null
+                                : () =>
+                                    widget.settings.retryPortraits(s.customId!),
                             width: 80,
                             height: 96,
                             fit: BoxFit.contain,

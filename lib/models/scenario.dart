@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'game_state.dart';
 import 'dart:convert';
 
+enum PortraitStatus { legacy, queued, generating, ready, failed }
+
 class Scenario {
   final String? customId;
   final String personality;
   final Map<String, String> portraits;
+  final PortraitStatus portraitStatus;
+  final String? portraitError;
   final GameCharacter character;
   final String name, role, title, goal, opening, level, winTitle;
   final Color color, backdrop;
@@ -13,6 +17,8 @@ class Scenario {
       {this.customId,
       this.personality = '',
       this.portraits = const {},
+      this.portraitStatus = PortraitStatus.legacy,
+      this.portraitError,
       required this.character,
       required this.name,
       required this.role,
@@ -33,6 +39,8 @@ class Scenario {
         'level': level,
         'personality': personality,
         if (portraits.isNotEmpty) 'portraits': portraits,
+        'portraitStatus': portraitStatus.name,
+        if (portraitError != null) 'portraitError': portraitError,
       };
   factory Scenario.fromJson(Map<String, dynamic> json) => Scenario(
       customId: json['id'] as String,
@@ -45,9 +53,35 @@ class Scenario {
       level: json['level'] as String,
       personality: json['personality'] as String? ?? '',
       portraits: parsePortraits(json['portraits']),
+      portraitStatus: PortraitStatus.values.firstWhere(
+          (s) => s.name == json['portraitStatus'],
+          orElse: () => parsePortraits(json['portraits']).isEmpty
+              ? PortraitStatus.legacy
+              : PortraitStatus.ready),
+      portraitError:
+          json['portraitError'] is String ? json['portraitError'] : null,
       winTitle: 'Вдало поговорили!',
       color: const Color(0xFF8F4856),
       backdrop: const Color(0xFFECD6D9));
+
+  Scenario withArtwork(PortraitStatus status,
+          {Map<String, String>? images, String? error}) =>
+      Scenario(
+          customId: customId,
+          character: character,
+          name: name,
+          role: role,
+          title: title,
+          goal: goal,
+          opening: opening,
+          level: level,
+          personality: personality,
+          winTitle: winTitle,
+          color: color,
+          backdrop: backdrop,
+          portraits: images ?? portraits,
+          portraitStatus: status,
+          portraitError: error);
 
   static Map<String, String> parsePortraits(Object? value) {
     if (value is! Map) return const {};

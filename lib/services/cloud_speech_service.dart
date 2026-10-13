@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'api_credentials.dart';
+import 'gemini_http.dart';
 import 'package:http/http.dart' as http;
 import 'ai_service.dart';
 import 'audio_cache_stub.dart' if (dart.library.io) 'audio_cache_io.dart'
@@ -40,7 +41,7 @@ class CloudSpeechService {
         throw const AiException(
             'Це озвучення ще не завантажене. Вибери системний голос для офлайн-вимови.');
       }
-      if (key.isEmpty) {
+      if (!ApiCredentials.available) {
         throw const AiException('Для голосів Gemini потрібен ключ API.');
       }
       final client = http.Client();
@@ -51,39 +52,36 @@ class CloudSpeechService {
           'expressive' => 'expressive but natural',
           _ => 'calm and clear'
         };
-        final response = await client
-            .post(
-                Uri.parse(
-                    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent'),
-                headers: {
-                  'Content-Type': 'application/json',
-                  'x-goog-api-key': key
-                },
-                body: jsonEncode({
-                  'contents': [
+        final response = await GeminiHttp.post(
+            client,
+            Uri.parse(
+                'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent'),
+            {
+              'contents': [
+                {
+                  'parts': [
                     {
-                      'parts': [
-                        {
-                          'text':
-                              'Read the following English transcript exactly, in a $tone voice. Do not add any words. Transcript:\n$text'
-                        }
-                      ]
+                      'text':
+                          'Read the following English transcript exactly, in a $tone voice. Do not add any words. Transcript:\n$text'
                     }
-                  ],
-                  'generationConfig': {
-                    'responseModalities': ['AUDIO'],
-                    'speechConfig': {
-                      'voiceConfig': {
-                        'prebuiltVoiceConfig': {'voiceName': voice}
-                      }
-                    }
-                  },
-                }))
-            .timeout(const Duration(seconds: 35));
+                  ]
+                }
+              ],
+              'generationConfig': {
+                'responseModalities': ['AUDIO'],
+                'speechConfig': {
+                  'voiceConfig': {
+                    'prebuiltVoiceConfig': {'voiceName': voice}
+                  }
+                }
+              },
+            },
+            key,
+            route: 'speech',
+            timeout: const Duration(seconds: 35));
         if (generation != _generation || _disposed) return;
         if (response.statusCode != 200) {
-          throw const AiException(
-              'Голос Gemini недоступний або вичерпано ліміт. Можна вибрати системні голоси в налаштуваннях.');
+          throw GeminiHttp.error(response, 'gemini-2.5-flash-preview-tts', key);
         }
         final json = jsonDecode(response.body);
         final parts = json['candidates'][0]['content']['parts'] as List;

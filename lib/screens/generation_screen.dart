@@ -216,7 +216,7 @@ class _GenerationScreenState extends State<GenerationScreen> {
                                       : const Icon(Icons.auto_awesome_outlined),
                                   label: Text(_busy
                                       ? widget.boss
-                                          ? 'Генерую персонажа та 9 портретів…'
+                                          ? 'Генерую персонажа…'
                                           : 'Генерую…'
                                       : _result == null
                                           ? 'Створити'
@@ -249,6 +249,9 @@ class _GenerationScreenState extends State<GenerationScreen> {
                                             Text(_result!['goal']),
                                             const SizedBox(height: 12),
                                             Text(_result!['description']),
+                                            const SizedBox(height: 12),
+                                            const Text(
+                                                '9 портретів генеруватимуться у фоні після збереження. Можна одразу почати розмову.'),
                                             if (preview!
                                                 .portraits.isNotEmpty) ...[
                                               const SizedBox(height: 16),

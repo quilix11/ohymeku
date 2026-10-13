@@ -19,11 +19,15 @@ GEMINI_API_KEY=your_key_here
 
 `.env` is git-ignored. The app can show a fixed opening line without a key, but sending a player turn requires Gemini. Since this is a client app and `.env` is declared as a Flutter asset, a bundled API key can be extracted; use a backend proxy for a production release.
 
-Text requests default to `gemini-flash-lite-latest` for faster responses. Set
-`GEMINI_MODEL` in `.env` to override the default. If the selected model is
-unavailable or temporarily overloaded, requests try the alternate Flash alias
-once and remember the working model for that service instance. Cloud speech
-continues to use its separate TTS model.
+Text requests default to `gemini-3.5-flash-lite` with minimal thinking and a
+20-second deadline that cancels the request. `GEMINI_MODEL` in `.env` overrides
+the default. Only a missing model (404) retries once with `gemini-flash-lite-latest`;
+quota, permission and overload errors are shown immediately with HTTP code,
+provider status, actual model and a redacted provider explanation. Cloud speech
+continues to use its separate TTS model. [Shared server gateway](gateway/README.md)
+supports a server secret and atomic usage caps; it needs hosting access to deploy.
+The public build accepts an optional `GEMINI_GATEWAY_URL` Actions variable, never
+a shared API key.
 
 ## Project map
 
@@ -109,11 +113,14 @@ proud, shocked, sad. The app removes a flat green backdrop, checks that each cel
 contains both foreground and transparency, and saves nine bounded 256px PNGs.
 Prompts request no visible labels, signatures or watermarks; Google's invisible
 provenance marking remains under Google's control. Actual image quality and
-identity consistency need review in the generation preview.
+identity consistency still need review on the character card.
 
 Portraits persist with the character, including archive/restore and offline use.
-Browser storage is finite; a full store produces a save error instead of silently
-discarding the character. Generation requires a key with access to the image
-model, internet and available quota. Failures do not save a partial character.
+Character metadata saves immediately; nine portraits generate in a separate,
+persisted serial queue. You can start chatting while they load. Image failures
+keep the character, show the cause, and offer retry on its portrait. Pending jobs
+resume after reopening with Gemini connected; they cannot run with the browser
+closed. Browser storage is finite; a full store exposes an image save error.
+Generation requires access to the image model, internet and available quota.
 Automated tests use synthetic images and mocked API responses; they do not
 establish live Google model access or generate billable portraits.

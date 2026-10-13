@@ -1,0 +1,15 @@
+name = "ohymeku-gemini"
+main = "worker.mjs"
+compatibility_date = "2026-10-13"
+workers_dev = true
+
+[vars]
+ALLOWED_ORIGIN = "https://quilix11.github.io"
+
+[[durable_objects.bindings]]
+name = "REQUEST_BUDGET"
+class_name = "RequestBudget"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RequestBudget"]

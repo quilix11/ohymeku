@@ -1,3 +1,4 @@
+import 'portrait_fixtures.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dialect_duel/models/meku_route.dart';
@@ -45,7 +46,7 @@ void main() {
   late ProgressService progress;
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
-    settings = SettingsService();
+    settings = SettingsService(portraitGenerator: fakePortraits);
     await settings.load();
     progress = ProgressService();
     await progress.initialize();

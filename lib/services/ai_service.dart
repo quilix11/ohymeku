@@ -34,7 +34,7 @@ class AiService {
     required String playerMessage,
     List<String> interests = const [],
   }) async {
-    if (_apiKey.isEmpty) {
+    if (!ApiCredentials.available) {
       throw const AiException(
           'Додай ключ Gemini у налаштуваннях для AI-розмови.');
     }
@@ -98,7 +98,7 @@ Both feedback explanations must be in Ukrainian. Do not invent mistakes if the E
           'maxOutputTokens': 4096,
           'responseMimeType': 'application/json'
         },
-      }, _apiKey).timeout(const Duration(seconds: 45));
+      }, _apiKey);
     } on TimeoutException {
       throw const AiException(
           'Відповідь затрималася. Перевір інтернет і повтори спробу.');
@@ -106,24 +106,20 @@ Both feedback explanations must be in Ukrainian. Do not invent mistakes if the E
       throw const AiException(
           'Немає зв’язку з AI. Перевір інтернет і повтори спробу.');
     }
-    if (response.statusCode != 200) {
-      throw AiException(switch (response.statusCode) {
-        429 => 'Ліміт AI тимчасово вичерпано. Спробуй трохи пізніше.',
-        400 ||
-        401 ||
-        403 =>
-          'AI недоступний: перевір ключ Gemini та доступ до моделі.',
-        _ => 'Сервіс AI тимчасово недоступний. Повтори спробу.',
-      });
-    }
     try {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final feedback = data['promptFeedback'];
+      if (feedback is Map && feedback['blockReason'] != null) {
+        throw AiException(
+            'Gemini заблокував відповідь: ${feedback['blockReason']}. Переформулюй повідомлення.');
+      }
       final candidates = data['candidates'] as List;
       if (candidates.isEmpty) throw const FormatException();
       final candidate = candidates.first as Map<String, dynamic>;
       if (candidate['finishReason'] != null &&
           candidate['finishReason'] != 'STOP') {
-        throw const FormatException();
+        throw AiException(
+            'Gemini зупинив відповідь: ${candidate['finishReason']}. Повтори або скороти повідомлення.');
       }
       final parts = candidate['content']['parts'] as List;
       final raw = parts
@@ -145,6 +141,8 @@ Both feedback explanations must be in Ukrainian. Do not invent mistakes if the E
         }
       }
       return NpcResponse.fromJson(json);
+    } on AiException {
+      rethrow;
     } on Object {
       throw const AiException(
           'AI повернув неповну відповідь. Твій текст збережено — повтори спробу.');

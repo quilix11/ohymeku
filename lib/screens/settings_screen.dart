@@ -63,6 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     input.dispose();
     if (key == null || !mounted) return;
     setState(() => ApiCredentials.setGeminiKey(key));
+    widget.settings.resumePortraits();
   }
 
   String? _notificationError;
@@ -319,10 +320,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   title: 'Gemini',
                                   children: [
                                     ListTile(
-                                      title: Text(
-                                          ApiCredentials.geminiKey.isEmpty
+                                      title:
+                                          Text(ApiCredentials.available == false
                                               ? 'Підключити Gemini'
-                                              : 'Gemini підключено'),
+                                              : ApiCredentials.useGateway
+                                                  ? 'Спільний Gemini підключено'
+                                                  : 'Gemini підключено'),
                                       subtitle: const Text(
                                           'Чат, генерація персонажів і 9 портретів із різними емоціями.'),
                                       trailing: const Icon(
