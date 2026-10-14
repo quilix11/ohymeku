@@ -6,6 +6,8 @@ enum PortraitStatus { legacy, queued, generating, ready, failed }
 
 class Scenario {
   final String? customId;
+  final String? voiceProfileId;
+  String get voiceKey => voiceProfileId ?? customId ?? character.name;
   final String personality;
   final Map<String, String> portraits;
   final PortraitStatus portraitStatus;
@@ -15,6 +17,7 @@ class Scenario {
   final Color color, backdrop;
   const Scenario(
       {this.customId,
+      this.voiceProfileId,
       this.personality = '',
       this.portraits = const {},
       this.portraitStatus = PortraitStatus.legacy,
@@ -31,6 +34,7 @@ class Scenario {
       required this.backdrop});
   Map<String, dynamic> toJson() => {
         'id': customId,
+        if (voiceProfileId != null) 'voiceProfileId': voiceProfileId,
         'character': character.name,
         'name': name,
         'role': role,
@@ -44,6 +48,9 @@ class Scenario {
       };
   factory Scenario.fromJson(Map<String, dynamic> json) => Scenario(
       customId: json['id'] as String,
+      voiceProfileId: json['voiceProfileId'] is String
+          ? json['voiceProfileId'] as String
+          : null,
       character: GameCharacter.values.byName(json['character'] as String),
       name: json['name'] as String,
       role: json['role'] as String,
@@ -68,6 +75,7 @@ class Scenario {
           {Map<String, String>? images, String? error}) =>
       Scenario(
           customId: customId,
+          voiceProfileId: voiceProfileId,
           character: character,
           name: name,
           role: role,
@@ -114,6 +122,23 @@ class Scenario {
     return 'assets/images/${folder}_cutout/${folder}_${emotion.name}.png';
   }
 
+  static const willow = Scenario(
+      customId: 'willow',
+      character: GameCharacter.hr,
+      name: 'Ms Willow',
+      role: 'ВЧИТЕЛЬКА АНГЛІЙСЬКОЇ',
+      title: 'Історії з пані Willow',
+      goal:
+          'Розкажи про улюблену книжку, вигадай маленьку історію або попроси допомогти з англійською.',
+      opening:
+          'Hi! I am Ms Willow. What would you like to learn together today?',
+      personality:
+          'Warm, playful English teacher. Encourage curious questions, give short examples and accept imperfect learner English.',
+      level: 'Навчання · A1–B2',
+      winTitle: 'Чудово попрактикувалися!',
+      color: Color(0xFF5A756A),
+      backdrop: Color(0xFFE0EBDE));
+
   static const all = [
     Scenario(
         character: GameCharacter.officer,
@@ -141,6 +166,7 @@ class Scenario {
         winTitle: 'Ти справив враження!',
         color: Color(0xFF864C5B),
         backdrop: Color(0xFFECD6D9)),
+    willow,
   ];
   static Scenario of(GameCharacter character) =>
       all.firstWhere((scenario) => scenario.character == character);

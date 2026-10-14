@@ -25,8 +25,7 @@ class ScenarioPortrait extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if ((scenario.customId == 'journey-boss-j12' ||
-        scenario.customId?.startsWith('journey-free-j12-') == true)) {
+    if (scenario.voiceKey == 'willow') {
       return WillowPortrait(
           width: width,
           height: height,

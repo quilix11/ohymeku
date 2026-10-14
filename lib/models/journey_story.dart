@@ -263,6 +263,7 @@ final journeyBosses = <String, Scenario>{
       'Supportive but demanding HR interviewer. Ask for concrete examples of experience, a challenge and teamwork. Accept plausible learner examples.'),
   'j12': const Scenario(
       customId: 'journey-boss-j12',
+      voiceProfileId: 'willow',
       character: GameCharacter.hr,
       name: 'Ms Willow',
       role: 'ВЧИТЕЛЬКА · ВАРТОВА ІСТОРІЙ',
@@ -282,6 +283,7 @@ Scenario _boss(String id, Scenario source, String role, String goal,
         String opening, String personality) =>
     Scenario(
         customId: 'journey-boss-$id',
+        voiceProfileId: source.voiceKey,
         character: source.character,
         name: source.name,
         role: role,
@@ -452,6 +454,7 @@ List<Scenario> freeJourneyScenes(JourneyLevel level) {
     for (var i = 0; i < scenes.length; i++)
       Scenario(
           customId: 'journey-free-${level.id}-$i',
+          voiceProfileId: source.voiceKey,
           character: source.character,
           name: source.name,
           role: source.role,

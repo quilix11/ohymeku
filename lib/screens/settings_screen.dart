@@ -100,7 +100,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final selected = _voices.any((v) => v.id == saved) ? saved! : '';
     return Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: Column(children: [
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           if (widget.settings.cloudVoices)
             DropdownButtonFormField<String>(
                 key: ValueKey(
@@ -144,14 +145,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         widget.settings.setScenarioVoice(
                             scenario, value == '' ? null : value);
                       }),
-          Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                  onPressed: _listening || _micBusy
-                      ? null
-                      : () => _previewAs(scenario),
-                  icon: const Icon(Icons.volume_up_outlined),
-                  label: Text('Послухати ${scenario.name}'))),
+          const SizedBox(height: 16),
+          TextButton.icon(
+              key: ValueKey('preview_${scenario.voiceKey}'),
+              onPressed:
+                  _listening || _micBusy ? null : () => _previewAs(scenario),
+              icon: const Icon(Icons.volume_up_outlined),
+              label: Text('Послухати ${scenario.name}')),
         ]));
   }
 
@@ -325,18 +325,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                               : ApiCredentials.useGateway
                                                   ? 'Спільний Gemini підключено'
                                                   : 'Gemini підключено'),
-                                      subtitle: const Text(
-                                          'Чат, генерація персонажів і 9 портретів із різними емоціями.'),
+                                      subtitle: const Padding(
+                                          padding: EdgeInsets.only(top: 8),
+                                          child: Text(
+                                              'Чат, генерація персонажів і 9 портретів із різними емоціями.')),
                                       trailing: const Icon(
                                           Icons.chevron_right_rounded),
                                       onTap: _configureGemini,
                                     ),
                                     if (ApiCredentials.hasSessionKey)
-                                      TextButton(
-                                          onPressed: () =>
-                                              setState(ApiCredentials.clear),
-                                          child: const Text(
-                                              'Видалити ключ із цього сеансу')),
+                                      Padding(
+                                          padding: const EdgeInsets.fromLTRB(
+                                              16, 12, 16, 0),
+                                          child: TextButton(
+                                              onPressed: () => setState(
+                                                  ApiCredentials.clear),
+                                              child: const Text(
+                                                  'Видалити ключ із цього сеансу'))),
                                   ]),
                               const SizedBox(height: 20),
                               _Section(
@@ -535,9 +540,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           divisions: 6,
                                           onChanged: (v) => settings.setExtra(
                                               'voice_pitch', v)),
-                                    _voicePicker(
-                                        Scenario.of(GameCharacter.officer)),
-                                    _voicePicker(Scenario.of(GameCharacter.hr)),
+                                    ...Scenario.all.map(_voicePicker),
                                     ...settings.customScenarios
                                         .map(_voicePicker),
                                     Padding(
@@ -550,8 +553,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                                 : _voices.length < 2
                                                     ? 'На телефоні менше двох англійських голосів: персонажі можуть звучати однаково. Встанови додаткові системні голоси або ввімкни хмарні.'
                                                     : 'Список залежить від пристрою. Вибрані голоси зберігаються окремо для кожного персонажа.')),
-                                    Align(
-                                        alignment: Alignment.centerLeft,
+                                    Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            16, 16, 16, 16),
                                         child: TextButton(
                                             onPressed: _voicesLoading
                                                 ? null
@@ -742,6 +746,9 @@ class _Section extends StatelessWidget {
                   .textTheme
                   .titleMedium
                   ?.copyWith(fontWeight: FontWeight.w800)),
+          childrenPadding: const EdgeInsets.only(top: 8, bottom: 20),
+          expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+          expandedAlignment: Alignment.centerLeft,
           children: children,
         ),
       );

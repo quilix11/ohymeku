@@ -106,7 +106,8 @@ void main() {
       await loader.load();
     }
   });
-  testWidgets('carousel, navigation and profile editing work on a small phone',
+  testWidgets(
+      'character selection, navigation and profile editing work on a small phone',
       (tester) async {
     tester.view.physicalSize = const Size(375, 812);
     tester.view.devicePixelRatio = 1;
@@ -139,9 +140,6 @@ void main() {
     await tester.tap(find.byKey(const Key('open_conversations')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('character_carousel')));
-    await tester.pumpAndSettle();
-    await tester.drag(
-        find.byKey(const Key('character_carousel')), const Offset(-330, 0));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Hannah'));
     await tester.pumpAndSettle();

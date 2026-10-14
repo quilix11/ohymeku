@@ -117,72 +117,33 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
     return ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         children: [
-          Row(children: [
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text(
-                      widget.progress.editableName.isEmpty
-                          ? 'Твій навчальний день'
-                          : 'Привіт, ${widget.progress.editableName}',
-                      style: theme.textTheme.titleLarge),
-                  const SizedBox(height: 4),
-                  Text('Обери, що практикуватимемо.',
-                      style: theme.textTheme.bodyMedium),
-                ])),
-          ]),
-          const SizedBox(height: 16),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            _DayStat(
-                icon: Icons.school_outlined,
-                value: widget.settings.effectiveLevel,
-                label: 'Рівень'),
-            _DayStat(
-                icon: Icons.local_fire_department_outlined,
-                value: '${widget.progress.profile.streakDays}',
-                label: 'Серія днів'),
-            _DayStat(
-                icon: Icons.bolt_outlined,
-                value: '${widget.progress.profile.xp}',
-                label: 'XP'),
-          ]),
           SectionTitle('Обери ситуацію',
               trailing: IconButton(
                   tooltip: 'Створити співрозмовника',
                   onPressed: _create,
                   icon: const Icon(Icons.add_rounded))),
-          if (large)
-            Column(key: const Key('character_carousel'), children: [
-              for (var i = 0; i < scenarios.length; i++)
-                Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: _SceneChoice(
-                        scenario: scenarios[i],
-                        selected: _index == i,
-                        onTap: () {
-                          setState(() => _index = i);
-                          widget.settings.setLastCharacter(i);
-                        })),
-            ])
-          else
-            SizedBox(
-                height: 88,
-                child: ListView.separated(
-                  key: const Key('character_carousel'),
-                  scrollDirection: Axis.horizontal,
-                  itemCount: scenarios.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
-                  itemBuilder: (_, i) => SizedBox(
-                      width: 180,
-                      child: _SceneChoice(
-                          scenario: scenarios[i],
-                          selected: _index == i,
-                          onTap: () {
-                            setState(() => _index = i);
-                            widget.settings.setLastCharacter(i);
-                          })),
-                )),
+          LayoutBuilder(builder: (context, constraints) {
+            final columns = !large && constraints.maxWidth >= 280 ? 2 : 1;
+            final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
+            return Wrap(
+                key: const Key('character_carousel'),
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  for (var i = 0; i < scenarios.length; i++)
+                    SizedBox(
+                        width: width,
+                        child: _SceneChoice(
+                            key: Key(
+                                'character_choice_${scenarios[i].customId ?? scenarios[i].character.name}'),
+                            scenario: scenarios[i],
+                            selected: _index == i,
+                            onTap: () {
+                              setState(() => _index = i);
+                              widget.settings.setLastCharacter(i);
+                            })),
+                ]);
+          }),
           const SizedBox(height: 16),
           SilkPanel(
               rose: s.character == GameCharacter.hr,
@@ -204,11 +165,13 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                                     color: c.onSurfaceVariant)),
                             const SizedBox(height: 8),
                             Text(
-                                s.customId != null
-                                    ? s.role
-                                    : s.character == GameCharacter.officer
-                                        ? 'Паспортний контроль'
-                                        : 'Твоя співбесіда',
+                                s.customId == 'willow'
+                                    ? s.title
+                                    : s.customId != null
+                                        ? s.role
+                                        : s.character == GameCharacter.officer
+                                            ? 'Паспортний контроль'
+                                            : 'Твоя співбесіда',
                                 style: theme.textTheme.headlineMedium),
                             const SizedBox(height: 6),
                             Text(s.level, style: theme.textTheme.labelLarge),
@@ -248,7 +211,7 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                         style: theme.textTheme.bodyMedium),
                     const SizedBox(height: 16),
                     FilledButton.icon(
-                        key: Key('start_${s.character.name}'),
+                        key: Key('start_${s.customId ?? s.character.name}'),
                         onPressed: _opening ? null : _start,
                         icon: const Icon(Icons.play_arrow_rounded, size: 28),
                         label: Text(widget.settings.offlineMode
@@ -285,40 +248,15 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
   }
 }
 
-class _DayStat extends StatelessWidget {
-  final IconData icon;
-  final String value, label;
-  const _DayStat(
-      {required this.icon, required this.value, required this.label});
-  @override
-  Widget build(BuildContext context) {
-    final c = Theme.of(context).colorScheme;
-    return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-            color: c.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: c.outlineVariant, width: 1.5)),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          Icon(icon, size: 20, color: c.primary),
-          const SizedBox(width: 8),
-          Flexible(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                Text(value, style: Theme.of(context).textTheme.titleMedium),
-                Text(label, style: Theme.of(context).textTheme.labelSmall),
-              ])),
-        ]));
-  }
-}
-
 class _SceneChoice extends StatelessWidget {
   final Scenario scenario;
   final bool selected;
   final VoidCallback onTap;
   const _SceneChoice(
-      {required this.scenario, required this.selected, required this.onTap});
+      {super.key,
+      required this.scenario,
+      required this.selected,
+      required this.onTap});
   @override
   Widget build(BuildContext context) {
     final c = Theme.of(context).colorScheme;

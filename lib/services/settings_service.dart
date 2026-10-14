@@ -160,11 +160,12 @@ class SettingsService extends ChangeNotifier {
   String get effectiveLevel =>
       learner.effectiveLevel(learningLevel, adaptiveLearning);
   String? scenarioVoice(Scenario s) =>
-      _scenarioVoices[s.customId ?? s.character.name] ?? voiceFor(s.character);
+      _scenarioVoices[s.voiceKey] ?? voiceFor(s.character);
   String scenarioCloudVoice(Scenario s) {
-    final id = s.customId ?? s.character.name;
+    final id = s.voiceKey;
     if (_scenarioCloudVoices.containsKey(id)) return _scenarioCloudVoices[id]!;
-    if (s.customId == null) return cloudVoiceFor(s.character);
+    if (id == 'willow') return 'Leda';
+    if (id == s.character.name) return cloudVoiceFor(s.character);
     final index = customScenarios.indexWhere((v) => v.customId == s.customId);
     return cloudVoiceNames[
         (index + 2).clamp(0, 100000) % cloudVoiceNames.length];
@@ -173,7 +174,7 @@ class SettingsService extends ChangeNotifier {
   Future<void> setScenarioVoice(Scenario s, String? voice,
       {bool cloud = false}) async {
     final values = cloud ? _scenarioCloudVoices : _scenarioVoices;
-    final id = s.customId ?? s.character.name;
+    final id = s.voiceKey;
     if (voice == null) {
       values.remove(id);
     } else {
@@ -484,8 +485,25 @@ class SettingsService extends ChangeNotifier {
     _ttsEnabled = _prefs.getBool('tts_enabled') ?? true;
     _autoSend = _prefs.getBool('auto_send') ?? false;
     _animationsEnabled = _prefs.getBool('animations_enabled') ?? true;
-    _lastCharacter = (_prefs.getInt('last_character') ?? 0)
-        .clamp(0, 1 + customScenarios.length);
+    final catalog = [...Scenario.all, ...customScenarios];
+    final selectedId = _prefs.getString('last_scenario_id');
+    final savedIndex = _prefs.getInt('last_character') ?? 0;
+    final restoredIndex = selectedId == null
+        ? -1
+        : catalog
+            .indexWhere((s) => (s.customId ?? s.character.name) == selectedId);
+    _lastCharacter = (restoredIndex >= 0
+            ? restoredIndex
+            : selectedId == null &&
+                    savedIndex >= 2 &&
+                    customScenarios.isNotEmpty
+                ? savedIndex + 1
+                : savedIndex)
+        .clamp(0, catalog.length - 1);
+    await _prefs.setString(
+        'last_scenario_id',
+        catalog[_lastCharacter].customId ??
+            catalog[_lastCharacter].character.name);
     _pauseSeconds = (_prefs.getInt('speech_pause') ?? 3).clamp(2, 5);
     final locale = _prefs.getString('speech_locale') ?? 'en_US';
     _speechLocale = ['en_US', 'en_GB'].contains(locale) ? locale : 'en_US';
@@ -533,8 +551,13 @@ class SettingsService extends ChangeNotifier {
   }
 
   Future<void> setLastCharacter(int value) async {
-    _lastCharacter = value.clamp(0, 1 + customScenarios.length);
+    final catalog = [...Scenario.all, ...customScenarios];
+    _lastCharacter = value.clamp(0, catalog.length - 1);
     await _prefs.setInt('last_character', _lastCharacter);
+    await _prefs.setString(
+        'last_scenario_id',
+        catalog[_lastCharacter].customId ??
+            catalog[_lastCharacter].character.name);
   }
 
   Future<void> setSpeechLocale(String value) async {
