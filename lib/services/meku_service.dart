@@ -1,3 +1,5 @@
+import '../models/journey_level.dart';
+import '../models/journey_story.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -122,11 +124,17 @@ class MekuService extends ChangeNotifier {
                   'network_required': v.networkRequired
                 })
             .toList(),
-        'characters': [...Scenario.all, ...settings.customScenarios]
+        'characters': [
+          ...Scenario.all,
+          ...journeyLevels.where((l) => l.boss).expand(freeJourneyScenes),
+          ...settings.customScenarios
+        ]
             .map((s) => {
                   'id': s.customId ?? s.character.name,
                   'name': s.name,
-                  'custom': s.customId != null,
+                  'custom': settings.customScenarios
+                      .any((custom) => custom.customId == s.customId),
+                  'scene': s.title,
                   'system_voice': settings.scenarioVoice(s),
                   'cloud_voice': settings.scenarioCloudVoice(s),
                 })
@@ -338,7 +346,11 @@ ${jsonEncode(mekuCapabilities)}''',
       final key = text(id);
       final list = archived
           ? settings.archivedScenarios
-          : [...Scenario.all, ...settings.customScenarios];
+          : [
+              ...Scenario.all,
+              ...journeyLevels.where((l) => l.boss).expand(freeJourneyScenes),
+              ...settings.customScenarios
+            ];
       for (final s in list) {
         if ((s.customId ?? s.character.name) == key ||
             s.name.toLowerCase() == key.toLowerCase()) {
@@ -563,9 +575,12 @@ ${jsonEncode(mekuCapabilities)}''',
       navigate(value as String);
       return 'Відкрито розділ застосунку.';
     }
-    if (type == 'theme' && ['light', 'dark'].contains(value)) {
-      await settings
-          .setTheme(value == 'dark' ? AppThemeMode.dark : AppThemeMode.light);
+    if (type == 'theme' && ['light', 'dark', 'system'].contains(value)) {
+      await settings.setTheme(value == 'system'
+          ? AppThemeMode.system
+          : value == 'dark'
+              ? AppThemeMode.dark
+              : AppThemeMode.light);
       return value == 'dark'
           ? 'Темну тему увімкнено.'
           : 'Світлу тему увімкнено.';

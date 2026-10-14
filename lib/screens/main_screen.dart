@@ -1,3 +1,5 @@
+import '../models/journey_level.dart';
+import '../models/journey_story.dart';
 import 'package:flutter/material.dart';
 import '../services/settings_service.dart';
 import '../services/progress_service.dart';
@@ -31,7 +33,6 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _index = 0;
-  bool _journey = true;
   final _visited = <int>{0};
   late final MekuService _meku;
   String? _wordDeck;
@@ -54,10 +55,24 @@ class _MainScreenState extends State<MainScreen> {
     if (!mounted) return;
     if (destination == 'journey' || destination == 'conversations') {
       setState(() {
-        _journey = destination == 'journey';
         _index = 0;
         _visited.add(0);
       });
+      if (destination == 'conversations') {
+        showModalBottomSheet<void>(
+            context: context,
+            isScrollControlled: true,
+            useSafeArea: true,
+            builder: (_) => SizedBox(
+                height: MediaQuery.sizeOf(context).height * .9,
+                child: Scaffold(
+                    appBar: AppBar(title: const Text('Персонажі й ситуації')),
+                    body: CharacterSelectionScreen(
+                        settings: widget.settings,
+                        progress: widget.progress,
+                        onReading: () => _navigate('reading'),
+                        onWords: () => _select(1)))));
+      }
       return;
     }
     const tabs = {'conversations': 0, 'words': 1, 'progress': 2, 'profile': 3};
@@ -120,8 +135,11 @@ class _MainScreenState extends State<MainScreen> {
         });
         return true;
       case 'start_conversation':
-        final matches = [...Scenario.all, ...widget.settings.customScenarios]
-            .where((s) => (s.customId ?? s.character.name) == args['id']);
+        final matches = [
+          ...Scenario.all,
+          ...journeyLevels.where((l) => l.boss).expand(freeJourneyScenes),
+          ...widget.settings.customScenarios
+        ].where((s) => (s.customId ?? s.character.name) == args['id']);
         if (matches.isEmpty || widget.settings.offlineMode) return false;
         final s = matches.first;
         screen = GameScreen(
@@ -206,31 +224,14 @@ class _MainScreenState extends State<MainScreen> {
                     style: theme.textTheme.titleLarge
                         ?.copyWith(fontWeight: FontWeight.w800, fontSize: 24)),
                 actions: [
-                  if (_journey && _index == 0)
-                    IconButton(
-                        tooltip: 'Налаштування',
-                        onPressed: () => _navigate('settings'),
-                        icon: const Icon(Icons.tune_rounded)),
-                  if (!_journey || _index != 0)
-                    IconButton(
-                        tooltip: 'Карта рівнів',
-                        onPressed: () => _navigate('journey'),
-                        icon: const Icon(Icons.route_rounded)),
-                  Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: large
-                          ? IconButton.filledTonal(
-                              key: const Key('meku_launcher'),
-                              tooltip: 'Поговорити з Meku',
-                              onPressed: _openMeku,
-                              icon:
-                                  MekuAvatar(size: 28, emotion: _meku.emotion))
-                          : TextButton.icon(
-                              key: const Key('meku_launcher'),
-                              onPressed: _openMeku,
-                              icon:
-                                  MekuAvatar(size: 28, emotion: _meku.emotion),
-                              label: const Text('Meku'))),
+                  IconButton(
+                      tooltip: 'Профіль',
+                      onPressed: () => _select(3),
+                      icon: const Icon(Icons.person_outline_rounded)),
+                  IconButton(
+                      tooltip: 'Налаштування',
+                      onPressed: () => _navigate('settings'),
+                      icon: const Icon(Icons.settings_rounded)),
                 ],
               ),
               body: SilkBackground(
@@ -243,17 +244,11 @@ class _MainScreenState extends State<MainScreen> {
                         child: IndexedStack(index: _index, children: [
                           if (_visited.contains(0))
                             RepaintBoundary(
-                                child: _journey
-                                    ? JourneyScreen(
-                                        settings: widget.settings,
-                                        progress: widget.progress,
-                                        onConversations: () =>
-                                            _navigate('conversations'))
-                                    : CharacterSelectionScreen(
-                                        settings: widget.settings,
-                                        progress: widget.progress,
-                                        onReading: () => _navigate('reading'),
-                                        onWords: () => _select(1)))
+                                child: JourneyScreen(
+                                    settings: widget.settings,
+                                    progress: widget.progress,
+                                    onConversations: () =>
+                                        _navigate('conversations')))
                           else
                             const SizedBox.shrink(),
                           if (_visited.contains(1))
@@ -300,14 +295,28 @@ class _MainScreenState extends State<MainScreen> {
                                 child: Padding(
                                     padding: const EdgeInsets.all(8),
                                     child: Row(children: [
-                                      _tab(0, Icons.home_outlined, 'Головна',
+                                      _tab(0, Icons.route_rounded, 'Пригода',
                                           large),
                                       _tab(1, Icons.style_outlined, 'Слова',
                                           large),
                                       _tab(2, Icons.insights_outlined,
                                           'Прогрес', large),
-                                      _tab(3, Icons.person_outline_rounded,
-                                          'Профіль', large),
+                                      Expanded(
+                                          child: TextButton(
+                                              key: const Key('meku_launcher'),
+                                              onPressed: _openMeku,
+                                              child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    MekuAvatar(
+                                                        size: 28,
+                                                        emotion: _meku.emotion),
+                                                    if (!large)
+                                                      const Text('Meku',
+                                                          style: TextStyle(
+                                                              fontSize: 12))
+                                                  ]))),
                                     ])),
                               ))))),
             ));

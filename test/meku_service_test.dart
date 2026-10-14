@@ -111,9 +111,9 @@ void main() {
     final action = {
       'type': 'add_word',
       'value': {
-        'word': 'curious',
-        'translation': 'допитливий',
-        'example': 'I am curious.'
+        'word': 'resourceful',
+        'translation': 'винахідливий',
+        'example': 'I am resourceful.'
       }
     };
     await service.execute(action, (_) {});
@@ -121,7 +121,7 @@ void main() {
     expect(settings.vocabulary.custom.length, 1);
     final restored = SettingsService();
     await restored.load();
-    expect(restored.vocabulary.custom.single.word, 'curious');
+    expect(restored.vocabulary.custom.single.word, 'resourceful');
   });
   test('offline blocks network and mutation', () async {
     var calls = 0;

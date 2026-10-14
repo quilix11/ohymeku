@@ -6,6 +6,8 @@ import '../services/settings_service.dart';
 import '../services/progress_service.dart';
 import '../widgets/meku_avatar.dart';
 import '../widgets/ohymeku_design.dart';
+import 'journey_quest_screen.dart';
+import 'journey_boss_screen.dart';
 
 enum _Phase { words, recall, test, result }
 
@@ -72,7 +74,16 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
     }
   }
 
-  void _startTest() {
+  Future<void> _startTest() async {
+    if (!widget.settings.journey.wordsReady(widget.level)) return;
+    if (!widget.settings.journey.questsDone(widget.level)) {
+      final done = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute<bool>(
+              builder: (_) => JourneyQuestScreen(
+                  level: widget.level, settings: widget.settings)));
+      if (done != true || !mounted) return;
+    }
     if (!widget.settings.journey.readyForTest(widget.level)) return;
     setState(() {
       _questions = widget.level.questions();
@@ -164,12 +175,14 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
     String guidance() {
       if (_phase == _Phase.result) {
         return passed
-            ? 'Острів відкрито! Ти впорався — ходімо далі!'
+            ? level.boss && !journey.bossDefeated(level)
+                ? 'Підготовка завершена! Бос чекає — ходімо до нього.'
+                : 'Стежку відкрито! Ти впорався — ходімо далі!'
             : 'Ми знайшли, що повторити. Спробуй ще раз — я поруч.';
       }
       if (_phase == _Phase.test) {
         return _answer == null
-            ? 'Тепер маленька перевірка. Чотири правильні відповіді з п’яти відкриють наступний острів.'
+            ? 'Тепер маленька перевірка. Чотири правильні відповіді з п’яти завершать підготовку.'
             : _answer == _questions[_question].answer
                 ? 'Точно! Запам’ятай пояснення — і рушай далі.'
                 : 'Зверни увагу на пояснення нижче. Помилка показує, що потренувати.';
@@ -265,12 +278,12 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                               onPressed: _busy ? null : _recall,
                                               child: const Text(
                                                   'Перевірити слово')),
-                                          if (journey.readyForTest(level))
+                                          if (journey.wordsReady(level))
                                             TextButton(
                                                 onPressed:
                                                     _busy ? null : _startTest,
                                                 child: const Text(
-                                                    'Обидва слова вже перевірені · До тесту')),
+                                                    'Продовжити квести')),
                                         ],
                                         if (_phase == _Phase.recall) ...[
                                           Text('Що означає «${word.word}»?',
@@ -324,7 +337,7 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                                       },
                                                 child: Text(_word == 0
                                                     ? 'Друге слово'
-                                                    : 'До тесту')),
+                                                    : 'До квестів')),
                                           TextButton(
                                               onPressed: _busy
                                                   ? null
@@ -426,14 +439,43 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                           const SizedBox(height: 12),
                                           Text(
                                               passed
-                                                  ? level.number == 8
-                                                      ? 'Ти завершив усю пригоду! Повторюй рівні, щоб зібрати 24 зірки.'
-                                                      : 'Рівень ${level.number + 1} тепер доступний на карті.'
+                                                  ? level.boss &&
+                                                          !journey.bossDefeated(
+                                                              level)
+                                                      ? 'Підготовка завершена. Здобудь печатку боса, щоб відкрити наступний світ!'
+                                                      : level.number ==
+                                                              journeyLevels
+                                                                  .length
+                                                          ? 'Три світи пройдено! Повторюй рівні, щоб зібрати ${journeyLevels.length * 3} зірок.'
+                                                          : 'Рівень ${level.number + 1} тепер доступний на карті.'
                                                   : journey.completed(level)
                                                       ? 'Ця спроба не змінює твій попередній успіх. Наступний рівень залишається відкритим.'
                                                       : 'Слова збережені. Повтори тест — наступний рівень відкриється після 4 із 5.',
                                               textAlign: TextAlign.center),
                                           const SizedBox(height: 20),
+                                          if (level.boss &&
+                                              journey.bossReady(level))
+                                            FilledButton.icon(
+                                                onPressed: () async {
+                                                  await Navigator.push<bool>(
+                                                      context,
+                                                      MaterialPageRoute<bool>(
+                                                          builder: (_) =>
+                                                              JourneyBossScreen(
+                                                                  level: level,
+                                                                  settings: widget
+                                                                      .settings,
+                                                                  progress: widget
+                                                                      .progress)));
+                                                  if (mounted) setState(() {});
+                                                },
+                                                icon: const Icon(
+                                                    Icons.flag_rounded),
+                                                label: Text(journey
+                                                        .bossDefeated(level)
+                                                    ? 'Печатка боса'
+                                                    : 'До боса · ${level.opponent!.name}')),
+                                          const SizedBox(height: 12),
                                           FilledButton(
                                               onPressed: () =>
                                                   Navigator.pop(context),

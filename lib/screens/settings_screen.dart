@@ -344,13 +344,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   icon: Icons.palette_outlined,
                                   title: 'Вигляд',
                                   children: [
+                                    SwitchListTile.adaptive(
+                                        title: const Text('Автоматична тема'),
+                                        subtitle: const Text(
+                                            'Як на телефоні або в браузері'),
+                                        secondary: const Icon(
+                                            Icons.brightness_auto_rounded),
+                                        value: settings.themeMode ==
+                                            AppThemeMode.system,
+                                        onChanged: (auto) =>
+                                            settings.setTheme(auto
+                                                ? AppThemeMode.system
+                                                : settings.isDark
+                                                    ? AppThemeMode.dark
+                                                    : AppThemeMode.light)),
                                     Padding(
                                         padding: const EdgeInsets.all(16),
                                         child: Row(children: [
                                           Expanded(
                                               child: _ThemeChoice(
                                                   dark: false,
-                                                  selected: !settings.isDark,
+                                                  selected:
+                                                      settings.themeMode ==
+                                                          AppThemeMode.light,
                                                   onTap: () =>
                                                       settings.setTheme(
                                                           AppThemeMode.light))),
@@ -358,7 +374,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           Expanded(
                                               child: _ThemeChoice(
                                                   dark: true,
-                                                  selected: settings.isDark,
+                                                  selected:
+                                                      settings.themeMode ==
+                                                          AppThemeMode.dark,
                                                   onTap: () =>
                                                       settings.setTheme(
                                                           AppThemeMode.dark))),

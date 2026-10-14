@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dialect_duel/models/journey_level.dart';
+import 'package:dialect_duel/models/journey_story.dart';
+import 'package:dialect_duel/models/game_state.dart';
+import 'package:dialect_duel/models/practice_record.dart';
 import 'package:dialect_duel/services/journey_service.dart';
 
 class FailingPrefs extends Fake implements SharedPreferences {
@@ -21,6 +24,14 @@ Future<void> learn(JourneyService service, JourneyLevel level) async {
   for (final word in level.words) {
     await service.verifyWord(level.id, word.id, word.translation);
   }
+  await quests(service, level);
+}
+
+Future<void> quests(JourneyService service, JourneyLevel level) async {
+  for (final q in level.story.questions) {
+    await service.verifyChallenge(level.id, q.id, q.options[q.answer]);
+  }
+  await service.verifyChallenge(level.id, 'order', level.story.sentence);
 }
 
 void main() {
@@ -88,7 +99,7 @@ void main() {
     expect(service.completedCount, 0);
   });
   test(
-      'all eight levels can be completed; replays never remove progress or duplicate stars',
+      'all twelve levels can be completed; replays never remove progress or duplicate stars',
       () async {
     final service = JourneyService();
     await service.load();
@@ -100,17 +111,21 @@ void main() {
       final questions = level.questions();
       await service.finishTest(
           level.id, questions, questions.map((q) => q.answer).toList());
+      if (level.boss) {
+        await service.finishDialogue(level.id,
+            bossDialogues[level.id]!.map((q) => q.options[q.answer]).toList());
+      }
     }
-    expect(service.completedCount, 8);
-    expect(service.totalStars, 24);
+    expect(service.completedCount, 12);
+    expect(service.totalStars, 36);
     final questions = journeyLevels.first.questions();
     await service.finishTest('j1', questions,
         questions.map((q) => (q.answer + 1) % q.options.length).toList());
-    expect(service.totalStars, 24);
+    expect(service.totalStars, 36);
     expect(service.best(journeyLevels.first), 5);
     final restored = JourneyService();
     await restored.load();
-    expect(restored.totalStars, 24);
+    expect(restored.totalStars, 36);
   });
   test(
       'failed persistence does not award words or unlock a level and can be retried',
@@ -144,7 +159,8 @@ void main() {
         (word) => service.verifyWord(level.id, word.id, word.translation)));
     final restored = JourneyService();
     await restored.load();
-    expect(restored.readyForTest(level), true);
+    expect(restored.wordsReady(level), true);
+    expect(restored.readyForTest(level), false);
   });
   test(
       'unknown save fields, malformed values and orphaned completion do not open the path',
@@ -167,5 +183,106 @@ void main() {
     expect(service.totalStars, 0);
     expect(service.current.id, 'j1');
     expect(service.unlocked(journeyLevels.last), false);
+  });
+  test(
+      'story and sentence challenges gate tests and persist only verified answers',
+      () async {
+    final prefs = FailingPrefs(), service = JourneyService();
+    await service.load(preferences: prefs);
+    final level = journeyLevels.first;
+    await expectLater(
+        service.verifyChallenge(level.id, 'order', level.story.sentence),
+        throwsStateError);
+    for (final w in level.words) {
+      await service.verifyWord(level.id, w.id, w.translation);
+    }
+    expect(await service.verifyChallenge(level.id, 'read:0', 'wrong'), false);
+    await expectLater(
+        service.finishTest(level.id, level.questions(), [0, 0, 0, 0, 0]),
+        throwsStateError);
+    prefs.fail = true;
+    await expectLater(
+        service.verifyChallenge(
+            level.id, 'read:0', level.story.questions.first.options.first),
+        throwsStateError);
+    expect(service.challengeDone(level, 'read:0'), false);
+    prefs.fail = false;
+    await quests(service, level);
+    expect(service.readyForTest(level), true);
+    final restored = JourneyService();
+    await restored.load(preferences: prefs);
+    expect(restored.questsDone(level), true);
+  });
+  test('a passing boss test never opens the next world before a genuine duel',
+      () async {
+    final service = JourneyService();
+    await service.load();
+    for (final level in journeyLevels.take(4)) {
+      await learn(service, level);
+      final q = level.questions();
+      await service.finishTest(level.id, q, q.map((q) => q.answer).toList());
+    }
+    final boss = journeyLevels[3];
+    expect(service.bossReady(boss), true);
+    expect(service.unlocked(journeyLevels[4]), false);
+    final replies =
+        bossDialogues[boss.id]!.map((q) => q.options[q.answer]).toList();
+    await expectLater(service.finishDialogue(boss.id, replies.take(2).toList()),
+        throwsArgumentError);
+    PracticeRecord record(String scenario, GameStatus status) => PracticeRecord(
+            id: 'battle',
+            date: DateTime.now(),
+            character: GameCharacter.officer,
+            status: status,
+            trust: 80,
+            patience: 80,
+            xp: 100,
+            scenarioId: scenario,
+            messages: [
+              for (var i = 0; i < 2; i++)
+                ChatMessage(
+                    text: 'I am visiting my sister.',
+                    isPlayer: true,
+                    timestamp: DateTime.now())
+            ],
+            feedback: const []);
+    await expectLater(
+        service.recordAiVictory(
+            boss.id, record('journey-free-j4-0', GameStatus.win)),
+        throwsStateError);
+    await expectLater(
+        service.recordAiVictory(
+            boss.id, record(boss.opponent!.customId!, GameStatus.inProgress)),
+        throwsStateError);
+    await service.recordAiVictory(
+        boss.id, record(boss.opponent!.customId!, GameStatus.win));
+    expect(service.unlocked(journeyLevels[4]), true);
+    expect(service.bossMode(boss), 'ai');
+    await service.finishDialogue(boss.id, replies);
+    expect(service.bossMode(boss), 'ai');
+  });
+  test(
+      'v1 completed levels migrate without resetting stars; partial saves still require new quests',
+      () async {
+    SharedPreferences.setMockInitialValues({
+      'journey_v1': jsonEncode({
+        for (final l in journeyLevels.take(4))
+          l.id: {'words': l.wordIds, 'best': 5},
+        'j5': {'words': journeyLevels[4].wordIds, 'best': 0},
+      })
+    });
+    final service = JourneyService();
+    await service.load();
+    expect(service.completedCount, 4);
+    expect(service.totalStars, 12);
+    expect(service.bossMode(journeyLevels[3]), 'legacy');
+    expect(service.current.id, 'j5');
+    expect(service.wordsReady(journeyLevels[4]), true);
+    expect(service.questsDone(journeyLevels[4]), false);
+    await quests(service, journeyLevels[4]);
+    final restored = JourneyService();
+    await restored.load();
+    expect(restored.completedCount, 4);
+    expect(restored.questsDone(journeyLevels[4]), true);
   });
 }

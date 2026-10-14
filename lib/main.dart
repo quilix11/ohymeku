@@ -41,7 +41,7 @@ class DialectDuelApp extends StatefulWidget {
 
 class _DialectDuelAppState extends State<DialectDuelApp>
     with WidgetsBindingObserver {
-  late bool _dark;
+  late AppThemeMode _mode;
   late bool _animations;
   late double _textScale;
   late bool _hasTakenPlacement;
@@ -52,7 +52,7 @@ class _DialectDuelAppState extends State<DialectDuelApp>
     super.initState();
     // Capture the initial values before the first settings notification.
     // Lazy initializers would read the already changed value and skip it.
-    _dark = widget.settings.isDark;
+    _mode = widget.settings.themeMode;
     _animations = widget.settings.animationsEnabled;
     _textScale = widget.settings.textScale;
     _hasTakenPlacement = widget.settings.hasTakenPlacement;
@@ -68,15 +68,22 @@ class _DialectDuelAppState extends State<DialectDuelApp>
     }
   }
 
+  @override
+  void didChangePlatformBrightness() {
+    if (widget.settings.themeMode == AppThemeMode.system && mounted) {
+      setState(() {});
+    }
+  }
+
   void _onSettingsChanged() {
-    if (_dark == widget.settings.isDark &&
+    if (_mode == widget.settings.themeMode &&
         _animations == widget.settings.animationsEnabled &&
         _textScale == widget.settings.textScale &&
         _hasTakenPlacement == widget.settings.hasTakenPlacement) {
       return;
     }
     setState(() {
-      _dark = widget.settings.isDark;
+      _mode = widget.settings.themeMode;
       _animations = widget.settings.animationsEnabled;
       _textScale = widget.settings.textScale;
       _hasTakenPlacement = widget.settings.hasTakenPlacement;
@@ -108,7 +115,11 @@ class _DialectDuelAppState extends State<DialectDuelApp>
       debugShowCheckedModeBanner: false,
       theme: _lightTheme,
       darkTheme: _darkTheme,
-      themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+      themeMode: switch (widget.settings.themeMode) {
+        AppThemeMode.system => ThemeMode.system,
+        AppThemeMode.light => ThemeMode.light,
+        AppThemeMode.dark => ThemeMode.dark
+      },
       themeAnimationDuration: widget.settings.animationsEnabled
           ? const Duration(milliseconds: 220)
           : Duration.zero,

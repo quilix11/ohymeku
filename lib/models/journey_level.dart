@@ -1,5 +1,7 @@
 import 'dart:math';
 import 'learning_exercise.dart';
+import 'journey_story.dart';
+import 'scenario.dart';
 import '../services/vocabulary_service.dart';
 
 class JourneyQuestion {
@@ -20,6 +22,13 @@ class JourneyLevel {
   const JourneyLevel(this.id, this.number, this.title, this.world, this.guide,
       this.wordIds, this.difficulty,
       {this.boss = false});
+  JourneyStory get story => journeyStories[id]!;
+  Scenario? get opponent => journeyBosses[id];
+  List<String> get challengeIds => ['read:0', 'read:1', 'order'];
+  List<WordCard> get worldWords => journeyLevels
+      .where((l) => l.world == world)
+      .expand((l) => l.words)
+      .toList();
   List<WordCard> get words =>
       [for (final id in wordIds) starterCards.firstWhere((w) => w.id == id)];
   List<String> choices(WordCard word) => [
@@ -89,7 +98,7 @@ const journeyLevels = [
       4,
       'Бос: аеропорт',
       'Подорож',
-      'Час маленького фіналу! Два нові слова та п’ять завдань. Чотири правильні — і шлях відкрито.',
+      'Vance чекає біля останнього турнікета. Збери підказки та підготуйся пояснити свою подорож.',
       ['a7', 'a8'],
       1,
       boss: true),
@@ -122,8 +131,35 @@ const journeyLevels = [
       8,
       'Бос: сила команди',
       'Робота',
-      'Фінальна зупинка! Застосуй слова й складні конструкції. Це фінал пригоди, а не сертифікат мовного рівня.',
+      'Hannah чекає на співбесіді. Розбери лист від команди й підготуй розповідь про свої сильні сторони.',
       ['h7', 'h8'],
       4,
+      boss: true),
+  JourneyLevel(
+      'j9',
+      9,
+      'Лист із бібліотеки',
+      'Школа',
+      'Пані Willow загубила сторінку своєї історії. Читай лист і знайди першу підказку!',
+      ['s1', 's2'],
+      0),
+  JourneyLevel('j10', 10, 'Таємний розклад', 'Школа',
+      'Розшифруй записку й допоможи Meku встигнути на урок.', ['s3', 's4'], 1),
+  JourneyLevel(
+      'j11',
+      11,
+      'Загадка в саду',
+      'Школа',
+      'За останніми дверима — вчителька. Спершу знайдемо відповідь у маленькій історії.',
+      ['s5', 's6'],
+      2),
+  JourneyLevel(
+      'j12',
+      12,
+      'Бос: пані Willow',
+      'Школа',
+      'Пані Willow хоче почути твою історію. Підготуй слова, прочитай записку й увійди до класу.',
+      ['s7', 's8'],
+      3,
       boss: true),
 ];

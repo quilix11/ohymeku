@@ -130,7 +130,7 @@ void main() {
     await tester.tap(find.byTooltip('Слова'));
     await tester.pumpAndSettle();
     await capture(tester, 'ohymeku_words');
-    await tester.tap(find.byTooltip('Головна'));
+    await tester.tap(find.byTooltip('Пригода'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('open_conversations')));
     await tester.tap(find.byKey(const Key('open_conversations')));
@@ -145,6 +145,10 @@ void main() {
     expect(settings.lastCharacter, 1);
     expect(find.text('Hannah'), findsOneWidget);
     await capture(tester, 'hannah');
+    if (find.text('Персонажі й ситуації').evaluate().isNotEmpty) {
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+    }
     await tester.tap(find.byIcon(Icons.insights_outlined));
     await tester.pumpAndSettle();
     expect(find.text('Твій прогрес'), findsOneWidget);
@@ -630,6 +634,8 @@ void main() {
       await tester.pumpAndSettle();
       expect(start.hitTestable(), findsOneWidget);
       expect(tester.takeException(), isNull, reason: '$size / $scale');
+      await tester.pageBack();
+      await tester.pumpAndSettle();
     }
   });
 

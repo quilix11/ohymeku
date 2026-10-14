@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'willow_portrait.dart';
 import 'package:flutter/material.dart';
 import '../models/game_state.dart';
 import '../models/scenario.dart';
@@ -24,6 +25,14 @@ class ScenarioPortrait extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if ((scenario.customId == 'journey-boss-j12' ||
+        scenario.customId?.startsWith('journey-free-j12-') == true)) {
+      return WillowPortrait(
+          width: width,
+          height: height,
+          emotion: emotion,
+          excludeFromSemantics: excludeFromSemantics);
+    }
     final image =
         scenario.portraits[emotion.name] ?? scenario.portraits['neutral'];
     Widget fallback() => Image.asset(scenario.image(emotion),

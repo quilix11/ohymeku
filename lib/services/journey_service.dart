@@ -2,11 +2,27 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/journey_level.dart';
+import '../models/journey_story.dart';
+import '../models/practice_record.dart';
+import '../models/game_state.dart';
 
 class JourneyService extends ChangeNotifier {
   late SharedPreferences _prefs;
   final Map<String, Set<String>> _words = {};
   final Map<String, int> _scores = {};
+  final Map<String, Set<String>> _quests = {};
+  final Map<String, String> _bosses = {};
+  bool challengeDone(JourneyLevel level, String id) =>
+      _quests[level.id]?.contains(id) ?? false;
+  bool questsDone(JourneyLevel level) =>
+      level.challengeIds.every((id) => challengeDone(level, id));
+  bool bossDefeated(JourneyLevel level) =>
+      !level.boss || _bosses.containsKey(level.id);
+  String? bossMode(JourneyLevel level) => _bosses[level.id];
+  bool wordsReady(JourneyLevel level) =>
+      level.wordIds.every((id) => wordLearned(level, id));
+  bool bossReady(JourneyLevel level) =>
+      level.boss && unlocked(level) && readyForTest(level) && best(level) >= 4;
   Future<void> _pending = Future.value();
   JourneyLevel get current => journeyLevels.firstWhere((l) => !completed(l),
       orElse: () => journeyLevels.last);
@@ -15,9 +31,12 @@ class JourneyService extends ChangeNotifier {
   bool wordLearned(JourneyLevel level, String id) =>
       _words[level.id]?.contains(id) ?? false;
   bool readyForTest(JourneyLevel level) =>
-      level.wordIds.every((id) => wordLearned(level, id));
+      wordsReady(level) && questsDone(level);
   bool completed(JourneyLevel level) =>
-      unlocked(level) && readyForTest(level) && best(level) >= 4;
+      unlocked(level) &&
+      readyForTest(level) &&
+      best(level) >= 4 &&
+      bossDefeated(level);
   int stars(JourneyLevel level) =>
       completed(level) ? (best(level) == 5 ? 3 : 2) : 0;
   int get totalStars => journeyLevels.fold(0, (sum, l) => sum + stars(l));
@@ -31,19 +50,44 @@ class JourneyService extends ChangeNotifier {
   Future<void> load({SharedPreferences? preferences}) async {
     _prefs = preferences ?? await SharedPreferences.getInstance();
     try {
-      final data = jsonDecode(_prefs.getString('journey_v1') ?? '{}');
+      final saved = _prefs.getString('journey_v2');
+      final legacy = saved == null;
+      final data = jsonDecode(saved ?? _prefs.getString('journey_v1') ?? '{}');
+      var legacyPrefix = true;
       if (data is Map) {
         for (final level in journeyLevels) {
           final item = data[level.id];
-          if (item is! Map) continue;
+          if (item is! Map) {
+            legacyPrefix = false;
+            continue;
+          }
           final words = item['words'];
           if (words is List) {
             _words[level.id] =
                 words.whereType<String>().where(level.wordIds.contains).toSet();
           }
+          final quests = item['quests'];
+          if (quests is List) {
+            _quests[level.id] = quests
+                .whereType<String>()
+                .where(level.challengeIds.contains)
+                .toSet();
+          }
+          final boss = item['boss'];
+          if (level.boss && ['ai', 'dialogue', 'legacy'].contains(boss)) {
+            _bosses[level.id] = boss as String;
+          }
           final score = item['best'];
           if (score is int && score >= 0 && score <= 5) {
             _scores[level.id] = score;
+          }
+          if (legacy) {
+            legacyPrefix =
+                legacyPrefix && wordsReady(level) && best(level) >= 4;
+            if (legacyPrefix) {
+              _quests[level.id] = level.challengeIds.toSet();
+              if (level.boss) _bosses[level.id] = 'legacy';
+            }
           }
         }
       }
@@ -59,13 +103,19 @@ class JourneyService extends ChangeNotifier {
     return task;
   }
 
-  Future<void> _save(
-      Map<String, Set<String>> words, Map<String, int> scores) async {
+  Future<void> _save(Map<String, Set<String>> words, Map<String, int> scores,
+      {Map<String, Set<String>>? quests, Map<String, String>? bosses}) async {
+    final nextQuests = quests ?? _quests, nextBosses = bosses ?? _bosses;
     final data = {
       for (final l in journeyLevels)
-        l.id: {'words': (words[l.id] ?? {}).toList(), 'best': scores[l.id] ?? 0}
+        l.id: {
+          'words': (words[l.id] ?? {}).toList(),
+          'best': scores[l.id] ?? 0,
+          'quests': (nextQuests[l.id] ?? {}).toList(),
+          if (nextBosses.containsKey(l.id)) 'boss': nextBosses[l.id]
+        }
     };
-    if (!await _prefs.setString('journey_v1', jsonEncode(data))) {
+    if (!await _prefs.setString('journey_v2', jsonEncode(data))) {
       throw StateError('Не вдалося зберегти пригоду. Спробуй ще раз.');
     }
     _words
@@ -74,6 +124,16 @@ class JourneyService extends ChangeNotifier {
     _scores
       ..clear()
       ..addAll(scores);
+    if (quests != null) {
+      _quests
+        ..clear()
+        ..addAll(quests);
+    }
+    if (bosses != null) {
+      _bosses
+        ..clear()
+        ..addAll(bosses);
+    }
     notifyListeners();
   }
 
@@ -99,7 +159,7 @@ class JourneyService extends ChangeNotifier {
       _write(() async {
         final level = _level(levelId);
         if (!unlocked(level) || !readyForTest(level)) {
-          throw StateError('Спочатку перевір обидва слова рівня.');
+          throw StateError('Спочатку перевір слова та заверши сюжетні квести.');
         }
         final expected = level.questions();
         if (questions.length != 5 ||
@@ -128,4 +188,66 @@ class JourneyService extends ChangeNotifier {
             {for (final e in _words.entries) e.key: Set.of(e.value)}, scores);
         return score;
       });
+  Future<bool> verifyChallenge(
+          String levelId, String challengeId, String answer) =>
+      _write(() async {
+        final level = _level(levelId);
+        if (!unlocked(level) || !wordsReady(level)) {
+          throw StateError('Спочатку перевір слова рівня.');
+        }
+        if (!level.challengeIds.contains(challengeId)) {
+          throw ArgumentError('Невідомий квест.');
+        }
+        final correct = challengeId == 'order'
+            ? answer == level.story.sentence
+            : level.story.questions
+                    .firstWhere((q) => q.id == challengeId)
+                    .options[0] ==
+                answer;
+        if (!correct) return false;
+        final quests = {
+          for (final e in _quests.entries) e.key: Set<String>.of(e.value)
+        };
+        (quests[levelId] ??= {}).add(challengeId);
+        await _save({
+          for (final e in _words.entries) e.key: Set<String>.of(e.value)
+        }, Map.of(_scores), quests: quests);
+        return true;
+      });
+  Future<void> finishDialogue(String levelId, List<String> answers) =>
+      _write(() async {
+        final level = _level(levelId);
+        if (!bossReady(level)) {
+          throw StateError('До боса ведуть слова, квести й тест 4/5.');
+        }
+        final questions = bossDialogues[levelId]!;
+        if (answers.length != questions.length ||
+            List.generate(
+                    questions.length,
+                    (i) =>
+                        answers[i] == questions[i].options[questions[i].answer])
+                .contains(false)) {
+          throw ArgumentError('Спочатку заверши всі три репліки дуелі.');
+        }
+        await _saveBoss(levelId, 'dialogue');
+      });
+  Future<void> recordAiVictory(String levelId, PracticeRecord record) =>
+      _write(() async {
+        final level = _level(levelId);
+        if (!bossReady(level) ||
+            record.scenarioId != level.opponent?.customId ||
+            record.status != GameStatus.win ||
+            record.messages.where((m) => m.isPlayer).length < 2) {
+          throw StateError(
+              'Печатку дає перемога в розмові з босом цього світу.');
+        }
+        await _saveBoss(levelId, 'ai');
+      });
+  Future<void> _saveBoss(String levelId, String mode) async {
+    final bosses = Map<String, String>.of(_bosses);
+    if (bosses[levelId] != 'ai') bosses[levelId] = mode;
+    await _save({
+      for (final e in _words.entries) e.key: Set<String>.of(e.value)
+    }, Map.of(_scores), bosses: bosses);
+  }
 }

@@ -19,6 +19,8 @@ class GameSession extends ChangeNotifier {
   String? error, saveError;
   LanguageHelp? tutorHelp;
   bool saving = false;
+  PracticeRecord? _savedRecord;
+  PracticeRecord? get savedRecord => _savedRecord;
   String? _failedMessage;
   List<ChatMessage> _confirmed = [];
   final List<Feedback> feedback = [];
@@ -73,6 +75,7 @@ class GameSession extends ChangeNotifier {
     saveError = null;
     _failedMessage = null;
     _saved = false;
+    _savedRecord = null;
     feedback.clear();
   }
 
@@ -173,7 +176,7 @@ class GameSession extends ChangeNotifier {
     saveError = null;
     if (!_disposed) notifyListeners();
     try {
-      await progress.recordSession(PracticeRecord(
+      final record = PracticeRecord(
           scenarioId: scenario.customId,
           scenarioName: scenario.name,
           id: _id,
@@ -184,7 +187,9 @@ class GameSession extends ChangeNotifier {
           patience: state.patience,
           xp: earnedXp,
           messages: List.unmodifiable(_confirmed),
-          feedback: List.unmodifiable(feedback)));
+          feedback: List.unmodifiable(feedback));
+      await progress.recordSession(record);
+      _savedRecord = record;
       _saved = true;
     } catch (_) {
       saveError = 'Не вдалося зберегти розмову. Повтори збереження.';

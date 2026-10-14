@@ -18,8 +18,14 @@ Future<(SettingsService, ProgressService)> setup() async {
 
 Future<void> tapText(WidgetTester tester, String value) async {
   final finder = find.text(value);
-  await tester.scrollUntilVisible(finder, 160,
-      scrollable: find.byType(Scrollable).last);
+  if (finder.evaluate().isEmpty) {
+    final scrollable = find.byType(Scrollable).last;
+    tester.state<ScrollableState>(scrollable).position.jumpTo(0);
+    await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(finder, 160,
+        scrollable: find.byType(Scrollable).last);
+  }
+  await Scrollable.ensureVisible(tester.element(finder.first), alignment: .5);
   await tester.pumpAndSettle();
   await tester.tap(finder.first);
   await tester.pumpAndSettle();
@@ -57,7 +63,18 @@ void main() {
     await tapText(tester, 'Друге слово');
     await tapText(tester, 'Перевірити слово');
     await tapText(tester, level.words.last.translation);
-    await tapText(tester, 'До тесту');
+    await tapText(tester, 'До квестів');
+    for (final q in level.story.questions) {
+      await tapText(tester, q.options[q.answer]);
+      await tapText(tester, 'Наступний квест');
+    }
+    for (final token in level.story.tokens) {
+      await tester.tap(find.widgetWithText(ActionChip, token).first);
+      await tester.pumpAndSettle();
+    }
+    await tapText(tester, 'Перевірити міст');
+    await tapText(tester, 'Забрати знахідку');
+    await tapText(tester, 'До перевірки');
     for (final q in level.questions()) {
       await tapText(tester, q.options[q.answer]);
       await tapText(tester,

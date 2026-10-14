@@ -4,6 +4,7 @@ import '../widgets/dictionary_sheet.dart';
 import 'practice_screen.dart';
 import 'package:flutter/material.dart';
 import '../models/game_state.dart';
+import '../models/practice_record.dart';
 import '../models/scenario.dart';
 import '../services/ai_service.dart';
 import '../services/game_session.dart';
@@ -24,6 +25,7 @@ class GameScreen extends StatefulWidget {
   final AiService? ai;
   final LearningService? tutor;
   final Scenario? scenario;
+  final Future<void> Function(PracticeRecord)? onVictory;
   const GameScreen(
       {super.key,
       required this.settings,
@@ -31,7 +33,8 @@ class GameScreen extends StatefulWidget {
       this.character = GameCharacter.officer,
       this.ai,
       this.tutor,
-      this.scenario});
+      this.scenario,
+      this.onVictory});
   @override
   State<GameScreen> createState() => _GameScreenState();
 }
@@ -50,7 +53,7 @@ class _GameScreenState extends State<GameScreen> {
       _micBusy = false,
       _leaving = false;
   int _capture = 0, _voiceRequest = 0, _messageCount = 0;
-  String? _audioError;
+  String? _audioError, _victoryError;
   Scenario get _scenario {
     final original = widget.scenario ?? Scenario.of(widget.character);
     return widget.settings.customScenarios.firstWhere(
@@ -361,7 +364,21 @@ class _GameScreenState extends State<GameScreen> {
       setState(() => _leaving = false);
       return;
     }
-    Navigator.of(context).pop();
+    if (widget.onVictory != null && _session.savedRecord?.won == true) {
+      try {
+        await widget.onVictory!(_session.savedRecord!);
+      } catch (_) {
+        if (mounted) {
+          setState(() {
+            _leaving = false;
+            _victoryError =
+                'Не вдалося зберегти печатку боса. Повтори повернення до пригоди.';
+          });
+        }
+        return;
+      }
+    }
+    if (mounted) Navigator.of(context).pop();
   }
 
   Future<void> _restart() async {
@@ -419,7 +436,8 @@ class _GameScreenState extends State<GameScreen> {
       child: Scaffold(
         appBar: AppBar(
             leading: IconButton(
-                tooltip: 'До персонажів',
+                tooltip:
+                    widget.onVictory == null ? 'До персонажів' : 'До пригоди',
                 onPressed: _leave,
                 icon: const Icon(Icons.arrow_back_rounded)),
             title: Text(_scenario.name,
@@ -531,6 +549,11 @@ class _GameScreenState extends State<GameScreen> {
                               text: _session.error!,
                               action: 'Повторити',
                               onAction: _session.canRetry ? _retryTurn : null),
+                        if (_victoryError != null)
+                          _Notice(
+                              text: _victoryError!,
+                              action: 'Повторити збереження',
+                              onAction: _leave),
                         if (_audioError != null)
                           _Notice(
                               text: _audioError!,
@@ -578,7 +601,9 @@ class _GameScreenState extends State<GameScreen> {
                             Expanded(
                                 child: OutlinedButton(
                                     onPressed: _session.saving ? null : _leave,
-                                    child: const Text('До персонажів'))),
+                                    child: Text(widget.onVictory == null
+                                        ? 'До персонажів'
+                                        : 'До пригоди'))),
                             const SizedBox(width: 10),
                             Expanded(
                                 child: FilledButton(

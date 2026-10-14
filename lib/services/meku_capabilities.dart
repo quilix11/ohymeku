@@ -113,7 +113,7 @@ const mekuCapabilities = [
   {
     'type': 'theme',
     'description': 'Change appearance immediately.',
-    'value': 'light/dark'
+    'value': 'light/dark/system'
   },
   {
     'type': 'card_count',

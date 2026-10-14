@@ -15,7 +15,7 @@ import 'cloud_speech_service.dart';
 import 'reading_service.dart';
 import 'journey_service.dart';
 
-enum AppThemeMode { light, dark }
+enum AppThemeMode { light, dark, system }
 
 class SettingsService extends ChangeNotifier {
   late SharedPreferences _prefs;
@@ -370,7 +370,7 @@ class SettingsService extends ChangeNotifier {
     return scenario;
   }
 
-  AppThemeMode _themeMode = AppThemeMode.light;
+  AppThemeMode _themeMode = AppThemeMode.system;
   final Map<GameCharacter, String> _voices = {};
   String? voiceFor(GameCharacter character) =>
       _scenarioVoices[character.name] ?? _voices[character];
@@ -394,7 +394,11 @@ class SettingsService extends ChangeNotifier {
   String _speechLocale = 'en_US';
 
   AppThemeMode get themeMode => _themeMode;
-  bool get isDark => _themeMode == AppThemeMode.dark;
+  bool get isDark =>
+      _themeMode == AppThemeMode.dark ||
+      (_themeMode == AppThemeMode.system &&
+          WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+              Brightness.dark);
   double get ttsSpeed => _ttsSpeed;
   double get ttsVolume => _ttsVolume;
   bool get ttsEnabled => _ttsEnabled;
@@ -470,8 +474,8 @@ class SettingsService extends ChangeNotifier {
         } catch (_) {}
       }
     } catch (_) {}
-    _themeMode =
-        AppThemeMode.values[(_prefs.getInt('theme_mode') ?? 0).clamp(0, 1)];
+    _themeMode = AppThemeMode.values[
+        (_prefs.getInt('theme_mode') ?? AppThemeMode.system.index).clamp(0, 2)];
     for (final character in GameCharacter.values) {
       final voice = _prefs.getString('voice_${character.name}');
       if (voice != null) _voices[character] = voice;

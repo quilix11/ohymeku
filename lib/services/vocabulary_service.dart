@@ -301,4 +301,18 @@ const starterCards = [
       'I want to improve my communication skills.', 'Робота'),
   WordCard('h8', 'teamwork', 'командна робота',
       'Good teamwork helped us solve the problem.', 'Робота'),
+  WordCard(
+      's1', 'library', 'бібліотека', 'The library opens at nine.', 'Школа'),
+  WordCard('s2', 'borrow', 'позичати', 'May I borrow this book?', 'Школа'),
+  WordCard('s3', 'lesson', 'урок', 'Our lesson starts at ten.', 'Школа'),
+  WordCard(
+      's4', 'schedule', 'розклад', 'Check the schedule before class.', 'Школа'),
+  WordCard(
+      's5', 'clue', 'підказка', 'The clue is under the old tree.', 'Школа'),
+  WordCard('s6', 'discover', 'відкривати; знаходити',
+      'We discover a secret garden.', 'Школа'),
+  WordCard(
+      's7', 'explain', 'пояснювати', 'Can you explain your answer?', 'Школа'),
+  WordCard('s8', 'curious', 'допитливий', 'Meku is curious about everything.',
+      'Школа'),
 ];
