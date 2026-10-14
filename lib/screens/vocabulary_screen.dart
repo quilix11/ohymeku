@@ -1,4 +1,5 @@
 import '../widgets/ohymeku_design.dart';
+import '../widgets/flip_card.dart';
 import 'dart:async';
 import '../services/progress_service.dart';
 import '../services/dictionary_service.dart';
@@ -321,6 +322,70 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
     super.dispose();
   }
 
+  Widget _cardFace(bool flipped) {
+    final theme = Theme.of(context), c = theme.colorScheme;
+    return Padding(
+        padding: const EdgeInsets.all(20),
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Row(children: [
+            Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                    color: c.secondaryContainer,
+                    borderRadius: BorderRadius.circular(8)),
+                child: Text(flipped ? 'UA' : 'EN',
+                    style: theme.textTheme.labelLarge)),
+            const Spacer(),
+            IconButton.filledTonal(
+                tooltip: 'Послухати вимову',
+                onPressed: _speak,
+                icon: Icon(
+                    _speaking ? Icons.stop_rounded : Icons.volume_up_outlined)),
+          ]),
+          const SizedBox(height: 28),
+          Text(flipped ? _queue.first.translation : _queue.first.word,
+              key: ValueKey('${_queue.first.id}_$flipped'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.headlineLarge
+                  ?.copyWith(fontFamily: 'Lora', fontSize: 32)),
+          if (_queue.first.transcription.isNotEmpty ||
+              wordIpa.containsKey(_queue.first.word)) ...[
+            const SizedBox(height: 12),
+            Text(
+                _queue.first.transcription.isEmpty
+                    ? wordIpa[_queue.first.word]!
+                    : _queue.first.transcription,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium
+                    ?.copyWith(fontFamily: 'NotoSans')),
+          ],
+          if (flipped && _queue.first.example.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                    color: c.primaryContainer,
+                    borderRadius: BorderRadius.circular(12)),
+                child: Text(_queue.first.example,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge
+                        ?.copyWith(color: c.onPrimaryContainer))),
+          ],
+          const SizedBox(height: 32),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            Icon(Icons.flip_rounded, size: 20, color: c.primary),
+            const SizedBox(width: 8),
+            Flexible(
+                child: Text(
+                    flipped ? 'Повернути слово' : 'Торкнись — покажу переклад',
+                    style: theme.textTheme.labelMedium,
+                    textAlign: TextAlign.center)),
+          ]),
+        ]));
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context), c = theme.colorScheme;
@@ -438,96 +503,13 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                           : 'Повторити весь набір')),
                 ]))
           else ...[
-            Semantics(
-                button: true,
-                label: _flipped ? 'Приховати переклад' : 'Показати переклад',
-                child: Material(
-                    color: c.surface,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: c.primary, width: 2)),
-                    clipBehavior: Clip.antiAlias,
-                    child: InkWell(
-                      onTap: () => setState(() => _flipped = !_flipped),
-                      child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Row(children: [
-                                  Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 10, vertical: 6),
-                                      decoration: BoxDecoration(
-                                          color: c.secondaryContainer,
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
-                                      child: Text(_flipped ? 'UA' : 'EN',
-                                          style: theme.textTheme.labelLarge)),
-                                  const Spacer(),
-                                  IconButton.filledTonal(
-                                      tooltip: 'Послухати вимову',
-                                      onPressed: _speak,
-                                      icon: Icon(_speaking
-                                          ? Icons.stop_rounded
-                                          : Icons.volume_up_outlined)),
-                                ]),
-                                const SizedBox(height: 28),
-                                Text(
-                                    _flipped
-                                        ? _queue.first.translation
-                                        : _queue.first.word,
-                                    key: ValueKey(
-                                        '${_queue.first.id}_$_flipped'),
-                                    textAlign: TextAlign.center,
-                                    style: theme.textTheme.headlineLarge
-                                        ?.copyWith(
-                                            fontFamily: 'Lora', fontSize: 32)),
-                                if (_queue.first.transcription.isNotEmpty ||
-                                    wordIpa.containsKey(_queue.first.word)) ...[
-                                  const SizedBox(height: 12),
-                                  Text(
-                                      _queue.first.transcription.isEmpty
-                                          ? wordIpa[_queue.first.word]!
-                                          : _queue.first.transcription,
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(fontFamily: 'NotoSans')),
-                                ],
-                                if (_flipped &&
-                                    _queue.first.example.isNotEmpty) ...[
-                                  const SizedBox(height: 24),
-                                  Container(
-                                      padding: const EdgeInsets.all(16),
-                                      decoration: BoxDecoration(
-                                          color: c.primaryContainer,
-                                          borderRadius:
-                                              BorderRadius.circular(12)),
-                                      child: Text(_queue.first.example,
-                                          textAlign: TextAlign.center,
-                                          style: theme.textTheme.bodyLarge
-                                              ?.copyWith(
-                                                  color:
-                                                      c.onPrimaryContainer))),
-                                ],
-                                const SizedBox(height: 32),
-                                Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.flip_rounded,
-                                          size: 20, color: c.primary),
-                                      const SizedBox(width: 8),
-                                      Flexible(
-                                          child: Text(
-                                              _flipped
-                                                  ? 'Повернути слово'
-                                                  : 'Торкнись — покажу переклад',
-                                              style:
-                                                  theme.textTheme.labelMedium,
-                                              textAlign: TextAlign.center)),
-                                    ]),
-                              ])),
-                    ))),
+            FlipCard(
+                key: ValueKey(_queue.first.id),
+                flipped: _flipped,
+                animate: widget.settings.animationsEnabled && widget.active,
+                onTap: () => setState(() => _flipped = !_flipped),
+                front: _cardFace(false),
+                back: _cardFace(true)),
             const SizedBox(height: 16),
             AdaptiveActions(children: [
               OutlinedButton.icon(
