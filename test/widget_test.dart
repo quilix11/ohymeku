@@ -132,6 +132,9 @@ void main() {
     await capture(tester, 'ohymeku_words');
     await tester.tap(find.byTooltip('Головна'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.byKey(const Key('open_conversations')));
+    await tester.tap(find.byKey(const Key('open_conversations')));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('character_carousel')));
     await tester.pumpAndSettle();
     await tester.drag(
@@ -602,6 +605,15 @@ void main() {
         home: MainScreen(
             key: UniqueKey(), settings: settings, progress: progress),
       ));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+          find.byKey(const Key('open_conversations')), 160,
+          scrollable: find.byType(Scrollable).first);
+      await Scrollable.ensureVisible(
+          tester.element(find.byKey(const Key('open_conversations'))),
+          alignment: .5);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('open_conversations')));
       await tester.pumpAndSettle();
       final start = find.byKey(const Key('start_officer'));
       if (scale == 1) {

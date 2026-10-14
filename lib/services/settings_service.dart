@@ -13,6 +13,7 @@ import 'vocabulary_service.dart';
 import 'notification_service.dart';
 import 'cloud_speech_service.dart';
 import 'reading_service.dart';
+import 'journey_service.dart';
 
 enum AppThemeMode { light, dark }
 
@@ -151,6 +152,7 @@ class SettingsService extends ChangeNotifier {
   final learner = LearnerService();
   final vocabulary = VocabularyService();
   final reading = ReadingService();
+  final journey = JourneyService();
   bool adaptiveLearning = true, offlineMode = false;
   int reminderHour = 19, reminderMinute = 0;
   String? notificationError;
@@ -407,6 +409,7 @@ class SettingsService extends ChangeNotifier {
     await learner.load();
     await vocabulary.load();
     await reading.load();
+    await journey.load(preferences: _prefs);
     adaptiveLearning = _prefs.getBool('adaptive_learning') ?? true;
     offlineMode = _prefs.getBool('offline_mode') ?? false;
     reminderHour = (_prefs.getInt('reminder_hour') ?? 19).clamp(0, 23);

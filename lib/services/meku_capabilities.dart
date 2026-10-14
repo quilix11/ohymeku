@@ -102,7 +102,7 @@ const mekuCapabilities = [
     'type': 'navigate',
     'description': 'Open a section of the app.',
     'value':
-        'conversations/words/progress/profile/settings/practice/placement/generation/character_generation/reading'
+        'journey/conversations/words/progress/profile/settings/practice/placement/generation/character_generation/reading'
   },
   {
     'type': 'level',

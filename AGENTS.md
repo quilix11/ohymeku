@@ -27,7 +27,9 @@ Read this map before exploring; inspect target source before edits.
 - `cloud_speech_service.dart`: Gemini 2.5 Flash preview TTS, WAV/PCM decoding, audioplayers playback, request cancellation and six-item session cache. Off by default; shares existing Gemini key. Separate voice choices per existing avatar profile. Custom characters have independent saved voice settings.
 - Local Lora/Manrope fonts in assets/fonts with OFL licenses. Additional saved settings: learning level, deck size, tutor coaching visibility, text scale, pitch, cloud voice/style.
 - `main.dart`: dotenv, settings/progress initialization, portrait orientation, animated light/dark theme; opens MainScreen directly.
-- `screens/main_screen.dart`: animated tabs: character selection, local progress, profile.
+- `screens/main_screen.dart`: home opens the Meku journey map, with a button for free character conversations; other tabs preserve local progress, profile and vocabulary.
+- `SettingsService.journey` owns `journey_service.dart`: serialized persisted word checks and canonical five-question results; two verified words and 4/5 unlock the next of eight levels. Best scores give two/three stars, never duplicate XP. Preserve shared vocabulary/learner ownership.
+- `journey_screen.dart` / `journey_level_screen.dart`: responsive zigzag map, reduced-motion-aware animations, local Meku guidance, word recall and authored grammar quizzes. Offline; no AI call or CEFR certification.
 - Current tabs use a lazy IndexedStack to preserve state without rebuilding pages on each swipe. Fourth tab: vocabulary.
 - `screens/vocabulary_screen.dart`, `services/vocabulary_service.dart`: 16 built-in travel/work cards, custom cards, flip, pronunciation, known/repeat queue, shuffle, undo; known IDs and custom cards persist in SharedPreferences.
 - `widgets/conversation_meters.dart`: trust/patience plus confirmed turn and unique English word counters. Practice targets grow with prior character wins; these counters are not language proficiency scores.

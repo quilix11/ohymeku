@@ -2,6 +2,12 @@
 
 Flutter mobile app for practicing spoken English through short, AI-driven role-play conversations. The current scenarios are an airport border interview with Officer Vance and a job interview with HR Hannah. The interface includes Ukrainian coaching feedback.
 
+## Пригода з Meku
+
+Головний екран — карта з вісьмома рівнями зигзагом. Meku веде через подорож і робочі завдання: на кожному рівні потрібно вивчити й перевірити два слова, а потім відповісти на п’ять питань. Результат 4/5 відкриває наступний рівень і дає дві зірки; 5/5 дає три. Прогрес зберігається на пристрої, повторне проходження не зменшує найкращий результат.
+
+Пригода працює без інтернету та Gemini. Слова й граматичні відповіді використовують спільні навчальні сервіси. Карта має анімації з підтримкою зменшення руху; вільні розмови доступні окремою кнопкою. Завершення пригоди не є підтвердженням рівня CEFR.
+
 ## Run locally
 
 Requirements: Flutter SDK with Dart 3, Android Studio/Xcode for device builds.

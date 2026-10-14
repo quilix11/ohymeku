@@ -74,6 +74,11 @@ class MekuService extends ChangeNotifier {
   }
 
   Map<String, dynamic> get context => {
+        'journey': {
+          'completed': settings.journey.completedCount,
+          'stars': settings.journey.totalStars,
+          'next_level': settings.journey.current.number
+        },
         'name': progress.editableName,
         'level': settings.effectiveLevel,
         'base_level': settings.learningLevel,
@@ -543,6 +548,7 @@ ${jsonEncode(mekuCapabilities)}''',
     }
     if (type == 'navigate' &&
         [
+          'journey',
           'conversations',
           'words',
           'progress',

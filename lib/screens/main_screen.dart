@@ -19,6 +19,7 @@ import '../widgets/dictionary_sheet.dart';
 import 'reading_screen.dart';
 import 'reader_screen.dart';
 import 'game_screen.dart';
+import 'journey_screen.dart';
 
 class MainScreen extends StatefulWidget {
   final SettingsService settings;
@@ -30,6 +31,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _index = 0;
+  bool _journey = true;
   final _visited = <int>{0};
   late final MekuService _meku;
   String? _wordDeck;
@@ -50,6 +52,14 @@ class _MainScreenState extends State<MainScreen> {
 
   void _navigate(String destination) {
     if (!mounted) return;
+    if (destination == 'journey' || destination == 'conversations') {
+      setState(() {
+        _journey = destination == 'journey';
+        _index = 0;
+        _visited.add(0);
+      });
+      return;
+    }
     const tabs = {'conversations': 0, 'words': 1, 'progress': 2, 'profile': 3};
     if (tabs.containsKey(destination)) {
       _select(tabs[destination]!);
@@ -196,6 +206,16 @@ class _MainScreenState extends State<MainScreen> {
                     style: theme.textTheme.titleLarge
                         ?.copyWith(fontWeight: FontWeight.w800, fontSize: 24)),
                 actions: [
+                  if (_journey && _index == 0)
+                    IconButton(
+                        tooltip: 'Налаштування',
+                        onPressed: () => _navigate('settings'),
+                        icon: const Icon(Icons.tune_rounded)),
+                  if (!_journey || _index != 0)
+                    IconButton(
+                        tooltip: 'Карта рівнів',
+                        onPressed: () => _navigate('journey'),
+                        icon: const Icon(Icons.route_rounded)),
                   Padding(
                       padding: const EdgeInsets.only(right: 16),
                       child: large
@@ -223,11 +243,17 @@ class _MainScreenState extends State<MainScreen> {
                         child: IndexedStack(index: _index, children: [
                           if (_visited.contains(0))
                             RepaintBoundary(
-                                child: CharacterSelectionScreen(
-                                    settings: widget.settings,
-                                    progress: widget.progress,
-                                    onReading: () => _navigate('reading'),
-                                    onWords: () => _select(1)))
+                                child: _journey
+                                    ? JourneyScreen(
+                                        settings: widget.settings,
+                                        progress: widget.progress,
+                                        onConversations: () =>
+                                            _navigate('conversations'))
+                                    : CharacterSelectionScreen(
+                                        settings: widget.settings,
+                                        progress: widget.progress,
+                                        onReading: () => _navigate('reading'),
+                                        onWords: () => _select(1)))
                           else
                             const SizedBox.shrink(),
                           if (_visited.contains(1))
