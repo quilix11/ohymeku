@@ -47,7 +47,7 @@ class FlipCard extends StatelessWidget {
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: onTap,
-                child: Stack(alignment: Alignment.center, children: [
+                child: Stack(alignment: Alignment.topCenter, children: [
                   Visibility(
                       visible: !showBack,
                       maintainState: true,
