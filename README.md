@@ -14,7 +14,16 @@ Flutter mobile app for practicing spoken English through short, AI-driven role-p
 
 ## Run locally
 
-Requirements: Flutter SDK with Dart 3, Android Studio/Xcode for device builds.
+Requirements: Git, Flutter SDK with Dart 3, Android Studio/Xcode for device builds.
+
+Clone the repository and open the project directory:
+
+```powershell
+git clone https://github.com/quilix11/ohymeku.git
+cd ohymeku
+```
+
+Install dependencies and run the app:
 
 ```powershell
 flutter pub get
