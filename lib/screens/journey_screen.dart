@@ -207,14 +207,32 @@ class JourneyScreen extends StatelessWidget {
                                               style:
                                                   theme.textTheme.titleSmall),
                                           const SizedBox(height: 3),
-                                          Text(
-                                              journey.completed(level)
-                                                  ? '★' * journey.stars(level)
-                                                  : journey.unlocked(level)
-                                                      ? '${level.world} · 2 слова + тест'
-                                                      : 'Пройди рівень ${level.number - 1}',
-                                              textAlign: TextAlign.center,
-                                              style: theme.textTheme.bodySmall),
+                                          if (journey.completed(level))
+                                            Semantics(
+                                                label:
+                                                    '${journey.stars(level)} зірки',
+                                                child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      for (var i = 0;
+                                                          i <
+                                                              journey
+                                                                  .stars(level);
+                                                          i++)
+                                                        Icon(Icons.star_rounded,
+                                                            size: 18,
+                                                            color: c.primary),
+                                                    ]))
+                                          else
+                                            Text(
+                                                journey.unlocked(level)
+                                                    ? '${level.world} · 2 слова + тест'
+                                                    : 'Пройди рівень ${level.number - 1}',
+                                                textAlign: TextAlign.center,
+                                                style:
+                                                    theme.textTheme.bodySmall),
                                         ]))),
                         ])));
               }),
