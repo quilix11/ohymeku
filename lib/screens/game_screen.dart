@@ -1,4 +1,5 @@
 import '../widgets/ohymeku_design.dart';
+import '../theme/app_theme.dart';
 import 'dart:async';
 import '../widgets/dictionary_sheet.dart';
 import 'practice_screen.dart';
@@ -568,7 +569,8 @@ class _GameScreenState extends State<GameScreen> {
                               onAction: _session.save),
                         if (_session.finished)
                           Card(
-                              color: theme.colorScheme.primaryContainer,
+                              color: theme.colorScheme.primaryContainer
+                                  .withValues(alpha: .90),
                               child: Padding(
                                   padding: const EdgeInsets.all(20),
                                   child: Column(children: [
@@ -611,7 +613,11 @@ class _GameScreenState extends State<GameScreen> {
                     else
                       Container(
                           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                          color: theme.colorScheme.surface,
+                          decoration: AppVisuals.panelDecoration(context)
+                              .copyWith(
+                                  borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(
+                                          AppVisuals.radiusCard))),
                           child: Column(
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -697,7 +703,8 @@ class _Notice extends StatelessWidget {
   const _Notice({required this.text, required this.action, this.onAction});
   @override
   Widget build(BuildContext context) => Card(
-      color: Theme.of(context).colorScheme.errorContainer,
+      color:
+          Theme.of(context).colorScheme.errorContainer.withValues(alpha: .94),
       child: Padding(
           padding: const EdgeInsets.all(12),
           child:

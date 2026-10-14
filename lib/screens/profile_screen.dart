@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/settings_service.dart';
 import '../services/progress_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/app_components.dart';
 import 'settings_screen.dart';
 import 'placement_screen.dart';
@@ -69,9 +70,8 @@ class ProfileScreen extends StatelessWidget {
               child: Row(children: [
                 Container(
                     padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                        color: c.surface,
-                        borderRadius: BorderRadius.circular(12)),
+                    decoration: AppVisuals.panelDecoration(context,
+                        radius: AppVisuals.radiusControl),
                     child: Icon(profileIcons[progress.avatar],
                         size: 28, color: c.primary)),
                 const SizedBox(width: 14),
@@ -101,9 +101,16 @@ class ProfileScreen extends StatelessWidget {
                 Row(children: [
                   Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                          color: c.primaryContainer,
-                          borderRadius: BorderRadius.circular(12)),
+                      decoration: AppVisuals.panelDecoration(context,
+                              radius: AppVisuals.radiusControl)
+                          .copyWith(
+                              gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                            c.primaryContainer.withValues(alpha: .85),
+                            c.primaryContainer.withValues(alpha: .96),
+                          ])),
                       child: Text(settings.effectiveLevel,
                           style: theme.textTheme.titleLarge
                               ?.copyWith(color: c.primary))),

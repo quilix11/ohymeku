@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 /// Token IDs keep repeated words independent while moving between both areas.
 class SentenceBuilder extends StatelessWidget {
@@ -49,9 +50,11 @@ class SentenceBuilder extends StatelessWidget {
           child: Material(
               color: Colors.transparent,
               child: Chip(
-                  elevation: 6,
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
+                  elevation: 4,
+                  backgroundColor: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: .94),
                   label: Text(words[token])))),
       childWhenDragging: Opacity(opacity: .3, child: chip),
       child: chip,
@@ -77,16 +80,20 @@ class SentenceBuilder extends StatelessWidget {
             width: double.infinity,
             constraints: const BoxConstraints(minHeight: 72),
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-                color: candidates.isEmpty
-                    ? colors.surfaceContainerLow
-                    : colors.primaryContainer,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                    color: candidates.isEmpty
-                        ? colors.outlineVariant
-                        : colors.primary,
-                    width: 2)),
+            decoration: AppVisuals.panelDecoration(context,
+                    radius: AppVisuals.radiusControl)
+                .copyWith(
+                    gradient: candidates.isEmpty
+                        ? AppVisuals.panelDecoration(context).gradient
+                        : LinearGradient(colors: [
+                            colors.primaryContainer.withValues(alpha: .96),
+                            colors.primaryContainer.withValues(alpha: .9),
+                          ]),
+                    border: Border.all(
+                        color: candidates.isEmpty
+                            ? AppVisuals.panelBorder(context)
+                            : colors.primary.withValues(alpha: .75),
+                        width: 2)),
             child: child),
       ),
     );
@@ -118,7 +125,8 @@ class SentenceBuilder extends StatelessWidget {
                           builder: (context, candidates, rejected) =>
                               DecoratedBox(
                                   decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: BorderRadius.circular(
+                                          AppVisuals.radiusControl),
                                       border: Border.all(
                                           color: candidates.isEmpty
                                               ? Colors.transparent

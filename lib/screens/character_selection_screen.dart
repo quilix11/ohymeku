@@ -8,6 +8,7 @@ import 'game_screen.dart';
 import 'generation_screen.dart';
 import 'practice_screen.dart';
 import '../widgets/ohymeku_design.dart';
+import '../theme/app_theme.dart';
 
 class CharacterSelectionScreen extends StatefulWidget {
   final SettingsService settings;
@@ -188,7 +189,8 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                           ])),
                       const SizedBox(width: 12),
                       ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius:
+                              BorderRadius.circular(AppVisuals.radiusControl),
                           child: ScenarioPortrait(
                             scenario: s,
                             onRetry: s.customId == null
@@ -264,11 +266,19 @@ class _SceneChoice extends StatelessWidget {
         button: true,
         selected: selected,
         child: Material(
-            color: selected ? c.primary : c.surface,
+            color: selected
+                ? c.primaryContainer.withValues(alpha: .94)
+                : AppVisuals.panelColor(context),
+            surfaceTintColor: Colors.transparent,
+            elevation: selected ? 2 : 0,
+            shadowColor: c.primary.withValues(alpha: .14),
             shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppVisuals.radiusControl),
                 side: BorderSide(
-                    color: selected ? c.primary : c.outlineVariant, width: 2)),
+                    color: selected
+                        ? c.primary.withValues(alpha: .55)
+                        : AppVisuals.panelBorder(context),
+                    width: 1)),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onTap,
@@ -276,7 +286,8 @@ class _SceneChoice extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   child: Row(children: [
                     ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius:
+                            BorderRadius.circular(AppVisuals.radiusSmall),
                         child: ScenarioPortrait(
                             scenario: scenario,
                             width: 40,
@@ -293,7 +304,9 @@ class _SceneChoice extends StatelessWidget {
                                 .textTheme
                                 .titleSmall
                                 ?.copyWith(
-                                    color: selected ? c.onPrimary : c.onSurface,
+                                    color: selected
+                                        ? c.onPrimaryContainer
+                                        : c.onSurface,
                                     fontWeight: FontWeight.w800))),
                   ])),
             )));

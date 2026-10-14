@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/game_state.dart';
+import '../theme/app_theme.dart';
 
 import 'word_clickable_text.dart';
 
@@ -18,6 +19,11 @@ class ChatBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final c = theme.colorScheme;
+    final ink = message.isPlayer ? c.onPrimaryContainer : c.onSurface;
+    final surface = message.isPlayer
+        ? c.primaryContainer.withValues(alpha: .94)
+        : AppVisuals.panelColor(context);
     return Align(
         alignment:
             message.isPlayer ? Alignment.centerRight : Alignment.centerLeft,
@@ -26,18 +32,27 @@ class ChatBubble extends StatelessWidget {
                 message.isPlayer ? 32 : 0, 6, message.isPlayer ? 0 : 20, 6),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-                color: message.isPlayer
-                    ? theme.colorScheme.primary
-                    : theme.colorScheme.surface,
+                color: surface,
+                gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      surface,
+                      Color.alphaBlend(
+                          c.surface.withValues(alpha: .18), surface),
+                    ]),
                 borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(12),
-                    topRight: const Radius.circular(12),
-                    bottomLeft: Radius.circular(message.isPlayer ? 12 : 4),
-                    bottomRight: Radius.circular(message.isPlayer ? 4 : 12)),
+                    topLeft: const Radius.circular(AppVisuals.radiusCard),
+                    topRight: const Radius.circular(AppVisuals.radiusCard),
+                    bottomLeft: Radius.circular(
+                        message.isPlayer ? AppVisuals.radiusCard : 9),
+                    bottomRight: Radius.circular(
+                        message.isPlayer ? 9 : AppVisuals.radiusCard)),
+                boxShadow: AppVisuals.panelShadows(context),
                 border: Border.all(
                     color: message.isPlayer
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.outlineVariant)),
+                        ? c.primary.withValues(alpha: .22)
+                        : AppVisuals.panelBorder(context))),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(mainAxisSize: MainAxisSize.min, children: [
@@ -45,8 +60,8 @@ class ChatBubble extends StatelessWidget {
                     child: Text(message.isPlayer ? 'ТИ' : 'СПІВРОЗМОВНИК',
                         style: theme.textTheme.labelSmall?.copyWith(
                             color: message.isPlayer
-                                ? theme.colorScheme.onPrimary
-                                : theme.colorScheme.onSurfaceVariant,
+                                ? c.onPrimaryContainer
+                                : c.onSurfaceVariant,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 1))),
                 if (!message.isPlayer && onSpeak != null)
@@ -59,10 +74,7 @@ class ChatBubble extends StatelessWidget {
               WordClickableText(
                   text: message.text,
                   onWordTap: onWordTap,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                      color: message.isPlayer
-                          ? theme.colorScheme.onPrimary
-                          : theme.colorScheme.onSurface)),
+                  style: theme.textTheme.bodyLarge?.copyWith(color: ink)),
             ])));
   }
 }

@@ -9,6 +9,7 @@ import '../services/progress_service.dart';
 import '../widgets/meku_avatar.dart';
 import '../widgets/scenario_portrait.dart';
 import '../widgets/ohymeku_design.dart';
+import '../theme/app_theme.dart';
 import 'journey_level_screen.dart';
 import 'journey_boss_screen.dart';
 
@@ -284,10 +285,11 @@ class _JourneyScreenState extends State<JourneyScreen>
                                     right: 0,
                                     child: Center(
                                         child: DecoratedBox(
-                                            decoration: BoxDecoration(
-                                                color: c.secondaryContainer,
-                                                borderRadius:
-                                                    BorderRadius.circular(22)),
+                                            decoration: AppVisuals.panelDecoration(
+                                                context,
+                                                rose: true,
+                                                radius:
+                                                    AppVisuals.radiusControl),
                                             child: Padding(
                                                 padding:
                                                     const EdgeInsets.symmetric(
@@ -323,46 +325,38 @@ class _JourneyScreenState extends State<JourneyScreen>
                                                   color: journey
                                                           .completed(level)
                                                       ? c.primaryContainer
+                                                          .withValues(
+                                                              alpha: .88)
                                                       : journey.unlocked(level)
-                                                          ? c.primary
-                                                          : c
-                                                              .surfaceContainerHighest,
+                                                          ? c.primary.withValues(
+                                                              alpha: .96)
+                                                          : c.surfaceContainerHighest
+                                                              .withValues(
+                                                                  alpha: .76),
+                                                  surfaceTintColor:
+                                                      Colors.transparent,
                                                   elevation:
                                                       journey.unlocked(level)
-                                                          ? 5
+                                                          ? 3
                                                           : 0,
                                                   shadowColor: c.primary
-                                                      .withValues(alpha: .25),
+                                                      .withValues(alpha: .16),
                                                   shape: CircleBorder(
                                                       side: BorderSide(
                                                           color: journey.unlocked(level)
                                                               ? c.primary
-                                                              : c
-                                                                  .outlineVariant,
-                                                          width: 3)),
+                                                                  .withValues(
+                                                                      alpha: .48)
+                                                              : AppVisuals.panelBorder(context),
+                                                          width: 2)),
                                                   child: InkWell(
-                                                      key: Key(
-                                                          'journey_level_${level.id}'),
-                                                      customBorder:
-                                                          const CircleBorder(),
-                                                      onTap: journey.unlocked(level)
-                                                          ? () => _open(level)
-                                                          : null,
+                                                      key: Key('journey_level_${level.id}'),
+                                                      customBorder: const CircleBorder(),
+                                                      onTap: journey.unlocked(level) ? () => _open(level) : null,
                                                       child: SizedBox.square(
                                                           dimension: 68,
                                                           child: level.boss
-                                                              ? Padding(
-                                                                  padding:
-                                                                      const EdgeInsets.all(
-                                                                          5),
-                                                                  child: ScenarioPortrait(
-                                                                      scenario:
-                                                                          level.opponent!,
-                                                                      emotion: journey.completed(level) ? NpcEmotion.proud : NpcEmotion.neutral,
-                                                                      width: 56,
-                                                                      height: 58,
-                                                                      cacheWidth: 140,
-                                                                      excludeFromSemantics: true))
+                                                              ? Padding(padding: const EdgeInsets.all(5), child: ScenarioPortrait(scenario: level.opponent!, emotion: journey.completed(level) ? NpcEmotion.proud : NpcEmotion.neutral, width: 56, height: 58, cacheWidth: 140, excludeFromSemantics: true))
                                                               : Icon(
                                                                   journey.completed(level)
                                                                       ? Icons.check_rounded

@@ -1,4 +1,5 @@
 import '../widgets/ohymeku_design.dart';
+import '../theme/app_theme.dart';
 import 'dart:async';
 import '../widgets/interest_picker.dart';
 import '../services/notification_service.dart';
@@ -703,11 +704,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         padding: const EdgeInsets.all(16),
                                         child: Container(
                                             padding: const EdgeInsets.all(16),
-                                            decoration: BoxDecoration(
-                                                color: theme.colorScheme
-                                                    .surfaceContainerHighest,
-                                                borderRadius:
-                                                    BorderRadius.circular(18)),
+                                            decoration:
+                                                AppVisuals.panelDecoration(
+                                                    context,
+                                                    radius: AppVisuals
+                                                        .radiusControl),
                                             child: Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.stretch,
@@ -755,12 +756,14 @@ class _Section extends StatelessWidget {
       {required this.icon, required this.title, required this.children});
   @override
   Widget build(BuildContext context) => Material(
-        color: Theme.of(context).colorScheme.surface,
+        color: AppVisuals.panelColor(context),
+        surfaceTintColor: Colors.transparent,
+        elevation: 1,
+        shadowColor:
+            Theme.of(context).colorScheme.primary.withValues(alpha: .10),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-                width: 1.5)),
+            borderRadius: BorderRadius.circular(AppVisuals.radiusCard),
+            side: BorderSide(color: AppVisuals.panelBorder(context), width: 1)),
         clipBehavior: Clip.antiAlias,
         child: ExpansionTile(
           key: PageStorageKey(title),
@@ -771,8 +774,12 @@ class _Section extends StatelessWidget {
           leading: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(10)),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .primaryContainer
+                      .withValues(alpha: .84),
+                  borderRadius:
+                      BorderRadius.circular(AppVisuals.radiusControl)),
               child: Icon(icon, color: Theme.of(context).colorScheme.primary)),
           title: Text(title,
               style: Theme.of(context)

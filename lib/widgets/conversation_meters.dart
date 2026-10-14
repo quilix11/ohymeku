@@ -78,13 +78,14 @@ class ConversationMeters extends StatelessWidget {
                                                 value: value,
                                                 minHeight: compact ? 4 : 6,
                                                 borderRadius:
-                                                    BorderRadius.circular(8),
+                                                    BorderRadius.circular(20),
                                                 color: metric.$1 == 'Терпіння'
                                                     ? theme.colorScheme.tertiary
                                                     : theme.colorScheme.primary,
                                                 backgroundColor: theme
                                                     .colorScheme
-                                                    .surfaceContainerHighest)),
+                                                    .primaryContainer
+                                                    .withValues(alpha: .72))),
                                   ])))))
                   .toList());
         }));

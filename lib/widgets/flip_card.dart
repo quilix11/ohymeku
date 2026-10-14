@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 /// Both faces share their maximum height, keeping review buttons stationary.
 class FlipCard extends StatelessWidget {
@@ -38,12 +39,14 @@ class FlipCard extends StatelessWidget {
             button: true,
             label: showBack ? 'Приховати переклад' : 'Показати переклад',
             child: Material(
-              color: showBack ? colors.surfaceContainerLow : colors.surface,
+              color: AppVisuals.panelColor(context, rose: showBack),
               elevation: 8 * math.sin(math.pi * progress),
-              shadowColor: colors.primary.withValues(alpha: .25),
+              shadowColor: colors.primary.withValues(alpha: .16),
+              surfaceTintColor: Colors.transparent,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: colors.primary, width: 2)),
+                  borderRadius: BorderRadius.circular(AppVisuals.radiusCard),
+                  side: BorderSide(
+                      color: AppVisuals.panelBorder(context), width: 1)),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: onTap,

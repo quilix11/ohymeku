@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' hide Feedback;
 import '../models/practice_record.dart';
 import '../models/scenario.dart';
 import '../services/progress_service.dart';
+import '../theme/app_theme.dart';
 import '../widgets/ohymeku_design.dart';
 
 class ProgressScreen extends StatelessWidget {
@@ -25,7 +26,23 @@ class ProgressScreen extends StatelessWidget {
           Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                  color: c.primary, borderRadius: BorderRadius.circular(16)),
+                  color: c.primary,
+                  gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        c.primary,
+                        Color.alphaBlend(
+                            c.onPrimary.withValues(alpha: .12), c.primary),
+                      ]),
+                  border: Border.all(color: c.onPrimary.withValues(alpha: .20)),
+                  boxShadow: [
+                    BoxShadow(
+                        color: c.primary.withValues(alpha: .14),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8)),
+                  ],
+                  borderRadius: BorderRadius.circular(AppVisuals.radiusCard)),
               child: Row(children: [
                 Expanded(
                     child: Column(
@@ -83,9 +100,19 @@ class ProgressScreen extends StatelessWidget {
                                             decoration: BoxDecoration(
                                                 color: active
                                                     ? c.primary
-                                                    : c.surface,
+                                                    : AppVisuals.panelColor(
+                                                        context),
+                                                border: Border.all(
+                                                    color: active
+                                                        ? c.primary.withValues(
+                                                            alpha: .20)
+                                                        : AppVisuals
+                                                            .panelBorder(
+                                                                context)),
                                                 borderRadius:
-                                                    BorderRadius.circular(8)),
+                                                    BorderRadius.circular(
+                                                        AppVisuals
+                                                            .radiusSmall)),
                                             child: Icon(
                                                 active
                                                     ? Icons.check_rounded
@@ -166,8 +193,12 @@ class ProgressScreen extends StatelessWidget {
             ...progress.records.map((record) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: Material(
-                    color: c.surface,
-                    borderRadius: BorderRadius.circular(14),
+                    color: AppVisuals.panelColor(context),
+                    shape: RoundedRectangleBorder(
+                        borderRadius:
+                            BorderRadius.circular(AppVisuals.radiusCard),
+                        side:
+                            BorderSide(color: AppVisuals.panelBorder(context))),
                     clipBehavior: Clip.antiAlias,
                     child: ListTile(
                         contentPadding: const EdgeInsets.all(16),

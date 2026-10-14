@@ -71,7 +71,7 @@ a shared API key.
 - Fonts Lora and Manrope are bundled locally with OFL licenses under assets/fonts.
 - API references: [Gemini speech generation](https://ai.google.dev/gemini-api/docs/speech-generation), [Gemini 2.5 Flash TTS model](https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-preview-tts), [audioplayers](https://pub.dev/packages/audioplayers).
 
-- The current visual style uses strawberry pink (#F9D1D9), matcha olive (#838F58), dark readable ink, rounded cards and a matching dark theme.
+- The visual style uses milk-white translucent surfaces with sage/rose accents, soft gradients, thin borders and subtle shadows, inspired by Telegram's rounded panels. Shared `AppVisuals` tokens keep 20px controls and 28px cards consistent across both themes, while text stays opaque. Existing navigation and button positions are preserved; the bottom controls sit over an inset glass capsule. Glass depth uses gradients rather than backdrop blur. Manrope and Lora remain bundled for offline use.
 - The Words tab offers travel/work flashcards, custom words, examples, pronunciation, repeat/known choices and persisted learning progress.
 - Each character has an independently saved system voice choice. Conversation meters include actual completed replies and unique words with adaptive practice targets.
 

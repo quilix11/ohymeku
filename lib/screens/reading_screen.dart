@@ -5,6 +5,7 @@ import '../services/ai_service.dart';
 import '../services/settings_service.dart';
 import '../services/progress_service.dart';
 import '../widgets/ohymeku_design.dart';
+import '../theme/app_theme.dart';
 import 'reader_screen.dart';
 
 const readingTopics = {
@@ -173,10 +174,15 @@ class _ReadingScreenState extends State<ReadingScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Material(
-                      color: c.surface,
+                      color: AppVisuals.panelColor(context),
+                      surfaceTintColor: Colors.transparent,
+                      elevation: 1,
+                      shadowColor: c.primary.withValues(alpha: .10),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(color: c.outlineVariant)),
+                          borderRadius:
+                              BorderRadius.circular(AppVisuals.radiusCard),
+                          side: BorderSide(
+                              color: AppVisuals.panelBorder(context))),
                       clipBehavior: Clip.antiAlias,
                       child: InkWell(
                         key: Key('read_${article.id}'),

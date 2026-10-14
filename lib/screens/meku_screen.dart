@@ -3,6 +3,7 @@ import '../services/meku_service.dart';
 import '../widgets/meku_avatar.dart';
 import '../models/meku_emotion.dart';
 import '../models/meku_route.dart';
+import '../theme/app_theme.dart';
 
 class MekuScreen extends StatefulWidget {
   final MekuService meku;
@@ -183,14 +184,31 @@ class _MekuScreenState extends State<MekuScreen> {
                           constraints: const BoxConstraints(maxWidth: 480),
                           decoration: BoxDecoration(
                               color: message['role'] == 'user'
-                                  ? c.primary
+                                  ? c.primaryContainer.withValues(alpha: .94)
                                   : message['role'] == 'result'
                                       ? (message['status'] == 'error'
                                           ? c.errorContainer
-                                          : c.primaryContainer)
-                                      : c.surface,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: c.outlineVariant)),
+                                              .withValues(alpha: .94)
+                                          : c.primaryContainer
+                                              .withValues(alpha: .90))
+                                      : AppVisuals.panelColor(context),
+                              borderRadius: BorderRadius.only(
+                                  topLeft: const Radius.circular(
+                                      AppVisuals.radiusCard),
+                                  topRight: const Radius.circular(
+                                      AppVisuals.radiusCard),
+                                  bottomLeft: Radius.circular(message['role'] == 'user'
+                                      ? AppVisuals.radiusCard
+                                      : 9),
+                                  bottomRight: Radius.circular(
+                                      message['role'] == 'user'
+                                          ? 9
+                                          : AppVisuals.radiusCard)),
+                              boxShadow: AppVisuals.panelShadows(context),
+                              border: Border.all(
+                                  color: message['role'] == 'user'
+                                      ? c.primary.withValues(alpha: .22)
+                                      : AppVisuals.panelBorder(context))),
                           child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -216,17 +234,21 @@ class _MekuScreenState extends State<MekuScreen> {
                                                   ? 'Дію не виконано'
                                                   : 'Результат дії')
                                               : 'Meku',
-                                      style: theme.textTheme.labelLarge
-                                          ?.copyWith(
+                                      style:
+                                          theme.textTheme.labelLarge?.copyWith(
                                               color: message['role'] == 'user'
-                                                  ? c.onPrimary
-                                                  : c.primary)),
+                                                  ? c.onPrimaryContainer
+                                                  : message['status'] == 'error'
+                                                      ? c.onErrorContainer
+                                                      : c.primary)),
                                 const SizedBox(height: 8),
                                 SelectableText(message['text']!,
                                     style: theme.textTheme.bodyLarge?.copyWith(
                                         color: message['role'] == 'user'
-                                            ? c.onPrimary
-                                            : c.onSurface)),
+                                            ? c.onPrimaryContainer
+                                            : message['status'] == 'error'
+                                                ? c.onErrorContainer
+                                                : c.onSurface)),
                               ]))),
                 if (meku.busy)
                   const Padding(
@@ -250,7 +272,14 @@ class _MekuScreenState extends State<MekuScreen> {
                     style: theme.textTheme.bodySmall),
               ])),
           Material(
-              color: c.surface,
+              color: AppVisuals.panelColor(context),
+              elevation: 2,
+              shadowColor: c.primary.withValues(alpha: .10),
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(AppVisuals.radiusCard)),
+                  side: BorderSide(color: AppVisuals.panelBorder(context))),
               child: SafeArea(
                 top: false,
                 child: Padding(

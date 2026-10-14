@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
 
 /// Shared surfaces for the Ohymeku screens, with no per-frame blur layers.
 class SilkBackground extends StatelessWidget {
@@ -6,10 +7,39 @@ class SilkBackground extends StatelessWidget {
   const SilkBackground({super.key, required this.child});
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    final c = Theme.of(context).colorScheme;
     return DecoratedBox(
-      decoration:
-          BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor),
-      child: child,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: dark
+              ? [
+                  AppColors.backgroundDark,
+                  const Color(0xFF1D2525),
+                  const Color(0xFF24232A)
+                ]
+              : [
+                  AppColors.background,
+                  const Color(0xFFEFF3F0),
+                  const Color(0xFFF4F0F3)
+                ],
+        ),
+      ),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(.9, -.8),
+            radius: 1.2,
+            colors: [
+              c.secondaryContainer.withValues(alpha: dark ? .10 : .12),
+              c.secondaryContainer.withValues(alpha: 0),
+            ],
+          ),
+        ),
+        child: child,
+      ),
     );
   }
 }
@@ -25,17 +55,9 @@ class SilkPanel extends StatelessWidget {
       this.rose = false});
   @override
   Widget build(BuildContext context) {
-    final c = Theme.of(context).colorScheme;
     return Container(
         padding: padding,
-        decoration: BoxDecoration(
-          color: rose ? c.secondaryContainer : c.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-              color:
-                  rose ? c.secondary.withValues(alpha: .25) : c.outlineVariant,
-              width: 1.5),
-        ),
+        decoration: AppVisuals.panelDecoration(context, rose: rose),
         child: child);
   }
 }
@@ -68,11 +90,10 @@ class LearningTile extends StatelessWidget {
       this.rose = false});
   @override
   Widget build(BuildContext context) => Material(
-      color: Theme.of(context).colorScheme.surface,
+      color: AppVisuals.panelColor(context),
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant, width: 1.5)),
+          borderRadius: BorderRadius.circular(AppVisuals.radiusControl),
+          side: BorderSide(color: AppVisuals.panelBorder(context))),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -85,7 +106,8 @@ class LearningTile extends StatelessWidget {
                       color: rose
                           ? Theme.of(context).colorScheme.secondaryContainer
                           : Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius:
+                          BorderRadius.circular(AppVisuals.radiusSmall)),
                   child: Icon(icon,
                       color: rose
                           ? Theme.of(context).colorScheme.secondary
@@ -127,7 +149,7 @@ class AnswerTile extends StatelessWidget {
         ? c.errorContainer
         : highlighted
             ? c.primaryContainer
-            : c.surface;
+            : AppVisuals.panelColor(context);
     final ink = incorrect
         ? c.onErrorContainer
         : highlighted
@@ -140,14 +162,14 @@ class AnswerTile extends StatelessWidget {
       child: Material(
           color: fill,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppVisuals.radiusControl),
               side: BorderSide(
                   color: incorrect
                       ? c.error
                       : highlighted
                           ? c.primary
-                          : c.outlineVariant,
-                  width: 2)),
+                          : AppVisuals.panelBorder(context),
+                  width: highlighted || incorrect ? 2 : 1)),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: onTap,
@@ -166,7 +188,8 @@ class AnswerTile extends StatelessWidget {
                           color: highlighted
                               ? c.primary
                               : c.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8)),
+                          borderRadius:
+                              BorderRadius.circular(AppVisuals.radiusSmall)),
                       child: Text(marker,
                           style: TextStyle(
                               fontWeight: FontWeight.w800,
@@ -204,7 +227,7 @@ class ScreenIntro extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(AppVisuals.radiusControl)),
             child: Icon(icon, color: Theme.of(context).colorScheme.primary)),
         const SizedBox(width: 16),
         Expanded(
