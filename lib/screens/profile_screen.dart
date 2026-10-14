@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import '../services/settings_service.dart';
 import '../services/progress_service.dart';
 import '../theme/app_theme.dart';
@@ -24,37 +25,37 @@ class ProfileScreen extends StatelessWidget {
         'Перша розмова',
         'Заверши одну розмову',
         progress.achievements.containsKey('first_chat'),
-        Icons.chat_bubble_outline_rounded
+        CupertinoIcons.chat_bubble
       ),
       (
         'Переконливий аргумент',
         'Здобудь першу перемогу',
         progress.achievements.containsKey('first_win'),
-        Icons.emoji_events_outlined
+        CupertinoIcons.rosette
       ),
       (
         'Звичка говорити',
         'Практикуйся 3 дні поспіль',
         progress.achievements.containsKey('streak3'),
-        Icons.local_fire_department_outlined
+        CupertinoIcons.flame
       ),
       (
         'Є що сказати',
         'Надішли 25 реплік у збережених розмовах',
         progress.achievements.containsKey('turns25'),
-        Icons.record_voice_over_outlined
+        CupertinoIcons.waveform
       ),
       (
         'Слова щодня',
         '10 зарахованих повторень слів',
         progress.achievements.containsKey('words10'),
-        Icons.style_outlined
+        CupertinoIcons.square_stack
       ),
       (
         'Відчуваю граматику',
         '10 зарахованих граматичних завдань',
         progress.achievements.containsKey('grammar10'),
-        Icons.school_outlined
+        CupertinoIcons.book
       ),
     ];
     final c = theme.colorScheme;
@@ -65,7 +66,6 @@ class ProfileScreen extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
         children: [
           SilkPanel(
-              rose: true,
               padding: const EdgeInsets.all(16),
               child: Row(children: [
                 Container(
@@ -91,7 +91,7 @@ class ProfileScreen extends StatelessWidget {
                     onPressed: () => showDialog<void>(
                         context: context,
                         builder: (_) => _EditProfile(progress: progress)),
-                    icon: const Icon(Icons.edit_outlined)),
+                    icon: const Icon(CupertinoIcons.pencil)),
               ])),
           const SectionTitle('Навчальний профіль'),
           SilkPanel(
@@ -103,14 +103,7 @@ class ProfileScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: AppVisuals.panelDecoration(context,
                               radius: AppVisuals.radiusControl)
-                          .copyWith(
-                              gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                            c.primaryContainer.withValues(alpha: .85),
-                            c.primaryContainer.withValues(alpha: .96),
-                          ])),
+                          .copyWith(color: c.primary.withValues(alpha: .07)),
                       child: Text(settings.effectiveLevel,
                           style: theme.textTheme.titleLarge
                               ?.copyWith(color: c.primary))),
@@ -137,7 +130,7 @@ class ProfileScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 TextButton.icon(
                     onPressed: () => open(SettingsScreen(settings: settings)),
-                    icon: const Icon(Icons.add_rounded),
+                    icon: const Icon(CupertinoIcons.plus),
                     label: Text(settings.interests.isEmpty
                         ? 'Додати інтереси'
                         : 'Змінити інтереси')),
@@ -147,7 +140,7 @@ class ProfileScreen extends StatelessWidget {
               title: 'Граматика в контексті',
               subtitle:
                   '${settings.learner.due(settings.effectiveLevel, settings.interests).length} завдань до повторення',
-              icon: Icons.edit_note_rounded,
+              icon: CupertinoIcons.pencil_outline,
               onTap: () =>
                   open(PracticeScreen(settings: settings, progress: progress))),
           const SizedBox(height: 10),
@@ -156,7 +149,7 @@ class ProfileScreen extends StatelessWidget {
               subtitle: settings.learner.placement == null
                   ? 'Короткий вступний тест'
                   : 'Останній результат: ${settings.learner.placement?["level"]}',
-              icon: Icons.quiz_outlined,
+              icon: CupertinoIcons.question_circle,
               onTap: () => open(PlacementScreen(
                   settings: settings, progress: progress, retake: true))),
           const SizedBox(height: 10),
@@ -169,11 +162,10 @@ class ProfileScreen extends StatelessWidget {
                 padding: const EdgeInsets.only(bottom: 10),
                 child: SilkPanel(
                     padding: const EdgeInsets.all(16),
-                    rose: item.$3,
                     child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(item.$3 ? item.$4 : Icons.lock_outline_rounded,
+                          Icon(item.$3 ? item.$4 : CupertinoIcons.lock,
                               color: item.$3 ? c.primary : c.onSurfaceVariant),
                           const SizedBox(width: 16),
                           Expanded(
@@ -187,7 +179,7 @@ class ProfileScreen extends StatelessWidget {
                               ])),
                           if (item.$3) ...[
                             const SizedBox(width: 8),
-                            Icon(Icons.check_rounded, color: c.primary)
+                            Icon(CupertinoIcons.check_mark, color: c.primary)
                           ],
                         ]))),
           const SizedBox(height: 16),

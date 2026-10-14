@@ -5,6 +5,8 @@ import '../services/progress_service.dart';
 import '../services/dictionary_service.dart';
 import '../widgets/dictionary_sheet.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
+import '../theme/app_theme.dart';
 import '../services/vocabulary_service.dart';
 import '../services/settings_service.dart';
 import '../services/tts_service.dart';
@@ -333,16 +335,19 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                    color: c.secondaryContainer,
-                    borderRadius: BorderRadius.circular(8)),
+                    color: c.primary.withValues(alpha: .06),
+                    border: Border.all(color: AppVisuals.panelBorder(context)),
+                    borderRadius:
+                        BorderRadius.circular(AppVisuals.radiusSmall)),
                 child: Text(flipped ? 'UA' : 'EN',
                     style: theme.textTheme.labelLarge)),
             const Spacer(),
             IconButton.filledTonal(
                 tooltip: 'Послухати вимову',
                 onPressed: _speak,
-                icon: Icon(
-                    _speaking ? Icons.stop_rounded : Icons.volume_up_outlined)),
+                icon: Icon(_speaking
+                    ? CupertinoIcons.stop
+                    : CupertinoIcons.speaker_2)),
           ]),
           const SizedBox(height: 28),
           Text(flipped ? _queue.first.translation : _queue.first.word,
@@ -366,16 +371,18 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
             Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                    color: c.primaryContainer,
-                    borderRadius: BorderRadius.circular(12)),
+                    color: c.primary.withValues(alpha: .05),
+                    border: Border.all(color: AppVisuals.panelBorder(context)),
+                    borderRadius:
+                        BorderRadius.circular(AppVisuals.radiusSmall)),
                 child: Text(_queue.first.example,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyLarge
-                        ?.copyWith(color: c.onPrimaryContainer))),
+                        ?.copyWith(color: c.onSurface))),
           ],
           const SizedBox(height: 32),
           Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(Icons.flip_rounded, size: 20, color: c.primary),
+            Icon(CupertinoIcons.arrow_2_squarepath, size: 20, color: c.primary),
             const SizedBox(width: 8),
             Flexible(
                 child: Text(
@@ -410,7 +417,7 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
             IconButton.filledTonal(
                 tooltip: 'Додати свою картку',
                 onPressed: _add,
-                icon: const Icon(Icons.add_rounded)),
+                icon: const Icon(CupertinoIcons.plus)),
           ]),
           const SizedBox(height: 20),
           OutlinedButton.icon(
@@ -419,7 +426,7 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                 await showDictionary(context, widget.settings);
                 if (mounted) _begin();
               },
-              icon: const Icon(Icons.search_rounded),
+              icon: const Icon(CupertinoIcons.search),
               label: const Text('Знайти слово або переклад')),
           const SizedBox(height: 12),
           SingleChildScrollView(
@@ -456,7 +463,7 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
             IconButton(
                 tooltip: 'Скасувати останню відповідь',
                 onPressed: _previousQueue == null || _answering ? null : _undo,
-                icon: const Icon(Icons.undo_rounded)),
+                icon: const Icon(CupertinoIcons.arrow_uturn_left)),
             const SizedBox(width: 8),
             IconButton(
                 tooltip: 'Перемішати картки',
@@ -470,7 +477,7 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                           _previousQueue = null;
                         });
                       },
-                icon: const Icon(Icons.shuffle_rounded)),
+                icon: const Icon(CupertinoIcons.shuffle)),
           ]),
           const SizedBox(height: 12),
           LinearProgressIndicator(
@@ -483,7 +490,8 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                 child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                  Icon(Icons.task_alt_rounded, size: 48, color: c.primary),
+                  Icon(CupertinoIcons.check_mark_circled,
+                      size: 48, color: c.primary),
                   const SizedBox(height: 16),
                   Text(
                       _deckCards.isEmpty
@@ -496,8 +504,8 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                       onPressed:
                           _deckCards.isEmpty ? _add : () => _begin(all: true),
                       icon: Icon(_deckCards.isEmpty
-                          ? Icons.add_rounded
-                          : Icons.replay_rounded),
+                          ? CupertinoIcons.plus
+                          : CupertinoIcons.arrow_clockwise),
                       label: Text(_deckCards.isEmpty
                           ? 'Додати перше слово'
                           : 'Повторити весь набір')),
@@ -515,12 +523,12 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
               OutlinedButton.icon(
                   onPressed:
                       _flipped && !_answering ? () => _answer(false) : null,
-                  icon: const Icon(Icons.replay_rounded),
+                  icon: const Icon(CupertinoIcons.arrow_clockwise),
                   label: const Text('Ще вчу')),
               FilledButton.icon(
                   onPressed:
                       _flipped && !_answering ? () => _answer(true) : null,
-                  icon: const Icon(Icons.check_rounded),
+                  icon: const Icon(CupertinoIcons.check_mark),
                   label: const Text('Знаю')),
             ]),
             const SizedBox(height: 12),
@@ -535,9 +543,8 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
           LearningTile(
               title: 'Створити набір',
               subtitle: 'Нові слова на цікаву тобі тему',
-              icon: Icons.auto_awesome_outlined,
-              onTap: _generate,
-              rose: true),
+              icon: CupertinoIcons.sparkles,
+              onTap: _generate),
         ]);
   }
 }

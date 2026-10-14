@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../models/game_state.dart';
 import '../theme/app_theme.dart';
 
@@ -22,7 +23,7 @@ class ChatBubble extends StatelessWidget {
     final c = theme.colorScheme;
     final ink = message.isPlayer ? c.onPrimaryContainer : c.onSurface;
     final surface = message.isPlayer
-        ? c.primaryContainer.withValues(alpha: .94)
+        ? c.primaryContainer.withValues(alpha: .58)
         : AppVisuals.panelColor(context);
     return Align(
         alignment:
@@ -33,26 +34,16 @@ class ChatBubble extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
                 color: surface,
-                gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      surface,
-                      Color.alphaBlend(
-                          c.surface.withValues(alpha: .18), surface),
-                    ]),
                 borderRadius: BorderRadius.only(
-                    topLeft: const Radius.circular(AppVisuals.radiusCard),
-                    topRight: const Radius.circular(AppVisuals.radiusCard),
-                    bottomLeft: Radius.circular(
-                        message.isPlayer ? AppVisuals.radiusCard : 9),
-                    bottomRight: Radius.circular(
-                        message.isPlayer ? 9 : AppVisuals.radiusCard)),
-                boxShadow: AppVisuals.panelShadows(context),
+                    topLeft: const Radius.circular(20),
+                    topRight: const Radius.circular(20),
+                    bottomLeft: Radius.circular(message.isPlayer ? 20 : 7),
+                    bottomRight: Radius.circular(message.isPlayer ? 7 : 20)),
                 border: Border.all(
                     color: message.isPlayer
-                        ? c.primary.withValues(alpha: .22)
-                        : AppVisuals.panelBorder(context))),
+                        ? c.primary.withValues(alpha: .14)
+                        : AppVisuals.panelBorder(context),
+                    width: .65)),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(mainAxisSize: MainAxisSize.min, children: [
@@ -62,13 +53,13 @@ class ChatBubble extends StatelessWidget {
                             color: message.isPlayer
                                 ? c.onPrimaryContainer
                                 : c.onSurfaceVariant,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1))),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: .6))),
                 if (!message.isPlayer && onSpeak != null)
                   IconButton(
                       tooltip: 'Прослухати репліку',
                       onPressed: onSpeak,
-                      icon: const Icon(Icons.volume_up_outlined, size: 20)),
+                      icon: const Icon(CupertinoIcons.speaker_2, size: 20)),
               ]),
               const SizedBox(height: 4),
               WordClickableText(

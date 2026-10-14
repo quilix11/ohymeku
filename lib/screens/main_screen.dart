@@ -8,7 +8,8 @@ import 'leaderboard_screen.dart';
 import 'profile_screen.dart';
 import 'vocabulary_screen.dart';
 import 'meku_screen.dart';
-import '../widgets/meku_avatar.dart';
+import '../widgets/air_navigation.dart';
+import '../widgets/app_icon.dart';
 import '../widgets/ohymeku_design.dart';
 import 'settings_screen.dart';
 import 'practice_screen.dart';
@@ -227,12 +228,12 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context), c = theme.colorScheme;
-    final large = MediaQuery.textScalerOf(context).scale(16) > 21;
+    final theme = Theme.of(context);
     return ListenableBuilder(
         listenable: Listenable.merge([widget.progress, _meku]),
         builder: (context, _) => Scaffold(
               key: _shell,
+              extendBody: true,
               drawer: AppMenu(
                   settings: widget.settings,
                   progress: widget.progress,
@@ -247,32 +248,32 @@ class _MainScreenState extends State<MainScreen> {
                     key: const Key('app_menu_button'),
                     tooltip: 'Меню застосунку',
                     onPressed: () => _shell.currentState?.openDrawer(),
-                    icon: const Icon(Icons.menu_rounded)),
+                    icon: const AppIcon(AppIconKind.menu)),
                 title: Text('ohymeku',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.titleLarge?.copyWith(
                         fontFamily: 'Manrope',
-                        fontWeight: FontWeight.w700,
-                        fontSize: 24,
-                        letterSpacing: -.7)),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 22,
+                        letterSpacing: -.4)),
                 actions: [
                   IconButton(
                       tooltip: 'Профіль',
                       onPressed: () => _select(3),
-                      icon: const Icon(Icons.person_outline_rounded)),
+                      icon: const AppIcon(AppIconKind.profile)),
                   const SizedBox(width: 8),
                   IconButton(
                       tooltip: 'Налаштування',
                       onPressed: () => _navigate('settings'),
-                      icon: const Icon(Icons.settings_rounded)),
+                      icon: const AppIcon(AppIconKind.settings)),
                   const SizedBox(width: 8),
                 ],
               ),
               body: SilkBackground(
                   child: SafeArea(
                       top: false,
-                      bottom: false,
+                      bottom: true,
                       child: Center(
                           child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 720),
@@ -311,138 +312,11 @@ class _MainScreenState extends State<MainScreen> {
                             const SizedBox.shrink(),
                         ]),
                       )))),
-              bottomNavigationBar: Material(
-                  color: Colors.transparent,
-                  child: Padding(
-                      padding: const EdgeInsets.only(top: 1.5),
-                      child: SafeArea(
-                          top: false,
-                          child: Center(
-                              heightFactor: 1,
-                              child: ConstrainedBox(
-                                constraints:
-                                    const BoxConstraints(maxWidth: 720),
-                                child: Stack(children: [
-                                  Positioned.fill(
-                                      left: 6,
-                                      right: 6,
-                                      top: 6,
-                                      bottom: 6,
-                                      child: IgnorePointer(
-                                          child: DecoratedBox(
-                                              decoration: BoxDecoration(
-                                                  color: AppVisuals.panelColor(
-                                                      context),
-                                                  borderRadius:
-                                                      BorderRadius.circular(30),
-                                                  border: Border.all(
-                                                      color: AppVisuals
-                                                          .panelBorder(context),
-                                                      width: .8),
-                                                  boxShadow:
-                                                      AppVisuals.panelShadows(
-                                                          context))))),
-                                  Padding(
-                                      padding: const EdgeInsets.all(8),
-                                      child: Row(children: [
-                                        _tab(0, Icons.route_rounded, 'Пригода',
-                                            large),
-                                        _tab(1, Icons.style_outlined, 'Слова',
-                                            large),
-                                        _tab(2, Icons.insights_outlined,
-                                            'Прогрес', large),
-                                        Expanded(
-                                            child: Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 4),
-                                                child: TextButton(
-                                                    key: const Key(
-                                                        'meku_launcher'),
-                                                    onPressed: _openMeku,
-                                                    style: TextButton.styleFrom(
-                                                        backgroundColor: c
-                                                            .secondaryContainer
-                                                            .withValues(
-                                                                alpha: .4),
-                                                        foregroundColor: c
-                                                            .onSecondaryContainer,
-                                                        side: BorderSide(
-                                                            color: AppVisuals.panelBorder(context)
-                                                                .withValues(
-                                                                    alpha: .35),
-                                                            width: .8),
-                                                        shape: RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius.circular(26))),
-                                                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                                                      MekuAvatar(
-                                                          size: 28,
-                                                          emotion:
-                                                              _meku.emotion),
-                                                      if (!large)
-                                                        const Text('Meku',
-                                                            style: TextStyle(
-                                                                fontSize: 12))
-                                                    ])))),
-                                      ])),
-                                ]),
-                              ))))),
+              bottomNavigationBar: AirNavigation(
+                selectedIndex: _index,
+                onSelect: _select,
+                onMeku: _openMeku,
+              ),
             ));
-  }
-
-  Widget _tab(int index, IconData icon, String label, bool large) {
-    final c = Theme.of(context).colorScheme;
-    final selected = _index == index;
-    return Expanded(
-        child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Semantics(
-                selected: selected,
-                button: true,
-                label: label,
-                child: Tooltip(
-                    message: label,
-                    child: DecoratedBox(
-                        decoration: BoxDecoration(
-                            color: selected
-                                ? c.primaryContainer.withValues(alpha: .6)
-                                : Colors.transparent,
-                            borderRadius:
-                                BorderRadius.circular(AppVisuals.radiusControl),
-                            border: selected
-                                ? Border.all(
-                                    color: c.primary.withValues(alpha: .12),
-                                    width: .8)
-                                : null),
-                        child: Material(
-                            color: Colors.transparent,
-                            borderRadius:
-                                BorderRadius.circular(AppVisuals.radiusControl),
-                            clipBehavior: Clip.antiAlias,
-                            child: InkWell(
-                              onTap: () => _select(index),
-                              child: Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 10),
-                                  child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(icon,
-                                            color: selected
-                                                ? c.onPrimaryContainer
-                                                : c.onSurfaceVariant),
-                                        if (!large) ...[
-                                          const SizedBox(height: 4),
-                                          Text(label,
-                                              style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: selected
-                                                      ? c.onPrimaryContainer
-                                                      : c.onSurfaceVariant)),
-                                        ],
-                                      ])),
-                            )))))));
   }
 }

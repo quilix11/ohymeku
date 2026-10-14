@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import '../models/reading_article.dart';
 import '../services/ai_service.dart';
 import '../services/settings_service.dart';
@@ -104,7 +105,7 @@ class _ReadingScreenState extends State<ReadingScreen> {
                   title: 'Читай і відкривай нове',
                   subtitle:
                       'Торкнись слова, збережи його й перевір розуміння після тексту.',
-                  icon: Icons.auto_stories_outlined),
+                  icon: CupertinoIcons.book),
               const SizedBox(height: 20),
               TextField(
                   key: const PageStorageKey('reading_search'),
@@ -124,7 +125,7 @@ class _ReadingScreenState extends State<ReadingScreen> {
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.search_rounded),
+                      : const Icon(CupertinoIcons.search),
                   label: Text(_busy
                       ? 'Шукаю статті…'
                       : widget.settings.offlineMode
@@ -176,8 +177,7 @@ class _ReadingScreenState extends State<ReadingScreen> {
                   child: Material(
                       color: AppVisuals.panelColor(context),
                       surfaceTintColor: Colors.transparent,
-                      elevation: 1,
-                      shadowColor: c.primary.withValues(alpha: .10),
+                      elevation: 0,
                       shape: RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.circular(AppVisuals.radiusCard),
@@ -202,9 +202,9 @@ class _ReadingScreenState extends State<ReadingScreen> {
                                         child: Text(article.title,
                                             style: theme.textTheme.titleLarge)),
                                     if (reading.bookmarks.contains(article.id))
-                                      const Icon(Icons.bookmark_rounded),
+                                      const Icon(CupertinoIcons.bookmark),
                                     const SizedBox(width: 8),
-                                    const Icon(Icons.arrow_forward_rounded)
+                                    const Icon(CupertinoIcons.arrow_right)
                                   ]),
                                   const SizedBox(height: 8),
                                   Text(

@@ -1,10 +1,12 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import '../models/journey_level.dart';
 import '../services/settings_service.dart';
 import '../services/progress_service.dart';
 import 'scenario_portrait.dart';
 import '../theme/app_theme.dart';
+import 'app_icon.dart';
 
 class AppMenu extends StatelessWidget {
   final SettingsService settings;
@@ -31,7 +33,14 @@ class AppMenu extends StatelessWidget {
               right: Radius.circular(AppVisuals.radiusCard))),
       clipBehavior: Clip.antiAlias,
       child: DecoratedBox(
-          decoration: AppVisuals.panelDecoration(context),
+          decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface.withValues(
+                  alpha: Theme.of(context).brightness == Brightness.dark
+                      ? .92
+                      : .88),
+              border: Border(
+                  right: BorderSide(
+                      color: AppVisuals.panelBorder(context), width: .65))),
           child: SafeArea(
               child: ListenableBuilder(
                   listenable: Listenable.merge([settings, progress]),
@@ -47,7 +56,8 @@ class AppMenu extends StatelessWidget {
                               IconButton(
                                   tooltip: 'Закрити меню',
                                   onPressed: close,
-                                  icon: const Icon(Icons.close_rounded))
+                                  icon: const Icon(CupertinoIcons.xmark,
+                                      size: 20))
                             ])),
                         Divider(
                             height: 1, color: AppVisuals.panelBorder(context)),
@@ -146,42 +156,77 @@ class AppMenu extends StatelessWidget {
       child: Text(title,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
               color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w700,
-              letterSpacing: .1)));
+              fontWeight: FontWeight.w600,
+              letterSpacing: .2)));
   Widget _item(BuildContext context, String title, IconData icon,
           VoidCallback action,
           {String? subtitle, Widget? portrait, Key? key}) =>
       Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: DecoratedBox(
-              decoration: AppVisuals.panelDecoration(context,
-                  radius: AppVisuals.radiusControl),
-              child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppVisuals.radiusControl),
-                  clipBehavior: Clip.antiAlias,
-                  child: ListTile(
-                      key: key,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      minVerticalPadding: 12,
-                      horizontalTitleGap: 12,
-                      leading: portrait ??
-                          Icon(icon,
-                              color: Theme.of(context).colorScheme.primary),
-                      title: Text(title,
-                          style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: subtitle == null
-                          ? null
-                          : Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Text(subtitle)),
-                      trailing: Icon(Icons.chevron_right_rounded,
-                          size: 18,
-                          color:
-                              Theme.of(context).colorScheme.onSurfaceVariant),
-                      onTap: () {
-                        close();
-                        action();
-                      }))));
+          child: Material(
+              color:
+                  Theme.of(context).colorScheme.surface.withValues(alpha: .22),
+              borderRadius: BorderRadius.circular(AppVisuals.radiusControl),
+              clipBehavior: Clip.antiAlias,
+              child: ListTile(
+                  key: key,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  minVerticalPadding: 12,
+                  horizontalTitleGap: 12,
+                  leading: portrait ?? _menuIcon(context, icon),
+                  title: Text(title,
+                      style: const TextStyle(fontWeight: FontWeight.w500)),
+                  subtitle: subtitle == null
+                      ? null
+                      : Padding(
+                          padding: const EdgeInsets.only(top: 6),
+                          child: Text(subtitle)),
+                  trailing: Icon(CupertinoIcons.chevron_right,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  onTap: () {
+                    close();
+                    action();
+                  })));
+
+  Widget _menuIcon(BuildContext context, IconData icon) {
+    final color = Theme.of(context).colorScheme.primary;
+    final AppIconKind? kind;
+    if (icon == Icons.route_rounded) {
+      kind = AppIconKind.journey;
+    } else if (icon == Icons.style_outlined) {
+      kind = AppIconKind.words;
+    } else if (icon == Icons.insights_outlined) {
+      kind = AppIconKind.progress;
+    } else if (icon == Icons.person_outline_rounded) {
+      kind = AppIconKind.profile;
+    } else if (icon == Icons.pets_rounded) {
+      kind = AppIconKind.meku;
+    } else {
+      kind = null;
+    }
+    if (kind != null) return AppIcon(kind, size: 24, color: color);
+    final IconData outline;
+    if (icon == Icons.chat_bubble_outline_rounded) {
+      outline = CupertinoIcons.bubble_left;
+    } else if (icon == Icons.people_outline_rounded) {
+      outline = CupertinoIcons.person_2;
+    } else if (icon == Icons.search_rounded) {
+      outline = CupertinoIcons.search;
+    } else if (icon == Icons.auto_stories_rounded) {
+      outline = CupertinoIcons.book;
+    } else if (icon == Icons.edit_note_rounded) {
+      outline = CupertinoIcons.pencil;
+    } else if (icon == Icons.quiz_outlined) {
+      outline = CupertinoIcons.checkmark_seal;
+    } else if (icon == Icons.auto_awesome_rounded) {
+      outline = CupertinoIcons.sparkles;
+    } else if (icon == Icons.person_add_alt_1_rounded) {
+      outline = CupertinoIcons.person_badge_plus;
+    } else {
+      outline = icon;
+    }
+    return Icon(outline, size: 23, color: color);
+  }
 }

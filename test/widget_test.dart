@@ -90,6 +90,10 @@ void main() {
     final icons = FontLoader('MaterialIcons')
       ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
     await icons.load();
+    final outlineIcons = FontLoader('packages/cupertino_icons/CupertinoIcons')
+      ..addFont(rootBundle
+          .load('packages/cupertino_icons/assets/CupertinoIcons.ttf'));
+    await outlineIcons.load();
     for (final family in ['Manrope', 'Lora', 'NotoSans']) {
       final loader = FontLoader(family)
         ..addFont(File('assets/fonts/$family.ttf')
@@ -150,11 +154,11 @@ void main() {
       await tester.pageBack();
       await tester.pumpAndSettle();
     }
-    await tester.tap(find.byIcon(Icons.insights_outlined));
+    await tester.tap(find.byTooltip('Прогрес'));
     await tester.pumpAndSettle();
     expect(find.text('Твій прогрес'), findsOneWidget);
     await capture(tester, 'ohymeku_progress');
-    await tester.tap(find.byIcon(Icons.person_outline_rounded));
+    await tester.tap(find.byTooltip('Профіль'));
     await tester.pumpAndSettle();
     await capture(tester, 'ohymeku_profile');
     await tester.tap(find.byTooltip('Редагувати профіль'));
@@ -677,10 +681,10 @@ void main() {
       await tester.tap(find.byTooltip('Слова'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      await tester.tap(find.byIcon(Icons.insights_outlined));
+      await tester.tap(find.byTooltip('Прогрес'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      await tester.tap(find.byIcon(Icons.person_outline_rounded));
+      await tester.tap(find.byTooltip('Профіль'));
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       await tester.tap(find.byKey(const Key('meku_launcher')));

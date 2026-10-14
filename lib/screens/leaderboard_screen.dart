@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide Feedback;
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import '../models/practice_record.dart';
 import '../models/scenario.dart';
 import '../services/progress_service.dart';
@@ -21,53 +22,33 @@ class ProgressScreen extends StatelessWidget {
           const ScreenIntro(
               title: 'Твій прогрес',
               subtitle: 'Кожна спроба має значення.',
-              icon: Icons.insights_outlined),
+              icon: CupertinoIcons.chart_bar),
           const SizedBox(height: 20),
-          Container(
+          SilkPanel(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                  color: c.primary,
-                  gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        c.primary,
-                        Color.alphaBlend(
-                            c.onPrimary.withValues(alpha: .12), c.primary),
-                      ]),
-                  border: Border.all(color: c.onPrimary.withValues(alpha: .20)),
-                  boxShadow: [
-                    BoxShadow(
-                        color: c.primary.withValues(alpha: .14),
-                        blurRadius: 24,
-                        offset: const Offset(0, 8)),
-                  ],
-                  borderRadius: BorderRadius.circular(AppVisuals.radiusCard)),
               child: Row(children: [
                 Expanded(
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                       Text('ДОСВІД НАВЧАННЯ',
-                          style: theme.textTheme.labelMedium
-                              ?.copyWith(color: c.onPrimary, letterSpacing: 1)),
+                          style: theme.textTheme.labelMedium?.copyWith(
+                              color: c.onSurfaceVariant, letterSpacing: 1)),
                       const SizedBox(height: 8),
                       Text('${progress.profile.xp} XP',
                           style: theme.textTheme.headlineLarge
-                              ?.copyWith(color: c.onPrimary)),
+                              ?.copyWith(color: c.onSurface)),
                     ])),
-                Icon(Icons.bolt_rounded, size: 40, color: c.onPrimary),
+                Icon(CupertinoIcons.bolt, size: 32, color: c.primary),
               ])),
           const SectionTitle('Твій ритм'),
           SilkPanel(
-              rose: true,
               padding: const EdgeInsets.all(16),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(children: [
-                      Icon(Icons.local_fire_department_outlined,
-                          color: c.secondary),
+                      Icon(CupertinoIcons.flame, color: c.secondary),
                       const SizedBox(width: 8),
                       Expanded(
                           child: Text(
@@ -100,26 +81,26 @@ class ProgressScreen extends StatelessWidget {
                                             decoration: BoxDecoration(
                                                 color: active
                                                     ? c.primary
+                                                        .withValues(alpha: .10)
                                                     : AppVisuals.panelColor(
                                                         context),
                                                 border: Border.all(
                                                     color: active
                                                         ? c.primary.withValues(
                                                             alpha: .20)
-                                                        : AppVisuals
-                                                            .panelBorder(
-                                                                context)),
+                                                        : AppVisuals.panelBorder(
+                                                            context)),
                                                 borderRadius:
                                                     BorderRadius.circular(
                                                         AppVisuals
                                                             .radiusSmall)),
                                             child: Icon(
                                                 active
-                                                    ? Icons.check_rounded
-                                                    : Icons.remove_rounded,
+                                                    ? CupertinoIcons.check_mark
+                                                    : CupertinoIcons.minus,
                                                 size: 18,
                                                 color: active
-                                                    ? c.onPrimary
+                                                    ? c.primary
                                                     : c.onSurfaceVariant)),
                                         const SizedBox(height: 8),
                                         Text('${date.day}',
@@ -138,17 +119,17 @@ class ProgressScreen extends StatelessWidget {
                       (
                         '${progress.records.length}',
                         'Розмов',
-                        Icons.forum_outlined
+                        CupertinoIcons.chat_bubble_2
                       ),
                       (
                         '${progress.studiedWords}',
                         'Повторень слів',
-                        Icons.style_outlined
+                        CupertinoIcons.square_stack
                       ),
                       (
                         '${progress.grammarAttempts}',
                         'Граматичних спроб',
-                        Icons.edit_note_rounded
+                        CupertinoIcons.pencil_outline
                       ),
                     ])
                       SizedBox(
@@ -186,7 +167,7 @@ class ProgressScreen extends StatelessWidget {
                   const SizedBox(height: 20),
                   FilledButton.icon(
                       onPressed: onStart,
-                      icon: const Icon(Icons.play_arrow_rounded),
+                      icon: const Icon(CupertinoIcons.play),
                       label: const Text('Обрати персонажа')),
                 ]))
           else
@@ -204,14 +185,14 @@ class ProgressScreen extends StatelessWidget {
                         contentPadding: const EdgeInsets.all(16),
                         leading: Icon(
                             record.won
-                                ? Icons.emoji_events_outlined
-                                : Icons.chat_outlined,
+                                ? CupertinoIcons.rosette
+                                : CupertinoIcons.chat_bubble,
                             color: c.primary),
                         title: Text(record.scenarioName ??
                             Scenario.of(record.character).name),
                         subtitle: Text(
                             '${record.date.day}.${record.date.month} · ${record.resultLabel} · ${record.turns} реплік'),
-                        trailing: const Icon(Icons.chevron_right_rounded),
+                        trailing: const Icon(CupertinoIcons.chevron_right),
                         onTap: () => showPracticeRecord(context, record))))),
         ]);
   }

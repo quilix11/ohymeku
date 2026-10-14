@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:flutter/foundation.dart' show listEquals;
 import '../models/journey_level.dart';
 import '../models/meku_emotion.dart';
@@ -162,65 +163,64 @@ class _JourneyScreenState extends State<JourneyScreen>
                                 ? theme.textTheme.titleLarge
                                 : theme.textTheme.headlineMedium)),
                     Chip(
-                        avatar: const Icon(Icons.star_rounded, size: 18),
+                        avatar: const Icon(CupertinoIcons.star, size: 18),
                         label: Text(
                             '${journey.totalStars}/${journeyLevels.length * 3}'))
                   ]),
                   const SizedBox(height: 12),
                   SilkPanel(
-                      rose: true,
                       child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  MekuAvatar(
-                                      size: large ? 40 : 68,
-                                      emotion: allDone
-                                          ? MekuEmotion.excited
-                                          : MekuEmotion.playful),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                      child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                        Text(
-                                            allDone
-                                                ? 'Три печатки наші!'
-                                                : large
-                                                    ? 'Meku поруч!'
-                                                    : 'Ходімо рятувати історію!',
-                                            style: large
-                                                ? theme.textTheme.titleMedium
-                                                : theme.textTheme.titleLarge),
-                                        const SizedBox(height: 6),
-                                        Text(large
-                                            ? 'Слова · історії · 3 боси'
-                                            : 'На стежці — загублені квитки, таємні листи й міст слів. Збери три печатки у вартових світу.'),
-                                      ]))
-                                ]),
-                            const SizedBox(height: 12),
-                            LinearProgressIndicator(
-                                value: journey.completedCount /
-                                    journeyLevels.length,
-                                minHeight: 8,
-                                borderRadius: BorderRadius.circular(8)),
-                            const SizedBox(height: 8),
-                            Text(
-                                '${journey.completedCount}/${journeyLevels.length} рівнів · Печатки $seals/3'),
-                            const SizedBox(height: 12),
-                            FilledButton.icon(
-                                key: const Key('journey_continue'),
-                                onPressed: () => _open(journey.current),
-                                icon: const Icon(Icons.play_arrow_rounded),
-                                label: Text(allDone
-                                    ? 'Повторити фінал'
-                                    : large
-                                        ? 'Рівень ${journey.current.number}'
-                                        : 'Рівень ${journey.current.number} · Почати')),
-                          ])),
+                        Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              MekuAvatar(
+                                  size: large ? 40 : 68,
+                                  emotion: allDone
+                                      ? MekuEmotion.excited
+                                      : MekuEmotion.playful),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                  child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                    Text(
+                                        allDone
+                                            ? 'Три печатки наші!'
+                                            : large
+                                                ? 'Meku поруч!'
+                                                : 'Ходімо рятувати історію!',
+                                        style: large
+                                            ? theme.textTheme.titleMedium
+                                            : theme.textTheme.titleLarge),
+                                    const SizedBox(height: 6),
+                                    Text(large
+                                        ? 'Слова · історії · 3 боси'
+                                        : 'На стежці — загублені квитки, таємні листи й міст слів. Збери три печатки у вартових світу.'),
+                                  ]))
+                            ]),
+                        const SizedBox(height: 12),
+                        LinearProgressIndicator(
+                            value:
+                                journey.completedCount / journeyLevels.length,
+                            minHeight: 8,
+                            borderRadius: BorderRadius.circular(8)),
+                        const SizedBox(height: 8),
+                        Text(
+                            '${journey.completedCount}/${journeyLevels.length} рівнів · Печатки $seals/3'),
+                        const SizedBox(height: 12),
+                        FilledButton.icon(
+                            key: const Key('journey_continue'),
+                            onPressed: () => _open(journey.current),
+                            icon: const Icon(CupertinoIcons.play),
+                            label: Text(allDone
+                                ? 'Повторити фінал'
+                                : large
+                                    ? 'Рівень ${journey.current.number}'
+                                    : 'Рівень ${journey.current.number} · Почати')),
+                      ])),
                   const SizedBox(height: 16),
                   LayoutBuilder(builder: (context, constraints) {
                     final width = constraints.maxWidth,
@@ -287,7 +287,6 @@ class _JourneyScreenState extends State<JourneyScreen>
                                         child: DecoratedBox(
                                             decoration: AppVisuals.panelDecoration(
                                                 context,
-                                                rose: true,
                                                 radius:
                                                     AppVisuals.radiusControl),
                                             child: Padding(
@@ -324,47 +323,45 @@ class _JourneyScreenState extends State<JourneyScreen>
                                               child: Material(
                                                   color: journey
                                                           .completed(level)
-                                                      ? c.primaryContainer
-                                                          .withValues(
-                                                              alpha: .88)
+                                                      ? c.primary.withValues(
+                                                          alpha: .10)
                                                       : journey.unlocked(level)
                                                           ? c.primary.withValues(
-                                                              alpha: .96)
-                                                          : c.surfaceContainerHighest
-                                                              .withValues(
-                                                                  alpha: .76),
+                                                              alpha: .06)
+                                                          : AppVisuals.panelColor(
+                                                              context),
                                                   surfaceTintColor:
                                                       Colors.transparent,
-                                                  elevation:
-                                                      journey.unlocked(level)
-                                                          ? 3
-                                                          : 0,
-                                                  shadowColor: c.primary
-                                                      .withValues(alpha: .16),
+                                                  elevation: 0,
                                                   shape: CircleBorder(
                                                       side: BorderSide(
                                                           color: journey.unlocked(level)
-                                                              ? c.primary
-                                                                  .withValues(
-                                                                      alpha: .48)
-                                                              : AppVisuals.panelBorder(context),
-                                                          width: 2)),
+                                                              ? c.primary.withValues(
+                                                                  alpha: .38)
+                                                              : AppVisuals.panelBorder(
+                                                                  context),
+                                                          width: 1)),
                                                   child: InkWell(
-                                                      key: Key('journey_level_${level.id}'),
-                                                      customBorder: const CircleBorder(),
-                                                      onTap: journey.unlocked(level) ? () => _open(level) : null,
+                                                      key: Key(
+                                                          'journey_level_${level.id}'),
+                                                      customBorder:
+                                                          const CircleBorder(),
+                                                      onTap: journey
+                                                              .unlocked(level)
+                                                          ? () => _open(level)
+                                                          : null,
                                                       child: SizedBox.square(
                                                           dimension: 68,
                                                           child: level.boss
                                                               ? Padding(padding: const EdgeInsets.all(5), child: ScenarioPortrait(scenario: level.opponent!, emotion: journey.completed(level) ? NpcEmotion.proud : NpcEmotion.neutral, width: 56, height: 58, cacheWidth: 140, excludeFromSemantics: true))
                                                               : Icon(
                                                                   journey.completed(level)
-                                                                      ? Icons.check_rounded
+                                                                      ? CupertinoIcons.check_mark
                                                                       : journey.unlocked(level)
-                                                                          ? Icons.star_rounded
-                                                                          : Icons.lock_rounded,
-                                                                  size: 32,
-                                                                  color: journey.unlocked(level) && !journey.completed(level) ? c.onPrimary : c.onSurfaceVariant))))),
+                                                                          ? CupertinoIcons.star
+                                                                          : CupertinoIcons.lock,
+                                                                  size: 28,
+                                                                  color: journey.unlocked(level) ? c.primary : c.onSurfaceVariant))))),
                                           const SizedBox(height: 8),
                                           Text(
                                               '${level.number}. ${level.title}',
@@ -388,7 +385,8 @@ class _JourneyScreenState extends State<JourneyScreen>
                                                               journey
                                                                   .stars(level);
                                                           i++)
-                                                        Icon(Icons.star_rounded,
+                                                        Icon(
+                                                            CupertinoIcons.star,
                                                             size: 18,
                                                             color: c.primary)
                                                     ]))

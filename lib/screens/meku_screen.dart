@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import '../services/meku_service.dart';
 import '../widgets/meku_avatar.dart';
 import '../models/meku_emotion.dart';
@@ -64,10 +65,11 @@ class _MekuScreenState extends State<MekuScreen> {
             message: 'Надіслати Meku',
             child: compact
                 ? IconButton.filled(
-                    onPressed: send, icon: const Icon(Icons.send_rounded))
+                    onPressed: send,
+                    icon: const Icon(CupertinoIcons.paperplane))
                 : FilledButton.icon(
                     onPressed: send,
-                    icon: const Icon(Icons.send_rounded),
+                    icon: const Icon(CupertinoIcons.paperplane),
                     label: const Text('Надіслати')));
       });
 
@@ -114,7 +116,7 @@ class _MekuScreenState extends State<MekuScreen> {
                   IconButton(
                       tooltip: 'Закрити Meku',
                       onPressed: widget.onClose,
-                      icon: const Icon(Icons.close_rounded)),
+                      icon: const Icon(CupertinoIcons.xmark)),
               ])),
           const Divider(height: 1),
           Expanded(
@@ -132,32 +134,32 @@ class _MekuScreenState extends State<MekuScreen> {
                   for (final action in [
                     (
                       'Створити картки',
-                      Icons.style_outlined,
+                      CupertinoIcons.square_stack,
                       'Створи 8 карток про каву.'
                     ),
                     (
                       'Новий персонаж',
-                      Icons.person_add_outlined,
+                      CupertinoIcons.person_badge_plus,
                       'Створи персонажа баристу для розмови в кав’ярні.'
                     ),
                     (
                       'Знайти статтю',
-                      Icons.menu_book_outlined,
+                      CupertinoIcons.book,
                       'Знайди статті про музику для читання.'
                     ),
                     (
                       'Пояснити правило',
-                      Icons.school_outlined,
+                      CupertinoIcons.book,
                       'Поясни граматичну тему для мого рівня з прикладом.'
                     ),
                     (
                       'Переглянути прогрес',
-                      Icons.insights_outlined,
+                      CupertinoIcons.chart_bar,
                       'Розкажи про мій прогрес і порадь наступний крок.'
                     ),
                     (
                       'Підняти рівень',
-                      Icons.trending_up_rounded,
+                      CupertinoIcons.arrow_up_right,
                       'Я краще розумію англійську. Підніми мій рівень на один ступінь.'
                     ),
                   ])
@@ -184,27 +186,25 @@ class _MekuScreenState extends State<MekuScreen> {
                           constraints: const BoxConstraints(maxWidth: 480),
                           decoration: BoxDecoration(
                               color: message['role'] == 'user'
-                                  ? c.primaryContainer.withValues(alpha: .94)
+                                  ? c.primary.withValues(alpha: .08)
                                   : message['role'] == 'result'
                                       ? (message['status'] == 'error'
-                                          ? c.errorContainer
-                                              .withValues(alpha: .94)
-                                          : c.primaryContainer
-                                              .withValues(alpha: .90))
+                                          ? c.error.withValues(alpha: .08)
+                                          : c.primary.withValues(alpha: .06))
                                       : AppVisuals.panelColor(context),
                               borderRadius: BorderRadius.only(
                                   topLeft: const Radius.circular(
                                       AppVisuals.radiusCard),
                                   topRight: const Radius.circular(
                                       AppVisuals.radiusCard),
-                                  bottomLeft: Radius.circular(message['role'] == 'user'
-                                      ? AppVisuals.radiusCard
-                                      : 9),
+                                  bottomLeft: Radius.circular(
+                                      message['role'] == 'user'
+                                          ? AppVisuals.radiusCard
+                                          : 9),
                                   bottomRight: Radius.circular(
                                       message['role'] == 'user'
                                           ? 9
                                           : AppVisuals.radiusCard)),
-                              boxShadow: AppVisuals.panelShadows(context),
                               border: Border.all(
                                   color: message['role'] == 'user'
                                       ? c.primary.withValues(alpha: .22)
@@ -237,17 +237,17 @@ class _MekuScreenState extends State<MekuScreen> {
                                       style:
                                           theme.textTheme.labelLarge?.copyWith(
                                               color: message['role'] == 'user'
-                                                  ? c.onPrimaryContainer
+                                                  ? c.primary
                                                   : message['status'] == 'error'
-                                                      ? c.onErrorContainer
+                                                      ? c.error
                                                       : c.primary)),
                                 const SizedBox(height: 8),
                                 SelectableText(message['text']!,
                                     style: theme.textTheme.bodyLarge?.copyWith(
                                         color: message['role'] == 'user'
-                                            ? c.onPrimaryContainer
+                                            ? c.onSurface
                                             : message['status'] == 'error'
-                                                ? c.onErrorContainer
+                                                ? c.error
                                                 : c.onSurface)),
                               ]))),
                 if (meku.busy)
@@ -272,14 +272,11 @@ class _MekuScreenState extends State<MekuScreen> {
                     style: theme.textTheme.bodySmall),
               ])),
           Material(
-              color: AppVisuals.panelColor(context),
-              elevation: 2,
-              shadowColor: c.primary.withValues(alpha: .10),
+              color: AppVisuals.panelColor(context).withValues(alpha: .24),
+              elevation: 0,
               surfaceTintColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                  borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(AppVisuals.radiusCard)),
-                  side: BorderSide(color: AppVisuals.panelBorder(context))),
+              shape: Border(
+                  top: BorderSide(color: AppVisuals.panelBorder(context))),
               child: SafeArea(
                 top: false,
                 child: Padding(

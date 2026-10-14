@@ -20,7 +20,6 @@ class FlipCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
     final motion = animate && !MediaQuery.disableAnimationsOf(context);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: flipped ? 1 : 0, end: flipped ? 1 : 0),
@@ -39,9 +38,8 @@ class FlipCard extends StatelessWidget {
             button: true,
             label: showBack ? 'Приховати переклад' : 'Показати переклад',
             child: Material(
-              color: AppVisuals.panelColor(context, rose: showBack),
-              elevation: 8 * math.sin(math.pi * progress),
-              shadowColor: colors.primary.withValues(alpha: .16),
+              color: AppVisuals.panelColor(context),
+              elevation: 0,
               surfaceTintColor: Colors.transparent,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppVisuals.radiusCard),

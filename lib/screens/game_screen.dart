@@ -4,6 +4,7 @@ import 'dart:async';
 import '../widgets/dictionary_sheet.dart';
 import 'practice_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import '../models/game_state.dart';
 import '../models/practice_record.dart';
 import '../models/scenario.dart';
@@ -441,7 +442,7 @@ class _GameScreenState extends State<GameScreen> {
                 tooltip:
                     widget.onVictory == null ? 'До персонажів' : 'До пригоди',
                 onPressed: _leave,
-                icon: const Icon(Icons.arrow_back_rounded)),
+                icon: const Icon(CupertinoIcons.arrow_left)),
             title: Text(_scenario.name,
                 maxLines: 1, overflow: TextOverflow.ellipsis),
             actions: [
@@ -457,8 +458,8 @@ class _GameScreenState extends State<GameScreen> {
                           _speak(message.text, manual: true);
                         },
                   icon: Icon(_speaking
-                      ? Icons.stop_circle_outlined
-                      : Icons.volume_up_outlined))
+                      ? CupertinoIcons.stop_circle
+                      : CupertinoIcons.speaker_2))
             ]),
         body: SilkBackground(
             child: SafeArea(
@@ -569,15 +570,14 @@ class _GameScreenState extends State<GameScreen> {
                               onAction: _session.save),
                         if (_session.finished)
                           Card(
-                              color: theme.colorScheme.primaryContainer
-                                  .withValues(alpha: .90),
+                              color: AppVisuals.panelColor(context),
                               child: Padding(
                                   padding: const EdgeInsets.all(20),
                                   child: Column(children: [
                                     Icon(
                                         state.status == GameStatus.win
-                                            ? Icons.emoji_events_rounded
-                                            : Icons.school_outlined,
+                                            ? CupertinoIcons.rosette
+                                            : CupertinoIcons.book,
                                         size: 36),
                                     const SizedBox(height: 10),
                                     Text(
@@ -613,11 +613,12 @@ class _GameScreenState extends State<GameScreen> {
                     else
                       Container(
                           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                          decoration: AppVisuals.panelDecoration(context)
-                              .copyWith(
-                                  borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(
-                                          AppVisuals.radiusCard))),
+                          decoration: BoxDecoration(
+                              color: AppVisuals.panelColor(context)
+                                  .withValues(alpha: .24),
+                              border: Border(
+                                  top: BorderSide(
+                                      color: AppVisuals.panelBorder(context)))),
                           child: Column(
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -651,16 +652,16 @@ class _GameScreenState extends State<GameScreen> {
                                             ? null
                                             : _toggleMic,
                                         icon: Icon(_listening
-                                            ? Icons.stop_rounded
-                                            : Icons.mic_none_rounded))
+                                            ? CupertinoIcons.stop
+                                            : CupertinoIcons.mic))
                                   else
                                     OutlinedButton.icon(
                                         onPressed: busy || _micBusy
                                             ? null
                                             : _toggleMic,
                                         icon: Icon(_listening
-                                            ? Icons.stop_rounded
-                                            : Icons.mic_none_rounded),
+                                            ? CupertinoIcons.stop
+                                            : CupertinoIcons.mic),
                                         label: Text(_listening
                                             ? 'Зупинити'
                                             : 'Говорити')),
@@ -672,8 +673,8 @@ class _GameScreenState extends State<GameScreen> {
                                           : () => _prepareInput(
                                               _input.text.trim(),
                                               help: true),
-                                      icon: const Icon(
-                                          Icons.lightbulb_outline_rounded)),
+                                      icon:
+                                          const Icon(CupertinoIcons.lightbulb)),
                                   const Spacer(),
                                   ValueListenableBuilder<TextEditingValue>(
                                       valueListenable: _input,
@@ -687,7 +688,7 @@ class _GameScreenState extends State<GameScreen> {
                                                   ? null
                                                   : _send,
                                               icon: const Icon(
-                                                  Icons.send_rounded))),
+                                                  CupertinoIcons.paperplane))),
                                 ]),
                               ])),
                   ]),
@@ -703,15 +704,13 @@ class _Notice extends StatelessWidget {
   const _Notice({required this.text, required this.action, this.onAction});
   @override
   Widget build(BuildContext context) => Card(
-      color:
-          Theme.of(context).colorScheme.errorContainer.withValues(alpha: .94),
+      color: Theme.of(context).colorScheme.error.withValues(alpha: .08),
       child: Padding(
           padding: const EdgeInsets.all(12),
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(text,
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.onErrorContainer)),
+                style: TextStyle(color: Theme.of(context).colorScheme.error)),
             if (onAction != null)
               TextButton(onPressed: onAction, child: Text(action)),
           ])));

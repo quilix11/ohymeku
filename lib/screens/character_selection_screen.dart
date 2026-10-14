@@ -1,5 +1,6 @@
 import '../widgets/scenario_portrait.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import '../models/game_state.dart';
 import '../models/scenario.dart';
 import '../services/progress_service.dart';
@@ -122,7 +123,7 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
               trailing: IconButton(
                   tooltip: 'Створити співрозмовника',
                   onPressed: _create,
-                  icon: const Icon(Icons.add_rounded))),
+                  icon: const Icon(CupertinoIcons.plus))),
           LayoutBuilder(builder: (context, constraints) {
             final columns = !large && constraints.maxWidth >= 280 ? 2 : 1;
             final width = (constraints.maxWidth - 12 * (columns - 1)) / columns;
@@ -147,7 +148,6 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
           }),
           const SizedBox(height: 16),
           SilkPanel(
-              rose: s.character == GameCharacter.hr,
               padding: const EdgeInsets.all(16),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -215,7 +215,7 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                     FilledButton.icon(
                         key: Key('start_${s.customId ?? s.character.name}'),
                         onPressed: _opening ? null : _start,
-                        icon: const Icon(Icons.play_arrow_rounded, size: 28),
+                        icon: const Icon(CupertinoIcons.play, size: 28),
                         label: Text(widget.settings.offlineMode
                             ? 'Практикувати офлайн'
                             : 'Поговорити з ${s.name}')),
@@ -230,22 +230,21 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
             LearningTile(
                 title: 'Читати тексти',
                 subtitle: 'Статті, переклад слів і запитання',
-                icon: Icons.menu_book_outlined,
+                icon: CupertinoIcons.book,
                 onTap: widget.onReading!),
             const SizedBox(height: 10),
           ],
           LearningTile(
               title: 'Повторити слова',
               subtitle: '$dueWords до повторення',
-              icon: Icons.style_outlined,
+              icon: CupertinoIcons.square_stack,
               onTap: widget.onWords ?? _practice),
           const SizedBox(height: 10),
           LearningTile(
               title: 'Потренувати граматику',
               subtitle: 'Завдання твого рівня',
-              icon: Icons.edit_note_rounded,
-              onTap: _practice,
-              rose: true),
+              icon: CupertinoIcons.pencil_outline,
+              onTap: _practice),
         ]);
   }
 }
@@ -267,16 +266,15 @@ class _SceneChoice extends StatelessWidget {
         selected: selected,
         child: Material(
             color: selected
-                ? c.primaryContainer.withValues(alpha: .94)
+                ? c.primary.withValues(alpha: .07)
                 : AppVisuals.panelColor(context),
             surfaceTintColor: Colors.transparent,
-            elevation: selected ? 2 : 0,
-            shadowColor: c.primary.withValues(alpha: .14),
+            elevation: 0,
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppVisuals.radiusControl),
                 side: BorderSide(
                     color: selected
-                        ? c.primary.withValues(alpha: .55)
+                        ? c.primary.withValues(alpha: .38)
                         : AppVisuals.panelBorder(context),
                     width: 1)),
             clipBehavior: Clip.antiAlias,
@@ -304,10 +302,8 @@ class _SceneChoice extends StatelessWidget {
                                 .textTheme
                                 .titleSmall
                                 ?.copyWith(
-                                    color: selected
-                                        ? c.onPrimaryContainer
-                                        : c.onSurface,
-                                    fontWeight: FontWeight.w800))),
+                                    color: selected ? c.primary : c.onSurface,
+                                    fontWeight: FontWeight.w600))),
                   ])),
             )));
   }

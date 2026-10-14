@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide Feedback;
+import 'package:flutter/cupertino.dart' hide Feedback;
 import '../models/game_state.dart';
 import '../theme/app_theme.dart';
 
@@ -16,14 +17,17 @@ class CoachingBox extends StatelessWidget {
     return Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: Card(
+            elevation: 0,
+            shadowColor: Colors.transparent,
             color: AppVisuals.panelColor(context, rose: true),
             shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppVisuals.radiusCard),
-                side: BorderSide(color: AppVisuals.panelBorder(context))),
+                side: BorderSide(
+                    color: AppVisuals.panelBorder(context), width: .65)),
             child: ExpansionTile(
               iconColor: c.secondary,
               collapsedIconColor: c.secondary,
-              leading: const Icon(Icons.lightbulb_outline_rounded),
+              leading: const Icon(CupertinoIcons.lightbulb, size: 22),
               title: const Text('Порада тренера'),
               shape: const Border(),
               collapsedShape: const Border(),
@@ -32,7 +36,7 @@ class CoachingBox extends StatelessWidget {
                 if (feedback.exercise != null && onPractice != null)
                   TextButton.icon(
                       onPressed: onPractice,
-                      icon: const Icon(Icons.school_outlined),
+                      icon: const Icon(CupertinoIcons.book, size: 19),
                       label: const Text('Закріпити граматику')),
                 Align(
                     alignment: Alignment.centerLeft,

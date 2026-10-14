@@ -83,9 +83,8 @@ class ConversationMeters extends StatelessWidget {
                                                     ? theme.colorScheme.tertiary
                                                     : theme.colorScheme.primary,
                                                 backgroundColor: theme
-                                                    .colorScheme
-                                                    .primaryContainer
-                                                    .withValues(alpha: .72))),
+                                                    .colorScheme.primary
+                                                    .withValues(alpha: .09))),
                                   ])))))
                   .toList());
         }));

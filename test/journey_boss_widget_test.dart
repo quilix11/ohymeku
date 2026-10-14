@@ -194,7 +194,7 @@ void main() {
     expect(Theme.of(tester.element(find.byType(JourneyScreen))).brightness,
         Brightness.dark);
     expect(find.byTooltip('Профіль'), findsOneWidget);
-    expect(find.byIcon(Icons.settings_rounded), findsOneWidget);
+    expect(find.byTooltip('Налаштування'), findsOneWidget);
     expect(tester.getCenter(find.byKey(const Key('meku_launcher'))).dy,
         greaterThan(tester.getCenter(find.byTooltip('Профіль')).dy));
     expect(tester.takeException(), isNull);

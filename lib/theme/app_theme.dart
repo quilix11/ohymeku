@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 
 // Legacy names retained for small reusable components.
 class AppColors {
-  // Misty sage and warm rose, with opaque inks for readable glass surfaces.
-  static const background = Color(0xFFF2F3F5);
-  static const backgroundDark = Color(0xFF171B1F);
+  // Cool mint, soft rose and graphite, with opaque text on light glass.
+  static const background = Color(0xFFF1F5F5);
+  static const backgroundDark = Color(0xFF121B20);
 
   static const surface = Color(0xFFFFFFFF);
-  static const surfaceDark = Color(0xFF282F32);
+  static const surfaceDark = Color(0xFF243238);
 
-  static const primary = Color(0xFF838F58);
-  static const primaryDark = Color(0xFF526137);
+  static const primary = Color(0xFF6EA895);
+  static const primaryDark = Color(0xFF2A665A);
 
   static const secondary = Color(0xFFEEF1E8);
   static const secondaryDark = Color(0xFF57634B);
@@ -32,10 +32,10 @@ class AppColors {
   static const patienceShadow = winGoldDark;
   static const patienceBg = trustBg;
 
-  static const textPrimary = Color(0xFF283127);
-  static const textPrimaryDark = Color(0xFFF4F4E9);
+  static const textPrimary = Color(0xFF1E3032);
+  static const textPrimaryDark = Color(0xFFEEF6F6);
 
-  static const textSecondary = Color(0xFF56604F);
+  static const textSecondary = Color(0xFF536B6D);
   static const textHint = textSecondary;
 
   static const textOnPrimary = Colors.white;
@@ -71,35 +71,27 @@ class AppColors {
 /// Shared visual tokens. Transparency applies to surfaces, never their content.
 /// Gradients and shadows provide depth without expensive backdrop filters.
 class AppVisuals {
-  static const radiusSmall = 14.0;
-  static const radiusControl = 20.0;
-  static const radiusCard = 28.0;
+  static const radiusSmall = 12.0;
+  static const radiusControl = 16.0;
+  static const radiusCard = 22.0;
 
   static Color panelColor(BuildContext context, {bool rose = false}) {
     final theme = Theme.of(context);
     final c = theme.colorScheme;
     final fill =
-        rose ? Color.lerp(c.surface, c.secondaryContainer, .45)! : c.surface;
+        rose ? Color.lerp(c.surface, c.secondaryContainer, .25)! : c.surface;
     return fill.withValues(
-        alpha: theme.brightness == Brightness.dark ? .88 : .84);
+        alpha: theme.brightness == Brightness.dark ? .34 : .46);
   }
 
   static Color panelBorder(BuildContext context) {
     final theme = Theme.of(context);
     return theme.brightness == Brightness.dark
-        ? theme.colorScheme.outline.withValues(alpha: .28)
-        : Colors.white.withValues(alpha: .92);
+        ? theme.colorScheme.outline.withValues(alpha: .22)
+        : Colors.white.withValues(alpha: .64);
   }
 
-  static List<BoxShadow> panelShadows(BuildContext context) => [
-        BoxShadow(
-          color: Theme.of(context).colorScheme.shadow.withValues(
-              alpha:
-                  Theme.of(context).brightness == Brightness.dark ? .16 : .05),
-          blurRadius: 20,
-          offset: const Offset(0, 6),
-        ),
-      ];
+  static List<BoxShadow> panelShadows(BuildContext context) => const [];
 
   static BoxDecoration panelDecoration(BuildContext context,
       {bool rose = false, double radius = radiusCard}) {
@@ -112,7 +104,7 @@ class AppVisuals {
         colors: [fill, Color.lerp(fill, c.primaryContainer, .04)!],
       ),
       borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: panelBorder(context)),
+      border: Border.all(color: panelBorder(context), width: .7),
       boxShadow: panelShadows(context),
     );
   }
@@ -169,12 +161,12 @@ ThemeData _theme(Brightness brightness) {
       seedColor: AppColors.primary,
       brightness: brightness,
       surface: dark ? AppColors.surfaceDark : AppColors.surface,
-      primary: dark ? const Color(0xFFBFCC9A) : AppColors.primaryDark);
+      primary: dark ? const Color(0xFF99D5C9) : AppColors.primaryDark);
   final scheme = seedScheme.copyWith(
-    onPrimary: dark ? const Color(0xFF263219) : Colors.white,
-    primaryContainer: dark ? const Color(0xFF35432A) : const Color(0xFFE7EEDD),
+    onPrimary: dark ? const Color(0xFF123B34) : Colors.white,
+    primaryContainer: dark ? const Color(0xFF24463E) : const Color(0xFFDDEFE9),
     onPrimaryContainer:
-        dark ? const Color(0xFFE1EACD) : const Color(0xFF354324),
+        dark ? const Color(0xFFD5F0E8) : const Color(0xFF143E36),
     secondary: dark ? const Color(0xFFF1B9C5) : const Color(0xFF8D4D60),
     secondaryContainer:
         dark ? const Color(0xFF48313B) : const Color(0xFFF4E4E9),
@@ -190,9 +182,9 @@ ThemeData _theme(Brightness brightness) {
     onErrorContainer:
         dark ? seedScheme.onErrorContainer : const Color(0xFF6A2A0A),
     onSurface: dark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-    onSurfaceVariant: dark ? const Color(0xFFC1CAB8) : AppColors.textSecondary,
-    outline: dark ? const Color(0xFF8E9986) : const Color(0xFF78836F),
-    outlineVariant: dark ? const Color(0xFF46584B) : const Color(0xFFD4DDD0),
+    onSurfaceVariant: dark ? const Color(0xFFBDD1D2) : AppColors.textSecondary,
+    outline: dark ? const Color(0xFF829A9C) : const Color(0xFF7A9393),
+    outlineVariant: dark ? const Color(0xFF41575A) : const Color(0xFFD6E3DF),
     surfaceContainerLowest:
         dark ? const Color(0xFF1C2420) : const Color(0xFFFAFCF8),
     surfaceContainerLow:
@@ -215,26 +207,26 @@ ThemeData _theme(Brightness brightness) {
   final textTheme = base.textTheme.apply(fontFamily: 'Manrope').copyWith(
         headlineLarge: TextStyle(
             fontFamily: 'Manrope',
-            fontSize: 32,
+            fontSize: 30,
             height: 1.16,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
             letterSpacing: -0.7,
             color: scheme.onSurface),
         headlineMedium: TextStyle(
             fontFamily: 'Manrope',
             fontSize: 26,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
             letterSpacing: -0.6,
             color: scheme.onSurface),
         titleLarge: TextStyle(
             fontFamily: 'Manrope',
             fontSize: 20,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: scheme.onSurface),
         titleMedium: TextStyle(
             fontFamily: 'Manrope',
             fontSize: 16,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: scheme.onSurface),
         bodyLarge: TextStyle(
             fontFamily: 'Manrope',
@@ -248,29 +240,30 @@ ThemeData _theme(Brightness brightness) {
             color: scheme.onSurfaceVariant),
       );
 
-  final glassSurface = scheme.surface.withValues(alpha: dark ? .88 : .82);
-  final softOutline = scheme.outlineVariant.withValues(alpha: dark ? .6 : .58);
+  final glassSurface = scheme.surface.withValues(alpha: dark ? .44 : .55);
+  final softOutline = scheme.outlineVariant.withValues(alpha: dark ? .45 : .48);
   final controlShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppVisuals.radiusControl));
   final cardShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(AppVisuals.radiusCard),
       side: BorderSide(
-          color: dark ? softOutline : Colors.white.withValues(alpha: .92)));
+          color: dark ? softOutline : Colors.white.withValues(alpha: .65),
+          width: .7));
 
   return base.copyWith(
     chipTheme: ChipThemeData(
       shape: const StadiumBorder(),
       backgroundColor: glassSurface,
-      selectedColor: scheme.primaryContainer,
+      selectedColor: scheme.primaryContainer.withValues(alpha: .62),
       labelStyle: TextStyle(color: scheme.onSurface, fontFamily: 'Manrope'),
       side: BorderSide(color: softOutline),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
     ),
     scaffoldBackgroundColor:
         dark ? AppColors.backgroundDark : AppColors.background,
     textTheme: textTheme,
     appBarTheme: AppBarTheme(
-        backgroundColor: glassSurface,
+        backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         foregroundColor: scheme.onSurface,
         elevation: 0,
@@ -278,36 +271,36 @@ ThemeData _theme(Brightness brightness) {
         centerTitle: false),
     filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-            minimumSize: const Size(48, 56),
-            elevation: 1,
+            minimumSize: const Size(48, 50),
+            elevation: 0,
             shadowColor: scheme.primary.withValues(alpha: .16),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            side: BorderSide(color: scheme.primary.withValues(alpha: .5)),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            side: BorderSide.none,
             shape: controlShape,
             textStyle: const TextStyle(
                 fontFamily: 'Manrope',
                 fontSize: 16,
-                fontWeight: FontWeight.w800))),
+                fontWeight: FontWeight.w600))),
     outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-            minimumSize: const Size(48, 56),
+            minimumSize: const Size(48, 48),
             backgroundColor: glassSurface,
             side: BorderSide(color: scheme.primary.withValues(alpha: .32)),
             textStyle: const TextStyle(
                 fontFamily: 'Manrope',
                 fontSize: 15,
-                fontWeight: FontWeight.w700),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                fontWeight: FontWeight.w600),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: controlShape)),
     elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-            minimumSize: const Size(48, 56),
+            minimumSize: const Size(48, 50),
             foregroundColor: scheme.onPrimary,
             backgroundColor: scheme.primary,
             surfaceTintColor: Colors.transparent,
-            elevation: 1,
+            elevation: 0,
             shadowColor: scheme.primary.withValues(alpha: .16),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
             shape: controlShape)),
     inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -328,14 +321,14 @@ ThemeData _theme(Brightness brightness) {
         style: IconButton.styleFrom(
             minimumSize: const Size(48, 48),
             padding: const EdgeInsets.all(12),
-            backgroundColor: glassSurface,
+            backgroundColor: Colors.transparent,
             foregroundColor: scheme.onSurface,
             shape: controlShape,
-            side: BorderSide(color: softOutline.withValues(alpha: .3)))),
+            side: BorderSide.none)),
     textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
             minimumSize: const Size(48, 48),
-            backgroundColor: scheme.primaryContainer.withValues(alpha: .66),
+            backgroundColor: Colors.transparent,
             foregroundColor: scheme.onPrimaryContainer,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             shape: controlShape,
@@ -383,7 +376,7 @@ ThemeData _theme(Brightness brightness) {
         labelTextStyle: WidgetStateProperty.all(const TextStyle(
             fontFamily: 'Manrope', fontSize: 12, fontWeight: FontWeight.w600))),
     cardTheme: CardThemeData(
-        elevation: 1,
+        elevation: 0,
         shadowColor: scheme.shadow.withValues(alpha: dark ? .14 : .06),
         surfaceTintColor: Colors.transparent,
         color: glassSurface,

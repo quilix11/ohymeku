@@ -5,6 +5,7 @@ import '../widgets/interest_picker.dart';
 import '../services/notification_service.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import '../services/settings_service.dart';
 import '../services/tts_service.dart';
 import '../services/speech_service.dart';
@@ -151,7 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               key: ValueKey('preview_${scenario.voiceKey}'),
               onPressed:
                   _listening || _micBusy ? null : () => _previewAs(scenario),
-              icon: const Icon(Icons.volume_up_outlined),
+              icon: const Icon(CupertinoIcons.speaker_2),
               label: Text('Послухати ${scenario.name}')),
         ]));
   }
@@ -313,10 +314,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   title: 'Зроби зручно',
                                   subtitle:
                                       '${settings.effectiveLevel} · ${settings.isDark ? "Темна тема" : "Світла тема"}',
-                                  icon: Icons.tune_rounded),
+                                  icon: CupertinoIcons.slider_horizontal_3),
                               const SizedBox(height: 20),
                               _Section(
-                                  icon: Icons.key_outlined,
+                                  icon: CupertinoIcons.lock,
                                   title: 'Gemini',
                                   children: [
                                     ListTile(
@@ -331,7 +332,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                           child: Text(
                                               'Чат, генерація персонажів і 9 портретів із різними емоціями.')),
                                       trailing: const Icon(
-                                          Icons.chevron_right_rounded),
+                                          CupertinoIcons.chevron_right),
                                       onTap: _configureGemini,
                                     ),
                                     if (ApiCredentials.hasSessionKey)
@@ -346,7 +347,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ]),
                               const SizedBox(height: 20),
                               _Section(
-                                  icon: Icons.palette_outlined,
+                                  icon: CupertinoIcons.paintbrush,
                                   title: 'Тема',
                                   children: [
                                     Padding(
@@ -379,7 +380,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ]),
                               const SizedBox(height: 20),
                               _Section(
-                                  icon: Icons.school_outlined,
+                                  icon: CupertinoIcons.book,
                                   title: 'Навчання',
                                   children: [
                                     Padding(
@@ -449,7 +450,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                             tooltip:
                                                 'Очистити завантажені озвучення',
                                             icon: const Icon(
-                                                Icons.delete_outline),
+                                                CupertinoIcons.trash),
                                             onPressed: () async {
                                               await _tts.stop();
                                               await _tts.clearCache();
@@ -481,7 +482,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ]),
                               const SizedBox(height: 28),
                               _Section(
-                                  icon: Icons.person_outline_rounded,
+                                  icon: CupertinoIcons.person,
                                   title: 'Твої інтереси й нагадування',
                                   children: [
                                     Padding(
@@ -522,7 +523,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ]),
                               const SizedBox(height: 28),
                               _Section(
-                                  icon: Icons.graphic_eq_rounded,
+                                  icon: CupertinoIcons.waveform,
                                   title: 'Голос і звук',
                                   children: [
                                     SwitchListTile(
@@ -639,15 +640,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                                         ? null
                                                         : _preview,
                                                 icon: Icon(_previewing
-                                                    ? Icons.stop_rounded
-                                                    : Icons.play_arrow_rounded),
+                                                    ? CupertinoIcons.stop
+                                                    : CupertinoIcons.play),
                                                 label: Text(_previewing
                                                     ? 'Зупинити приклад'
                                                     : 'Перевірити звучання')))),
                                   ]),
                               const SizedBox(height: 20),
                               _Section(
-                                  icon: Icons.mic_none_rounded,
+                                  icon: CupertinoIcons.mic,
                                   title: 'Мікрофон',
                                   children: [
                                     Padding(
@@ -729,9 +730,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                                           ? null
                                                           : _testMic,
                                                       icon: Icon(_listening
-                                                          ? Icons.stop_rounded
-                                                          : Icons
-                                                              .mic_none_rounded),
+                                                          ? CupertinoIcons.stop
+                                                          : CupertinoIcons.mic),
                                                       label: Text(_micBusy
                                                           ? 'Підключення…'
                                                           : _listening
@@ -758,9 +758,7 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) => Material(
         color: AppVisuals.panelColor(context),
         surfaceTintColor: Colors.transparent,
-        elevation: 1,
-        shadowColor:
-            Theme.of(context).colorScheme.primary.withValues(alpha: .10),
+        elevation: 0,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppVisuals.radiusCard),
             side: BorderSide(color: AppVisuals.panelBorder(context), width: 1)),
@@ -773,19 +771,15 @@ class _Section extends StatelessWidget {
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           leading: Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primaryContainer
-                      .withValues(alpha: .84),
-                  borderRadius:
-                      BorderRadius.circular(AppVisuals.radiusControl)),
-              child: Icon(icon, color: Theme.of(context).colorScheme.primary)),
+              decoration: AppVisuals.panelDecoration(context,
+                  radius: AppVisuals.radiusControl),
+              child: Icon(icon,
+                  size: 22, color: Theme.of(context).colorScheme.primary)),
           title: Text(title,
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w800)),
+                  ?.copyWith(fontWeight: FontWeight.w600)),
           childrenPadding: const EdgeInsets.only(top: 8, bottom: 20),
           expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
           expandedAlignment: Alignment.centerLeft,
@@ -822,7 +816,7 @@ class _SettingSlider extends StatelessWidget {
           Text(display,
               style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w800))
+                  fontWeight: FontWeight.w600))
         ]),
         Slider(
             value: value.clamp(min, max),
