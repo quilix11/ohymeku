@@ -5,7 +5,6 @@ import '../models/scenario.dart';
 import '../services/progress_service.dart';
 import '../services/settings_service.dart';
 import 'game_screen.dart';
-import 'settings_screen.dart';
 import 'generation_screen.dart';
 import 'practice_screen.dart';
 import '../widgets/ohymeku_design.dart';
@@ -132,14 +131,6 @@ class _CharacterSelectionScreenState extends State<CharacterSelectionScreen> {
                   Text('Обери, що практикуватимемо.',
                       style: theme.textTheme.bodyMedium),
                 ])),
-            IconButton(
-                tooltip: 'Налаштування',
-                onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                        builder: (_) =>
-                            SettingsScreen(settings: widget.settings))),
-                icon: const Icon(Icons.tune_rounded)),
           ]),
           const SizedBox(height: 16),
           Wrap(spacing: 8, runSpacing: 8, children: [

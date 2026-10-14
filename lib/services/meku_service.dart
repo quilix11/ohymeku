@@ -575,15 +575,8 @@ ${jsonEncode(mekuCapabilities)}''',
       navigate(value as String);
       return 'Відкрито розділ застосунку.';
     }
-    if (type == 'theme' && ['light', 'dark', 'system'].contains(value)) {
-      await settings.setTheme(value == 'system'
-          ? AppThemeMode.system
-          : value == 'dark'
-              ? AppThemeMode.dark
-              : AppThemeMode.light);
-      return value == 'dark'
-          ? 'Темну тему увімкнено.'
-          : 'Світлу тему увімкнено.';
+    if (type == 'theme') {
+      return 'Тема автоматично відповідає телефону чи браузеру. Ручне перемикання вимкнено.';
     }
     if (type == 'card_count' &&
         value is int &&

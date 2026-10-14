@@ -132,7 +132,10 @@ void main() {
     await capture(tester, 'ohymeku_words');
     await tester.tap(find.byTooltip('Пригода'));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('app_menu_button')));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('open_conversations')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('open_conversations')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const Key('character_carousel')));
@@ -167,13 +170,15 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('first theme change works independently of animations',
+  testWidgets('system appearance changes work independently of animations',
       (tester) async {
     tester.view.physicalSize = const Size(375, 812);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
     for (final animations in [true, false]) {
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
       final (settings, progress) = await services();
       await settings.setAnimationsEnabled(animations);
       await tester.pumpWidget(DialectDuelApp(
@@ -182,13 +187,13 @@ void main() {
       expect(Theme.of(tester.element(find.byType(MainScreen))).brightness,
           Brightness.light);
 
-      await settings.setTheme(AppThemeMode.dark);
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
       await tester.pumpAndSettle();
       expect(Theme.of(tester.element(find.byType(MainScreen))).brightness,
           Brightness.dark);
       expect(settings.animationsEnabled, animations);
 
-      await settings.setTheme(AppThemeMode.light);
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
       await tester.pumpAndSettle();
       expect(Theme.of(tester.element(find.byType(MainScreen))).brightness,
           Brightness.light);
@@ -610,9 +615,14 @@ void main() {
             key: UniqueKey(), settings: settings, progress: progress),
       ));
       await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('app_menu_button')));
+      await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
           find.byKey(const Key('open_conversations')), 160,
-          scrollable: find.byType(Scrollable).first);
+          scrollable: find
+              .descendant(
+                  of: find.byType(Drawer), matching: find.byType(Scrollable))
+              .first);
       await Scrollable.ensureVisible(
           tester.element(find.byKey(const Key('open_conversations'))),
           alignment: .5);

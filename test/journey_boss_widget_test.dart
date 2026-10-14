@@ -74,10 +74,7 @@ void main() {
                 disableAnimations: true),
             child: child!),
         home: Scaffold(
-            body: JourneyScreen(
-                settings: settings,
-                progress: progress,
-                onConversations: () {}))));
+            body: JourneyScreen(settings: settings, progress: progress))));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
         find.byKey(const Key('journey_continue')), 200,
@@ -157,7 +154,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   testWidgets(
-      'automatic theme follows platform changes while manual choices stay fixed',
+      'system theme follows the device and ignores legacy manual choices',
       (tester) async {
     final (settings, progress) = await setupBoss();
     addTearDown(settings.dispose);
@@ -176,11 +173,11 @@ void main() {
     await settings.setTheme(AppThemeMode.light);
     await tester.pumpAndSettle();
     expect(Theme.of(tester.element(find.byType(JourneyScreen))).brightness,
-        Brightness.light);
+        Brightness.dark);
     final restored = SettingsService();
     await restored.load();
     addTearDown(restored.dispose);
-    expect(restored.themeMode, AppThemeMode.light);
+    expect(restored.themeMode, AppThemeMode.system);
     expect(find.byTooltip('Профіль'), findsOneWidget);
     expect(find.byIcon(Icons.settings_rounded), findsOneWidget);
     expect(tester.getCenter(find.byKey(const Key('meku_launcher'))).dy,

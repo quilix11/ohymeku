@@ -9,18 +9,13 @@ import '../widgets/meku_avatar.dart';
 import '../widgets/scenario_portrait.dart';
 import '../widgets/ohymeku_design.dart';
 import 'journey_level_screen.dart';
-import 'journey_chat_sheet.dart';
 import 'journey_boss_screen.dart';
 
 class JourneyScreen extends StatefulWidget {
   final SettingsService settings;
   final ProgressService progress;
-  final VoidCallback onConversations;
   const JourneyScreen(
-      {super.key,
-      required this.settings,
-      required this.progress,
-      required this.onConversations});
+      {super.key, required this.settings, required this.progress});
   @override
   State<JourneyScreen> createState() => _JourneyScreenState();
 }
@@ -36,6 +31,7 @@ class _JourneyScreenState extends State<JourneyScreen>
   void initState() {
     super.initState();
     _walk.value = 1;
+    _walk.addListener(_followWalk);
     _from = widget.settings.journey.current.number - 1.0;
     _to = _from;
   }
@@ -47,26 +43,43 @@ class _JourneyScreenState extends State<JourneyScreen>
   double get _extent => MediaQuery.textScalerOf(context).scale(16) > 21
       ? 155 + MediaQuery.textScalerOf(context).scale(14) * 6
       : 190;
-  Future<void> _move(int index) async {
-    if (!mounted) return;
+  double? _cameraOffset(double position) {
     final box = _mapKey.currentContext?.findRenderObject();
-    if (box is RenderBox && _scroll.hasClients) {
-      final target = (_scroll.offset +
-              box.localToGlobal(Offset(0, 126 + index * _extent)).dy -
-              MediaQuery.sizeOf(context).height * .4)
-          .clamp(0.0, _scroll.position.maxScrollExtent);
+    if (box is! RenderBox || !box.attached || !_scroll.hasClients) return null;
+    return (_scroll.offset +
+            box.localToGlobal(Offset(0, 126 + position * _extent)).dy -
+            MediaQuery.sizeOf(context).height * .42)
+        .clamp(0.0, _scroll.position.maxScrollExtent);
+  }
+
+  void _followWalk() {
+    if (!mounted || !_walk.isAnimating || !_animate) return;
+    final position =
+        _from + (_to - _from) * Curves.easeInOutCubic.transform(_walk.value);
+    final target = _cameraOffset(position);
+    if (target != null && (_scroll.offset - target).abs() > .5) {
+      _scroll.jumpTo(target);
+    }
+  }
+
+  Future<void> _move(int index) async {
+    if (!mounted || _to == index.toDouble()) return;
+    final start = _cameraOffset(_animate ? _to : index.toDouble());
+    if (start != null) {
       if (_animate) {
-        await _scroll.animateTo(target,
-            duration: const Duration(milliseconds: 350),
-            curve: Curves.easeInOut);
+        await _scroll.animateTo(start,
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutCubic);
       } else {
-        _scroll.jumpTo(target);
+        _scroll.jumpTo(start);
       }
     }
-    if (!mounted || _to == index.toDouble()) return;
+    if (!mounted) return;
     _from = _to;
     _to = index.toDouble();
     if (_animate) {
+      _walk.duration = Duration(
+          milliseconds: (1200 * (_to - _from).abs()).round().clamp(1200, 3600));
       await _walk.forward(from: 0).orCancel;
     } else {
       _walk.value = 1;
@@ -187,47 +200,6 @@ class _JourneyScreenState extends State<JourneyScreen>
                                     ? 'Рівень ${journey.current.number}'
                                     : 'Рівень ${journey.current.number} · Почати')),
                       ])),
-              const SizedBox(height: 16),
-              Text('Розмови поруч', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                for (final boss in journeyLevels.where((l) => l.boss))
-                  Expanded(
-                      child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 3),
-                          child: OutlinedButton(
-                              key: Key('free_chat_${boss.id}'),
-                              onPressed: () => showJourneyChats(context, boss,
-                                  widget.settings, widget.progress),
-                              style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 8)),
-                              child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ScenarioPortrait(
-                                        scenario: boss.opponent!,
-                                        width: 38,
-                                        height: 44,
-                                        cacheWidth: 110,
-                                        excludeFromSemantics: true),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                        boss.id == 'j4'
-                                            ? 'Vance'
-                                            : boss.id == 'j8'
-                                                ? 'Hannah'
-                                                : 'Willow',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: theme.textTheme.labelMedium)
-                                  ])))),
-              ]),
-              TextButton.icon(
-                  key: const Key('open_conversations'),
-                  onPressed: widget.onConversations,
-                  icon: const Icon(Icons.people_outline_rounded),
-                  label: const Text('Усі персонажі та ситуації')),
               const SizedBox(height: 16),
               LayoutBuilder(builder: (context, constraints) {
                 final width = constraints.maxWidth,
@@ -369,27 +341,85 @@ class _JourneyScreenState extends State<JourneyScreen>
                               builder: (_, child) {
                                 final value = _from +
                                     (_to - _from) *
-                                        Curves.easeInOut.transform(_walk.value);
+                                        Curves.easeInOutCubic
+                                            .transform(_walk.value);
                                 final point = _trailPoint(value, width, extent);
-                                final bounce = _walk.isAnimating && _animate
-                                    ? sin(_walk.value * pi * 12) * 3
+                                final walking = _walk.isAnimating && _animate;
+                                final stride = _walk.value *
+                                    pi *
+                                    12 *
+                                    max(1, (_to - _from).abs());
+                                final hop =
+                                    walking ? -sin(stride).abs() * 6 : 0.0;
+                                final direction = (_trailPoint(
+                                                min(journeyLevels.length - 1.0,
+                                                    value + .01),
+                                                width,
+                                                extent)
+                                            .dx -
+                                        point.dx) *
+                                    (_to >= _from ? 1 : -1);
+                                final landing = walking && _walk.value > .82
+                                    ? sin((_walk.value - .82) / .18 * pi)
                                     : 0.0;
                                 return Positioned(
-                                    left: point.dx - 28,
-                                    top: point.dy - 76 + bounce,
+                                    left: point.dx - 40,
+                                    top: point.dy - 88,
                                     child: IgnorePointer(
                                         child: Semantics(
                                             label:
                                                 'Meku на стежці біля рівня ${value.round() + 1}',
-                                            child: Transform.rotate(
-                                                angle: _walk.isAnimating &&
-                                                        _animate
-                                                    ? sin(_walk.value *
-                                                            pi *
-                                                            12) *
-                                                        .06
-                                                    : 0,
-                                                child: child))));
+                                            child: SizedBox(
+                                                width: 80,
+                                                height: 88,
+                                                child: Stack(
+                                                    clipBehavior: Clip.none,
+                                                    children: [
+                                                      Positioned(
+                                                          left: 19,
+                                                          top: 70,
+                                                          child: Transform.scale(
+                                                              scaleX: walking
+                                                                  ? 1 -
+                                                                      sin(stride)
+                                                                              .abs() *
+                                                                          .18
+                                                                  : 1,
+                                                              child: Container(
+                                                                  width: 42,
+                                                                  height: 8,
+                                                                  decoration: BoxDecoration(
+                                                                      color: c
+                                                                          .primary
+                                                                          .withValues(
+                                                                              alpha:
+                                                                                  .18),
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              20))))),
+                                                      if (walking)
+                                                        Positioned.fill(
+                                                            child: CustomPaint(
+                                                                painter:
+                                                                    _WalkAccents(
+                                                                        c.primary,
+                                                                        landing,
+                                                                        stride))),
+                                                      Positioned(
+                                                          left: 12,
+                                                          top: 12 + hop,
+                                                          child: Transform.rotate(
+                                                              angle: walking
+                                                                  ? sin(stride) *
+                                                                      .08
+                                                                  : 0,
+                                                              child: Transform.flip(
+                                                                  flipX: walking &&
+                                                                      direction <
+                                                                          0,
+                                                                  child:
+                                                                      child))),
+                                                    ])))));
                               },
                               child: const MekuAvatar(
                                   key: Key('journey_walker'),
@@ -473,4 +503,31 @@ class _TrailPainter extends CustomPainter {
       old.color != color ||
       old.muted != muted ||
       old.completed != completed;
+}
+
+class _WalkAccents extends CustomPainter {
+  final Color color;
+  final double landing, stride;
+  _WalkAccents(this.color, this.landing, this.stride);
+  @override
+  void paint(Canvas canvas, Size size) {
+    final dust = Paint()..color = color.withValues(alpha: .18);
+    for (var i = 0; i < 3; i++) {
+      canvas.drawCircle(Offset(20 + i * 18, 77 + sin(stride + i) * 2),
+          2 + (sin(stride + i) + 1), dust);
+    }
+    if (landing > 0) {
+      for (var i = 0; i < 8; i++) {
+        final angle = i * pi / 4, radius = 26 + landing * 15;
+        canvas.drawCircle(
+            Offset(40 + cos(angle) * radius, 40 + sin(angle) * radius),
+            2 * landing,
+            Paint()..color = color.withValues(alpha: landing * .65));
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_WalkAccents old) =>
+      old.landing != landing || old.stride != stride || old.color != color;
 }

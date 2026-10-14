@@ -28,30 +28,42 @@ Future<void> showJourneyChats(BuildContext context, JourneyLevel level,
                     const SizedBox(width: 16),
                     Expanded(
                         child: Text('${level.opponent!.name} · Розмови',
-                            style: Theme.of(context).textTheme.titleLarge))
+                            style: Theme.of(context).textTheme.titleLarge)),
+                    const SizedBox(width: 8),
+                    IconButton(
+                        tooltip: 'Закрити ситуації',
+                        onPressed: () => Navigator.pop(sheetContext),
+                        icon: const Icon(Icons.close_rounded))
                   ]),
                   const SizedBox(height: 12),
                   const Text(
                       'Вибери ситуацію й говори своїми словами. Ці розмови доступні окремо від босового випробування.'),
                   const SizedBox(height: 12),
                   for (final scene in freeJourneyScenes(level))
-                    ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.chat_bubble_outline_rounded),
-                        title: Text(scene.title),
-                        subtitle: Text(scene.opening),
-                        trailing: const Icon(Icons.chevron_right_rounded),
-                        onTap: () {
-                          Navigator.pop(sheetContext);
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute<void>(
-                                  builder: (_) => GameScreen(
-                                      settings: settings,
-                                      progress: progress,
-                                      character: scene.character,
-                                      scenario: scene)));
-                        }),
+                    Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 12),
+                            leading:
+                                const Icon(Icons.chat_bubble_outline_rounded),
+                            title: Text(scene.title),
+                            subtitle: Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Text(scene.opening)),
+                            trailing: const Icon(Icons.chevron_right_rounded),
+                            onTap: () {
+                              Navigator.pop(sheetContext);
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute<void>(
+                                      builder: (_) => GameScreen(
+                                          settings: settings,
+                                          progress: progress,
+                                          character: scene.character,
+                                          scenario: scene)));
+                            })),
+                  const Divider(height: 24),
                   ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: Icon(settings.journey.bossReady(level)

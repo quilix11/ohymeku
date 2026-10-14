@@ -132,12 +132,15 @@ class _JourneyQuestScreenState extends State<JourneyQuestScreen> {
                                   SilkPanel(
                                       child: SelectableText(story.text,
                                           style: theme.textTheme.bodyLarge)),
-                                  TextButton.icon(
-                                      onPressed: () => showDictionary(
-                                          context, widget.settings),
-                                      icon: const Icon(Icons.menu_book_rounded),
-                                      label: const Text(
-                                          'Розібрати незнайоме слово')),
+                                  Padding(
+                                      padding: const EdgeInsets.only(top: 12),
+                                      child: TextButton.icon(
+                                          onPressed: () => showDictionary(
+                                              context, widget.settings),
+                                          icon: const Icon(
+                                              Icons.menu_book_rounded),
+                                          label: const Text(
+                                              'Розібрати незнайоме слово'))),
                                   const SizedBox(height: 12),
                                   Text(story.questions[_step].question,
                                       style: theme.textTheme.titleLarge),
@@ -204,6 +207,7 @@ class _JourneyQuestScreenState extends State<JourneyQuestScreen> {
                                               .map((i) => story.tokens[i])
                                               .join(' ')),
                                       child: const Text('Перевірити міст')),
+                                  const SizedBox(height: 12),
                                   TextButton(
                                       onPressed: _busy || _correct == true
                                           ? null
@@ -222,6 +226,7 @@ class _JourneyQuestScreenState extends State<JourneyQuestScreen> {
                                           ? 'Спробуй ще раз: шукай відповідь у тексті.'
                                           : 'Ще не тримається! Пригадай фразу: ${story.sentence}')),
                                 if (_correct == true) ...[
+                                  const SizedBox(height: 12),
                                   SilkPanel(
                                       child: Text(_step < 2
                                           ? story.questions[_step].explanation

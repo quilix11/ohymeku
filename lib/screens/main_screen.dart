@@ -22,6 +22,8 @@ import 'reading_screen.dart';
 import 'reader_screen.dart';
 import 'game_screen.dart';
 import 'journey_screen.dart';
+import 'journey_chat_sheet.dart';
+import '../widgets/app_menu.dart';
 
 class MainScreen extends StatefulWidget {
   final SettingsService settings;
@@ -32,6 +34,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  final _shell = GlobalKey<ScaffoldState>();
   int _index = 0;
   final _visited = <int>{0};
   late final MekuService _meku;
@@ -94,7 +97,12 @@ class _MainScreenState extends State<MainScreen> {
         screen = PlacementScreen(
             settings: widget.settings, progress: widget.progress, retake: true);
       case 'generation':
-        if (widget.settings.offlineMode) return;
+        if (widget.settings.offlineMode) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text(
+                  'Генерація потребує інтернету. Вимкни офлайн-режим у налаштуваннях.')));
+          return;
+        }
         screen = GenerationScreen(
           boss: false,
           level: widget.settings.effectiveLevel,
@@ -104,7 +112,12 @@ class _MainScreenState extends State<MainScreen> {
               .addGenerated(result['cards'], '$topic · $level'),
         );
       case 'character_generation':
-        if (widget.settings.offlineMode) return;
+        if (widget.settings.offlineMode) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text(
+                  'Генерація потребує інтернету. Вимкни офлайн-режим у налаштуваннях.')));
+          return;
+        }
         screen = GenerationScreen(
             boss: true,
             level: widget.settings.effectiveLevel,
@@ -217,7 +230,22 @@ class _MainScreenState extends State<MainScreen> {
     return ListenableBuilder(
         listenable: Listenable.merge([widget.progress, _meku]),
         builder: (context, _) => Scaffold(
+              key: _shell,
+              drawer: AppMenu(
+                  settings: widget.settings,
+                  progress: widget.progress,
+                  close: () => _shell.currentState?.closeDrawer(),
+                  navigate: _navigate,
+                  chat: (boss) => showJourneyChats(
+                      context, boss, widget.settings, widget.progress),
+                  dictionary: () => showDictionary(context, widget.settings),
+                  meku: _openMeku),
               appBar: AppBar(
+                leading: IconButton(
+                    key: const Key('app_menu_button'),
+                    tooltip: 'Меню застосунку',
+                    onPressed: () => _shell.currentState?.openDrawer(),
+                    icon: const Icon(Icons.menu_rounded)),
                 title: Text('ohymeku',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -228,10 +256,12 @@ class _MainScreenState extends State<MainScreen> {
                       tooltip: 'Профіль',
                       onPressed: () => _select(3),
                       icon: const Icon(Icons.person_outline_rounded)),
+                  const SizedBox(width: 8),
                   IconButton(
                       tooltip: 'Налаштування',
                       onPressed: () => _navigate('settings'),
                       icon: const Icon(Icons.settings_rounded)),
+                  const SizedBox(width: 8),
                 ],
               ),
               body: SilkBackground(
@@ -246,9 +276,7 @@ class _MainScreenState extends State<MainScreen> {
                             RepaintBoundary(
                                 child: JourneyScreen(
                                     settings: widget.settings,
-                                    progress: widget.progress,
-                                    onConversations: () =>
-                                        _navigate('conversations')))
+                                    progress: widget.progress))
                           else
                             const SizedBox.shrink(),
                           if (_visited.contains(1))
@@ -302,21 +330,27 @@ class _MainScreenState extends State<MainScreen> {
                                       _tab(2, Icons.insights_outlined,
                                           'Прогрес', large),
                                       Expanded(
-                                          child: TextButton(
-                                              key: const Key('meku_launcher'),
-                                              onPressed: _openMeku,
-                                              child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    MekuAvatar(
-                                                        size: 28,
-                                                        emotion: _meku.emotion),
-                                                    if (!large)
-                                                      const Text('Meku',
-                                                          style: TextStyle(
-                                                              fontSize: 12))
-                                                  ]))),
+                                          child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 4),
+                                              child: TextButton(
+                                                  key: const Key(
+                                                      'meku_launcher'),
+                                                  onPressed: _openMeku,
+                                                  child: Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        MekuAvatar(
+                                                            size: 28,
+                                                            emotion:
+                                                                _meku.emotion),
+                                                        if (!large)
+                                                          const Text('Meku',
+                                                              style: TextStyle(
+                                                                  fontSize: 12))
+                                                      ])))),
                                     ])),
                               ))))),
             ));

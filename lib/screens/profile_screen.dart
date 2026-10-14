@@ -153,11 +153,6 @@ class ProfileScreen extends StatelessWidget {
               onTap: () => open(PlacementScreen(
                   settings: settings, progress: progress, retake: true))),
           const SizedBox(height: 10),
-          LearningTile(
-              title: 'Налаштування',
-              subtitle: 'Вигляд, голос і навчання',
-              icon: Icons.tune_rounded,
-              onTap: () => open(SettingsScreen(settings: settings))),
           SectionTitle('Досягнення',
               trailing: Text(
                   '${achievements.where((item) => item.$3).length} / ${achievements.length}',

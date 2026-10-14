@@ -278,12 +278,14 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                               onPressed: _busy ? null : _recall,
                                               child: const Text(
                                                   'Перевірити слово')),
-                                          if (journey.wordsReady(level))
+                                          if (journey.wordsReady(level)) ...[
+                                            const SizedBox(height: 12),
                                             TextButton(
                                                 onPressed:
                                                     _busy ? null : _startTest,
                                                 child: const Text(
                                                     'Продовжити квести')),
+                                          ],
                                         ],
                                         if (_phase == _Phase.recall) ...[
                                           Text('Що означає «${word.word}»?',
@@ -338,6 +340,7 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                                 child: Text(_word == 0
                                                     ? 'Друге слово'
                                                     : 'До квестів')),
+                                          const SizedBox(height: 12),
                                           TextButton(
                                               onPressed: _busy
                                                   ? null
@@ -480,6 +483,7 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                               onPressed: () =>
                                                   Navigator.pop(context),
                                               child: const Text('На карту')),
+                                          const SizedBox(height: 12),
                                           TextButton(
                                               onPressed: _startTest,
                                               child:

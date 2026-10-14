@@ -96,7 +96,7 @@ class LearningTile extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                     Text(title, style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(subtitle,
                         style: Theme.of(context).textTheme.bodySmall),
                   ])),
@@ -215,4 +215,32 @@ class ScreenIntro extends StatelessWidget {
           Text(subtitle, style: Theme.of(context).textTheme.bodyMedium),
         ])),
       ]);
+}
+
+/// Keep paired actions apart and stack them when labels need more room.
+class AdaptiveActions extends StatelessWidget {
+  final List<Widget> children;
+  const AdaptiveActions({super.key, required this.children});
+  @override
+  Widget build(BuildContext context) =>
+      LayoutBuilder(builder: (context, constraints) {
+        if (constraints.maxWidth < 360 ||
+            MediaQuery.textScalerOf(context).scale(16) > 21) {
+          return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var i = 0; i < children.length; i++)
+                  Padding(
+                      padding: EdgeInsets.only(
+                          bottom: i == children.length - 1 ? 0 : 12),
+                      child: children[i])
+              ]);
+        }
+        return Row(children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const SizedBox(width: 12),
+            Expanded(child: children[i])
+          ]
+        ]);
+      });
 }

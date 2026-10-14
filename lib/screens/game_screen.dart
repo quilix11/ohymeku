@@ -88,6 +88,7 @@ class _GameScreenState extends State<GameScreen> {
 
   void _changed() {
     if (!mounted) return;
+    if (_session.finished) FocusManager.instance.primaryFocus?.unfocus();
     final messages = _session.state.messages;
     if (messages.length > _messageCount && !messages.last.isPlayer) {
       unawaited(_speak(messages.last.text));
@@ -597,19 +598,15 @@ class _GameScreenState extends State<GameScreen> {
                     if (_session.finished)
                       Padding(
                           padding: const EdgeInsets.all(16),
-                          child: Row(children: [
-                            Expanded(
-                                child: OutlinedButton(
-                                    onPressed: _session.saving ? null : _leave,
-                                    child: Text(widget.onVictory == null
-                                        ? 'До персонажів'
-                                        : 'До пригоди'))),
-                            const SizedBox(width: 10),
-                            Expanded(
-                                child: FilledButton(
-                                    onPressed:
-                                        _session.saving ? null : _restart,
-                                    child: const Text('Ще раз'))),
+                          child: AdaptiveActions(children: [
+                            OutlinedButton(
+                                onPressed: _session.saving ? null : _leave,
+                                child: Text(widget.onVictory == null
+                                    ? 'До персонажів'
+                                    : 'До пригоди')),
+                            FilledButton(
+                                onPressed: _session.saving ? null : _restart,
+                                child: const Text('Ще раз')),
                           ]))
                     else
                       Container(

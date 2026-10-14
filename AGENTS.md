@@ -27,14 +27,14 @@ Read this map before exploring; inspect target source before edits.
 - `cloud_speech_service.dart`: Gemini 2.5 Flash preview TTS, WAV/PCM decoding, audioplayers playback, request cancellation and six-item session cache. Off by default; shares existing Gemini key. Separate voice choices per existing avatar profile. Custom characters have independent saved voice settings.
 - Local Lora/Manrope fonts in assets/fonts with OFL licenses. Additional saved settings: learning level, deck size, tutor coaching visibility, text scale, pitch, cloud voice/style.
 - `main.dart`: dotenv, settings/progress initialization, portrait orientation, animated light/dark theme; opens MainScreen directly.
-- `screens/main_screen.dart`: lazy IndexedStack for adventure, vocabulary, progress and top-bar profile; bottom Meku opens its chat overlay. Settings use a gear icon. Character library opens over the adventure, never replaces it.
+- `screens/main_screen.dart`: lazy IndexedStack for adventure, vocabulary, progress and top-bar profile; bottom Meku opens its chat overlay. Settings use the top gear icon. AppMenu is a scrollable side drawer for all learning tools and character conversations; it has no setting toggles. The map contains no conversation cards. Character library opens over the adventure, never replaces it.
 - `SettingsService.journey` owns `journey_service.dart`: serialized word/challenge/test/boss saves in journey_v2. Twelve levels, three worlds; two words + two reading checks + ordered sentence + 4/5 test gate completion; levels 4/8/12 also require a boss seal. V1 completed prefixes migrate without resetting stars; partial saves still require quests. Canonical validation and persistence precede state changes. Stars cap at 36; do not duplicate XP.
 - `journey_story.dart`: authored story passages, word bridges, boss dialogues and three free scenarios per boss. Free chat scenario IDs differ from boss IDs and never award a seal.
-- `journey_screen.dart`: responsive trail, inline free conversation cards, finite Meku walking animation, reduced motion. `journey_level_screen.dart` / `journey_quest_screen.dart` own local word/story/grammar UI. `journey_boss_screen.dart` offers clearly distinct live AI and authored dialogue modes.
+- `journey_screen.dart`: responsive trail, finite Meku walking with following camera, facing direction, bounce, shadow/dust and arrival accents. Respect reduced motion; no continuous animation. `journey_level_screen.dart` / `journey_quest_screen.dart` own local word/story/grammar UI. `journey_boss_screen.dart` offers clearly distinct live AI and authored dialogue modes.
 - `GameSession.savedRecord` exists only after successful history persistence; optional `GameScreen.onVictory` records the matching journey boss seal on leaving a won conversation. Failed seal writes keep the conversation open for retry. No claim of CEFR certification.
 - `willow_portrait.dart`: original vector teacher illustration with emotion states; `ScenarioPortrait` uses it for the built-in journey teacher and her free scenes.
 - `screens/vocabulary_screen.dart`, `services/vocabulary_service.dart`: 24 built-in travel/work/school cards plus custom cards; shared persisted known/repeat queues.
-- AppThemeMode indices light=0/dark=1 are preserved; appended system=2 is the new default. MaterialApp and system UI follow platform brightness in automatic mode; manual choices remain fixed.
+- AppThemeMode indices light=0/dark=1/system=2 remain compatible, but appearance is always system. Load migrates old manual preferences to 2; the legacy setter normalizes to system. Settings have no theme controls and Meku cannot override platform brightness.
 - `widgets/conversation_meters.dart`: trust/patience plus confirmed turn and unique English word counters. Practice targets grow with prior character wins; these counters are not language proficiency scores.
 - `tts_service.dart` caches English voice discovery; `settings_service.dart` stores a separate voice ID for each character. Pitch/rate defaults differ. Voice availability depends on the OS/browser.
 - Performance: no per-frame carousel builders/opacity layers, image decode width capped, no precaching all emotions, no whole-game rebuild while typing, cached themes updated only for appearance settings.
@@ -48,7 +48,7 @@ Read this map before exploring; inspect target source before edits.
 - `screens/settings_screen.dart`: real settings, speech preview and microphone transcript preview.
 - `services/tts_service.dart`, `speech_service.dart`: lazy platform voice services; typed play works independently.
 - `widgets/npc_avatar.dart`: emotion crossfade; asset pattern `assets/images/<officer|hr>/<prefix>_<emotion>.png`.
-- `theme/app_theme.dart`: both themes, semantic colors and typography.
+- `theme/app_theme.dart`: both themes, semantic colors and typography. `AdaptiveActions` stacks paired actions on narrow or large-text layouts, with 12px gaps; quest actions use explicit vertical spacing.
 
 ## Behavior and limitations
 - NPC opening appears immediately. Player turns require GEMINI_API_KEY from optional .env.

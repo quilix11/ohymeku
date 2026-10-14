@@ -111,11 +111,6 @@ const mekuCapabilities = [
     'value': 'A1/A2/B1/B2/C1'
   },
   {
-    'type': 'theme',
-    'description': 'Change appearance immediately.',
-    'value': 'light/dark/system'
-  },
-  {
     'type': 'card_count',
     'description': 'Set default size for new vocabulary sets.',
     'value': '5/8/12/16'

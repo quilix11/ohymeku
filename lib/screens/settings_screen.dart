@@ -11,7 +11,6 @@ import '../models/game_state.dart';
 import '../models/scenario.dart';
 import '../services/cloud_speech_service.dart';
 import '../services/ai_service.dart';
-import '../theme/app_theme.dart';
 import '../services/api_credentials.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -338,49 +337,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                               setState(ApiCredentials.clear),
                                           child: const Text(
                                               'Видалити ключ із цього сеансу')),
-                                  ]),
-                              const SizedBox(height: 20),
-                              _Section(
-                                  icon: Icons.palette_outlined,
-                                  title: 'Вигляд',
-                                  children: [
-                                    SwitchListTile.adaptive(
-                                        title: const Text('Автоматична тема'),
-                                        subtitle: const Text(
-                                            'Як на телефоні або в браузері'),
-                                        secondary: const Icon(
-                                            Icons.brightness_auto_rounded),
-                                        value: settings.themeMode ==
-                                            AppThemeMode.system,
-                                        onChanged: (auto) =>
-                                            settings.setTheme(auto
-                                                ? AppThemeMode.system
-                                                : settings.isDark
-                                                    ? AppThemeMode.dark
-                                                    : AppThemeMode.light)),
-                                    Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: Row(children: [
-                                          Expanded(
-                                              child: _ThemeChoice(
-                                                  dark: false,
-                                                  selected:
-                                                      settings.themeMode ==
-                                                          AppThemeMode.light,
-                                                  onTap: () =>
-                                                      settings.setTheme(
-                                                          AppThemeMode.light))),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                              child: _ThemeChoice(
-                                                  dark: true,
-                                                  selected:
-                                                      settings.themeMode ==
-                                                          AppThemeMode.dark,
-                                                  onTap: () =>
-                                                      settings.setTheme(
-                                                          AppThemeMode.dark))),
-                                        ])),
                                   ]),
                               const SizedBox(height: 20),
                               _Section(
@@ -833,49 +789,4 @@ class _SettingSlider extends StatelessWidget {
           Text(end, style: Theme.of(context).textTheme.labelSmall)
         ]),
       ]));
-}
-
-class _ThemeChoice extends StatelessWidget {
-  final bool dark, selected;
-  final VoidCallback onTap;
-  const _ThemeChoice(
-      {required this.dark, required this.selected, required this.onTap});
-  @override
-  Widget build(BuildContext context) {
-    // Each swatch previews the actual theme even when the other theme is active.
-    final preview = dark ? buildDarkTheme() : buildAppTheme();
-    final c = preview.colorScheme;
-    return Semantics(
-        button: true,
-        selected: selected,
-        child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(12),
-            child: AnimatedContainer(
-                duration: MediaQuery.disableAnimationsOf(context)
-                    ? Duration.zero
-                    : const Duration(milliseconds: 180),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                    color: preview.scaffoldBackgroundColor,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: selected ? c.primary : c.outline,
-                        width: selected ? 2 : 1)),
-                child: Column(children: [
-                  Icon(dark ? Icons.dark_mode_rounded : Icons.wb_sunny_rounded,
-                      color: c.primary, size: 26),
-                  const SizedBox(height: 12),
-                  Text(dark ? 'Темна' : 'Світла',
-                      style: TextStyle(
-                          color: c.onSurface, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 8),
-                  Icon(
-                      selected
-                          ? Icons.check_circle_rounded
-                          : Icons.circle_outlined,
-                      size: 18,
-                      color: c.primary),
-                ]))));
-  }
 }

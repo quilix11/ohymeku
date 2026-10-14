@@ -170,6 +170,7 @@ class _JourneyBossScreenState extends State<JourneyBossScreen> {
                                     onPressed: () =>
                                         Navigator.pop(context, true),
                                     child: const Text('Продовжити пригоду')),
+                                const SizedBox(height: 12),
                                 TextButton(
                                     onPressed: canAi ? _ai : null,
                                     child: const Text('Ще одна AI-дуель')),
@@ -204,9 +205,11 @@ class _JourneyBossScreenState extends State<JourneyBossScreen> {
                                     icon: const Icon(Icons.chat_rounded),
                                     label: const Text('Жива AI-дуель')),
                                 if (!canAi) ...[
+                                  const SizedBox(height: 16),
                                   Text(widget.settings.offlineMode
                                       ? 'Офлайн: сюжетна дуель доступна повністю.'
                                       : 'Для живої AI-дуелі підключи Gemini у налаштуваннях. Сюжетна дуель працює без ключа.'),
+                                  const SizedBox(height: 12),
                                   TextButton(
                                       onPressed: () async {
                                         await Navigator.push(
@@ -243,8 +246,11 @@ class _JourneyBossScreenState extends State<JourneyBossScreen> {
                                                           _turn]
                                                       .options[0])),
                                 if (_correct == false)
-                                  Text(
-                                      'Спробуй ще раз. ${bossDialogues[level.id]![_turn].explanation}'),
+                                  Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
+                                      child: Text(
+                                          'Спробуй ще раз. ${bossDialogues[level.id]![_turn].explanation}')),
                                 if (_correct == true && _turn < 2)
                                   FilledButton(
                                       onPressed: () => setState(() {
@@ -252,6 +258,7 @@ class _JourneyBossScreenState extends State<JourneyBossScreen> {
                                             _prepare();
                                           }),
                                       child: const Text('Наступна репліка')),
+                                const SizedBox(height: 12),
                                 TextButton(
                                     onPressed: _busy
                                         ? null

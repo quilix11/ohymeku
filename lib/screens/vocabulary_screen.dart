@@ -529,20 +529,17 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
                               ])),
                     ))),
             const SizedBox(height: 16),
-            Row(children: [
-              Expanded(
-                  child: OutlinedButton.icon(
-                      onPressed:
-                          _flipped && !_answering ? () => _answer(false) : null,
-                      icon: const Icon(Icons.replay_rounded),
-                      label: const Text('Ще вчу'))),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: FilledButton.icon(
-                      onPressed:
-                          _flipped && !_answering ? () => _answer(true) : null,
-                      icon: const Icon(Icons.check_rounded),
-                      label: const Text('Знаю'))),
+            AdaptiveActions(children: [
+              OutlinedButton.icon(
+                  onPressed:
+                      _flipped && !_answering ? () => _answer(false) : null,
+                  icon: const Icon(Icons.replay_rounded),
+                  label: const Text('Ще вчу')),
+              FilledButton.icon(
+                  onPressed:
+                      _flipped && !_answering ? () => _answer(true) : null,
+                  icon: const Icon(Icons.check_rounded),
+                  label: const Text('Знаю')),
             ]),
             const SizedBox(height: 12),
             Text(

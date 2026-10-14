@@ -67,7 +67,7 @@ void main() {
             'type': 'review_words',
             'value': {'deck': 'last_created', 'all': true}
           },
-          {'type': 'theme', 'value': 'dark'},
+          {'type': 'coaching', 'value': false},
           {
             'type': 'create_cards',
             'value': {'topic': 'Кава', 'count': 12, 'level': 'A2'}
@@ -82,7 +82,7 @@ void main() {
       return true;
     });
     expect(meku.error, isNull);
-    expect(settings.isDark, isTrue);
+    expect(settings.showCoaching, isFalse);
     expect(settings.vocabulary.custom.length, 12);
     expect(ai.calls, 2);
     expect(routes.single.destination, 'review_words');

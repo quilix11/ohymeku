@@ -43,10 +43,7 @@ void main() {
     addTearDown(settings.dispose);
     await tester.pumpWidget(MaterialApp(
         home: Scaffold(
-            body: JourneyScreen(
-                settings: settings,
-                progress: progress,
-                onConversations: () {}))));
+            body: JourneyScreen(settings: settings, progress: progress))));
     await tester.pumpAndSettle();
     expect(
         tester.widget<InkWell>(find.byKey(const Key('journey_level_j2'))).onTap,
@@ -111,10 +108,7 @@ void main() {
                 disableAnimations: true),
             child: child!),
         home: Scaffold(
-            body: JourneyScreen(
-                settings: settings,
-                progress: progress,
-                onConversations: () {}))));
+            body: JourneyScreen(settings: settings, progress: progress))));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
         find.byKey(const Key('journey_level_j8')), 300,
@@ -137,10 +131,7 @@ void main() {
     addTearDown(settings.dispose);
     await tester.pumpWidget(MaterialApp(
         home: Scaffold(
-            body: JourneyScreen(
-                settings: settings,
-                progress: progress,
-                onConversations: () {}))));
+            body: JourneyScreen(settings: settings, progress: progress))));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('journey_continue')));
     await tester.pumpAndSettle();
