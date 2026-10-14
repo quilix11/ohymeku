@@ -36,8 +36,7 @@ void main() {
         'has_taken_placement': true,
         'tts_enabled': false,
         'animations_enabled': false,
-        'text_scale': 2.0,
-        'theme_mode': 1
+        'text_scale': 2.0
       });
       tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
       addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);

@@ -5,6 +5,7 @@ import '../models/meku_emotion.dart';
 import '../services/settings_service.dart';
 import '../widgets/dictionary_sheet.dart';
 import '../widgets/meku_avatar.dart';
+import '../widgets/sentence_builder.dart';
 import '../widgets/ohymeku_design.dart';
 
 class JourneyQuestScreen extends StatefulWidget {
@@ -161,41 +162,18 @@ class _JourneyQuestScreenState extends State<JourneyQuestScreen> {
                                                         .options[0])),
                                 ] else ...[
                                   Text(
-                                      'Збери фразу англійською. Натисни вибране слово, щоб повернути його.',
+                                      'Збери фразу англійською. Утримуй і тягни слова: у речення, на потрібне місце чи назад. Можна й натискати.',
                                       style: theme.textTheme.bodyLarge),
                                   const SizedBox(height: 16),
-                                  SilkPanel(
-                                      child: Wrap(
-                                          spacing: 8,
-                                          runSpacing: 8,
-                                          children: [
-                                        if (_chosen.isEmpty)
-                                          const Text(
-                                              'Твоє речення з’явиться тут…'),
-                                        for (final index in _chosen)
-                                          InputChip(
-                                              label: Text(story.tokens[index]),
-                                              onPressed: _busy ||
-                                                      _correct == true
-                                                  ? null
-                                                  : () => setState(() {
-                                                        _chosen.remove(index);
-                                                        _correct = null;
-                                                      })),
-                                      ])),
-                                  const SizedBox(height: 16),
-                                  Wrap(spacing: 8, runSpacing: 8, children: [
-                                    for (final index in _tokens)
-                                      if (!_chosen.contains(index))
-                                        ActionChip(
-                                            label: Text(story.tokens[index]),
-                                            onPressed: _busy || _correct == true
-                                                ? null
-                                                : () => setState(() {
-                                                      _chosen.add(index);
-                                                      _correct = null;
-                                                    })),
-                                  ]),
+                                  SentenceBuilder(
+                                      words: story.tokens,
+                                      bankOrder: _tokens,
+                                      chosen: _chosen,
+                                      enabled: !_busy && _correct != true,
+                                      onChanged: (value) => setState(() {
+                                            _chosen = value;
+                                            _correct = null;
+                                          })),
                                   const SizedBox(height: 16),
                                   FilledButton(
                                       onPressed: _busy ||

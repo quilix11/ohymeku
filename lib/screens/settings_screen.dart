@@ -345,6 +345,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   ]),
                               const SizedBox(height: 20),
                               _Section(
+                                  icon: Icons.palette_outlined,
+                                  title: 'Тема',
+                                  children: [
+                                    Padding(
+                                        padding: const EdgeInsets.all(16),
+                                        child: DropdownButtonFormField<
+                                                AppThemeMode>(
+                                            key: ValueKey(
+                                                'theme_choice_${settings.themeMode.name}'),
+                                            initialValue: settings.themeMode,
+                                            isExpanded: true,
+                                            decoration: const InputDecoration(
+                                                labelText: 'Тема застосунку'),
+                                            items: const [
+                                              DropdownMenuItem(
+                                                  value: AppThemeMode.system,
+                                                  child:
+                                                      Text('Як на телефоні')),
+                                              DropdownMenuItem(
+                                                  value: AppThemeMode.light,
+                                                  child: Text('Світла')),
+                                              DropdownMenuItem(
+                                                  value: AppThemeMode.dark,
+                                                  child: Text('Темна')),
+                                            ],
+                                            onChanged: (value) {
+                                              if (value != null) {
+                                                settings.setTheme(value);
+                                              }
+                                            })),
+                                  ]),
+                              const SizedBox(height: 20),
+                              _Section(
                                   icon: Icons.school_outlined,
                                   title: 'Навчання',
                                   children: [
@@ -731,7 +764,7 @@ class _Section extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: ExpansionTile(
           key: PageStorageKey(title),
-          initiallyExpanded: title == 'Вигляд' || title == 'Gemini',
+          initiallyExpanded: title == 'Gemini',
           shape: const Border(),
           collapsedShape: const Border(),
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

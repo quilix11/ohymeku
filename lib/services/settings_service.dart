@@ -393,10 +393,13 @@ class SettingsService extends ChangeNotifier {
   int _lastCharacter = 0, _pauseSeconds = 3;
   String _speechLocale = 'en_US';
 
-  AppThemeMode get themeMode => AppThemeMode.system;
+  AppThemeMode _themeMode = AppThemeMode.system;
+  AppThemeMode get themeMode => _themeMode;
   bool get isDark =>
-      WidgetsBinding.instance.platformDispatcher.platformBrightness ==
-      Brightness.dark;
+      _themeMode == AppThemeMode.dark ||
+      (_themeMode == AppThemeMode.system &&
+          WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+              Brightness.dark);
   double get ttsSpeed => _ttsSpeed;
   double get ttsVolume => _ttsVolume;
   bool get ttsEnabled => _ttsEnabled;
@@ -472,10 +475,12 @@ class SettingsService extends ChangeNotifier {
         } catch (_) {}
       }
     } catch (_) {}
-    // Old manual preferences no longer override the device appearance.
-    if (_prefs.getInt('theme_mode') != AppThemeMode.system.index) {
-      await _prefs.setInt('theme_mode', AppThemeMode.system.index);
-    }
+    final savedTheme = _prefs.getInt('theme_mode');
+    _themeMode = savedTheme != null &&
+            savedTheme >= 0 &&
+            savedTheme < AppThemeMode.values.length
+        ? AppThemeMode.values[savedTheme]
+        : AppThemeMode.system;
     for (final character in GameCharacter.values) {
       final voice = _prefs.getString('voice_${character.name}');
       if (voice != null) _voices[character] = voice;
@@ -514,9 +519,9 @@ class SettingsService extends ChangeNotifier {
     resumePortraits();
   }
 
-  // Compatibility for older callers: appearance always follows the device.
-  Future<void> setTheme(AppThemeMode _) async {
-    await _prefs.setInt('theme_mode', AppThemeMode.system.index);
+  Future<void> setTheme(AppThemeMode value) async {
+    await _prefs.setInt('theme_mode', value.index);
+    _themeMode = value;
     notifyListeners();
   }
 

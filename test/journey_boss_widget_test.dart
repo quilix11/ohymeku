@@ -154,7 +154,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   testWidgets(
-      'system theme follows the device and ignores legacy manual choices',
+      'theme defaults to device, persists manual choice and can follow device again',
       (tester) async {
     final (settings, progress) = await setupBoss();
     addTearDown(settings.dispose);
@@ -173,11 +173,26 @@ void main() {
     await settings.setTheme(AppThemeMode.light);
     await tester.pumpAndSettle();
     expect(Theme.of(tester.element(find.byType(JourneyScreen))).brightness,
-        Brightness.dark);
+        Brightness.light);
+    expect(settings.isDark, false);
     final restored = SettingsService();
     await restored.load();
     addTearDown(restored.dispose);
-    expect(restored.themeMode, AppThemeMode.system);
+    expect(restored.themeMode, AppThemeMode.light);
+    expect(restored.isDark, false);
+    await settings.setTheme(AppThemeMode.dark);
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.light;
+    await tester.pumpAndSettle();
+    expect(Theme.of(tester.element(find.byType(JourneyScreen))).brightness,
+        Brightness.dark);
+    await settings.setTheme(AppThemeMode.system);
+    await tester.pumpAndSettle();
+    expect(Theme.of(tester.element(find.byType(JourneyScreen))).brightness,
+        Brightness.light);
+    tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+    await tester.pumpAndSettle();
+    expect(Theme.of(tester.element(find.byType(JourneyScreen))).brightness,
+        Brightness.dark);
     expect(find.byTooltip('Профіль'), findsOneWidget);
     expect(find.byIcon(Icons.settings_rounded), findsOneWidget);
     expect(tester.getCenter(find.byKey(const Key('meku_launcher'))).dy,

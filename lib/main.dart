@@ -115,7 +115,11 @@ class _DialectDuelAppState extends State<DialectDuelApp>
       debugShowCheckedModeBanner: false,
       theme: _lightTheme,
       darkTheme: _darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: switch (_mode) {
+        AppThemeMode.light => ThemeMode.light,
+        AppThemeMode.dark => ThemeMode.dark,
+        AppThemeMode.system => ThemeMode.system,
+      },
       themeAnimationDuration: widget.settings.animationsEnabled
           ? const Duration(milliseconds: 220)
           : Duration.zero,

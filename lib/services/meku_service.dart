@@ -576,7 +576,8 @@ ${jsonEncode(mekuCapabilities)}''',
       return 'Відкрито розділ застосунку.';
     }
     if (type == 'theme') {
-      return 'Тема автоматично відповідає телефону чи браузеру. Ручне перемикання вимкнено.';
+      navigate('settings');
+      return 'У розділі «Тема» можна вибрати «Як на телефоні», світлу або темну тему.';
     }
     if (type == 'card_count' &&
         value is int &&
