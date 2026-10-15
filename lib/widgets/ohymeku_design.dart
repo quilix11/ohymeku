@@ -8,50 +8,9 @@ class SilkBackground extends StatelessWidget {
   const SilkBackground({super.key, required this.child});
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: dark
-              ? [
-                  AppColors.backgroundDark,
-                  const Color(0xFF1B2428),
-                  const Color(0xFF25242C)
-                ]
-              : [
-                  AppColors.background,
-                  const Color(0xFFEEF4F2),
-                  const Color(0xFFF7F3F3)
-                ],
-        ),
-      ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: RadialGradient(
-            center: const Alignment(1, -.7),
-            radius: 1.35,
-            colors: [
-              const Color(0xFFB9D8CF).withValues(alpha: dark ? .08 : .40),
-              const Color(0xFFB9D8CF).withValues(alpha: 0),
-            ],
-          ),
-        ),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(-1, .8),
-              radius: 1.4,
-              colors: [
-                const Color(0xFFE2C9D0).withValues(alpha: dark ? .06 : .30),
-                const Color(0xFFE2C9D0).withValues(alpha: 0),
-              ],
-            ),
-          ),
-          child: child,
-        ),
-      ),
+    return ColoredBox(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: child,
     );
   }
 }

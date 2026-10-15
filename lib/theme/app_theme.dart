@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 
 // Legacy names retained for small reusable components.
 class AppColors {
-  // Cool mint, soft rose and graphite, with opaque text on light glass.
-  static const background = Color(0xFFF1F5F5);
-  static const backgroundDark = Color(0xFF121B20);
+  // Milk and deep violet, with solid backgrounds and readable surface steps.
+  static const background = Color(0xFFF7F6FF);
+  static const backgroundDark = Color(0xFF191334);
 
   static const surface = Color(0xFFFFFFFF);
-  static const surfaceDark = Color(0xFF243238);
+  static const surfaceDark = Color(0xFF282044);
 
-  static const primary = Color(0xFF6EA895);
-  static const primaryDark = Color(0xFF2A665A);
+  static const primary = Color(0xFF49319A);
+  static const primaryDark = Color(0xFF2D1B78);
 
-  static const secondary = Color(0xFFEEF1E8);
-  static const secondaryDark = Color(0xFF57634B);
+  static const secondary = Color(0xFFEDE9FA);
+  static const secondaryDark = Color(0xFF6A598F);
 
   static const bossRed = Color(0xFFD97777);
   static const bossRedDark = Color(0xFF9E4E4E);
@@ -26,38 +26,38 @@ class AppColors {
 
   static const trustFill = primary;
   static const trustShadow = primaryDark;
-  static const trustBg = Color(0xFFE7EEDD);
+  static const trustBg = Color(0xFFEAE5F7);
 
   static const patienceFill = winGold;
   static const patienceShadow = winGoldDark;
   static const patienceBg = trustBg;
 
-  static const textPrimary = Color(0xFF1E3032);
-  static const textPrimaryDark = Color(0xFFEEF6F6);
+  static const textPrimary = Color(0xFF281968);
+  static const textPrimaryDark = Color(0xFFF7F6FF);
 
-  static const textSecondary = Color(0xFF536B6D);
+  static const textSecondary = Color(0xFF69617D);
   static const textHint = textSecondary;
 
   static const textOnPrimary = Colors.white;
 
   static const bubbleNpc = surface;
-  static const bubbleNpcBorder = Color(0xFFD8DFD0);
+  static const bubbleNpcBorder = Color(0xFFDED8EC);
 
-  static const bubblePlayer = Color(0xFFE7EEDD);
-  static const bubblePlayerBorder = Color(0xFFB2C09B);
+  static const bubblePlayer = Color(0xFFEAE5F7);
+  static const bubblePlayerBorder = Color(0xFFC9BFDF);
 
   static const coachingBg = secondary;
-  static const coachingBorder = Color(0xFFD8DFD0);
-  static const coachingText = Color(0xFF354324);
+  static const coachingBorder = Color(0xFFDED8EC);
+  static const coachingText = Color(0xFF44365F);
 
   static const heartActive = bossRed;
-  static const heartEmpty = Color(0xFFDFE5D9);
+  static const heartEmpty = Color(0xFFE4DEEE);
 
   static const micFill = primary;
   static const micShadow = primaryDark;
 
-  static const borderDefault = Color(0xFFD8DFD0);
-  static const borderDark = Color(0xFF526259);
+  static const borderDefault = Color(0xFFDED8EC);
+  static const borderDark = Color(0xFF625573);
 
   static const emotionNeutral = secondary;
   static const emotionSuspicious = winGold;
@@ -69,7 +69,7 @@ class AppColors {
 }
 
 /// Shared visual tokens. Transparency applies to surfaces, never their content.
-/// Gradients and shadows provide depth without expensive backdrop filters.
+/// Solid milk/violet surfaces keep both themes calm and consistent.
 class AppVisuals {
   static const radiusSmall = 12.0;
   static const radiusControl = 16.0;
@@ -95,14 +95,9 @@ class AppVisuals {
 
   static BoxDecoration panelDecoration(BuildContext context,
       {bool rose = false, double radius = radiusCard}) {
-    final c = Theme.of(context).colorScheme;
     final fill = panelColor(context, rose: rose);
     return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [fill, Color.lerp(fill, c.primaryContainer, .04)!],
-      ),
+      color: fill,
       borderRadius: BorderRadius.circular(radius),
       border: Border.all(color: panelBorder(context), width: .7),
       boxShadow: panelShadows(context),
@@ -161,17 +156,17 @@ ThemeData _theme(Brightness brightness) {
       seedColor: AppColors.primary,
       brightness: brightness,
       surface: dark ? AppColors.surfaceDark : AppColors.surface,
-      primary: dark ? const Color(0xFF99D5C9) : AppColors.primaryDark);
+      primary: dark ? const Color(0xFFC5B5FF) : AppColors.primaryDark);
   final scheme = seedScheme.copyWith(
-    onPrimary: dark ? const Color(0xFF123B34) : Colors.white,
-    primaryContainer: dark ? const Color(0xFF24463E) : const Color(0xFFDDEFE9),
+    onPrimary: dark ? const Color(0xFF251457) : Colors.white,
+    primaryContainer: dark ? const Color(0xFF3B2C63) : const Color(0xFFE9E3FA),
     onPrimaryContainer:
-        dark ? const Color(0xFFD5F0E8) : const Color(0xFF143E36),
-    secondary: dark ? const Color(0xFFF1B9C5) : const Color(0xFF8D4D60),
+        dark ? const Color(0xFFEAE2FF) : const Color(0xFF302066),
+    secondary: dark ? const Color(0xFFC5B5E3) : const Color(0xFF69538D),
     secondaryContainer:
-        dark ? const Color(0xFF48313B) : const Color(0xFFF4E4E9),
+        dark ? const Color(0xFF35294D) : const Color(0xFFEDE7F7),
     onSecondaryContainer:
-        dark ? const Color(0xFFF9D1D9) : const Color(0xFF663748),
+        dark ? const Color(0xFFEEE6FA) : const Color(0xFF4C3769),
     tertiary: dark ? const Color(0xFFE9CB92) : const Color(0xFF795622),
     tertiaryContainer: dark ? const Color(0xFF453A26) : const Color(0xFFF3E7CF),
     onTertiaryContainer:
@@ -182,18 +177,18 @@ ThemeData _theme(Brightness brightness) {
     onErrorContainer:
         dark ? seedScheme.onErrorContainer : const Color(0xFF6A2A0A),
     onSurface: dark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-    onSurfaceVariant: dark ? const Color(0xFFBDD1D2) : AppColors.textSecondary,
-    outline: dark ? const Color(0xFF829A9C) : const Color(0xFF7A9393),
-    outlineVariant: dark ? const Color(0xFF41575A) : const Color(0xFFD6E3DF),
+    onSurfaceVariant: dark ? const Color(0xFFC8BFD9) : AppColors.textSecondary,
+    outline: dark ? const Color(0xFF9285AB) : const Color(0xFF9186A6),
+    outlineVariant: dark ? const Color(0xFF4C3F64) : const Color(0xFFDFD9EC),
     surfaceContainerLowest:
-        dark ? const Color(0xFF1C2420) : const Color(0xFFFAFCF8),
+        dark ? const Color(0xFF17112B) : const Color(0xFFFCFBFF),
     surfaceContainerLow:
-        dark ? const Color(0xFF242E28) : const Color(0xFFF4F7F1),
-    surfaceContainer: dark ? const Color(0xFF2B372E) : const Color(0xFFEDF2E8),
+        dark ? const Color(0xFF211937) : const Color(0xFFF3F0FB),
+    surfaceContainer: dark ? const Color(0xFF2B2144) : const Color(0xFFEEEAF7),
     surfaceContainerHigh:
-        dark ? const Color(0xFF354138) : const Color(0xFFE6EDDF),
+        dark ? const Color(0xFF35294F) : const Color(0xFFE8E2F2),
     surfaceContainerHighest:
-        dark ? const Color(0xFF404D42) : const Color(0xFFDCE6D4),
+        dark ? const Color(0xFF403359) : const Color(0xFFE0D8ED),
   );
 
   final base = ThemeData(

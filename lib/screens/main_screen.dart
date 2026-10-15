@@ -263,11 +263,6 @@ class _MainScreenState extends State<MainScreen> {
                       onPressed: () => _select(3),
                       icon: const AppIcon(AppIconKind.profile)),
                   const SizedBox(width: 8),
-                  IconButton(
-                      tooltip: 'Налаштування',
-                      onPressed: () => _navigate('settings'),
-                      icon: const AppIcon(AppIconKind.settings)),
-                  const SizedBox(width: 8),
                 ],
               ),
               body: SilkBackground(
@@ -316,6 +311,8 @@ class _MainScreenState extends State<MainScreen> {
                 selectedIndex: _index,
                 onSelect: _select,
                 onMeku: _openMeku,
+                emotion: _meku.emotion,
+                onSettings: () => _navigate('settings'),
               ),
             ));
   }

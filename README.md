@@ -71,7 +71,7 @@ a shared API key.
 - Fonts Lora and Manrope are bundled locally with OFL licenses under assets/fonts.
 - API references: [Gemini speech generation](https://ai.google.dev/gemini-api/docs/speech-generation), [Gemini 2.5 Flash TTS model](https://ai.google.dev/gemini-api/docs/models/gemini-2.5-flash-preview-tts), [audioplayers](https://pub.dev/packages/audioplayers).
 
-- The visual style uses light translucent surfaces, cool mint/rose accents, fine outlines and original line icons. `AppVisuals` keeps 16px controls and 22px cards consistent across both themes, with opaque text and no raised panel shadows. `AirNavigation` has a 56px visible panel, 48px touch targets and 28%/20% light/dark surface opacity; the background paints beneath it while screen content stays clear of the controls. The four destinations and their order are preserved. `AppIcon` draws the navigation/header glyphs locally; Manrope and Lora also remain bundled for offline use. No backdrop blur or runtime icon/font downloads.
+- Theme: milk and deep violet with solid backgrounds in both themes, subtle translucent panels and bundled Manrope/Lora. `AppVisuals` owns 12/16/22px radii. `AirNavigation` is 56px with 48px targets: adventure, words, original emotion-aware Meku avatar in the center, progress, settings on the right. The drawer uses a clipped 24px backdrop blur and a near-opaque surface to hide underlying content. No runtime icon/font fetch.
 - The Words tab offers travel/work flashcards, custom words, examples, pronunciation, repeat/known choices and persisted learning progress.
 - Each character has an independently saved system voice choice. Conversation meters include actual completed replies and unique words with adaptive practice targets.
 

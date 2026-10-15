@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'app_icon.dart';
+import 'meku_avatar.dart';
+import '../models/meku_emotion.dart';
 
 /// A light navigation surface with full-size targets and a quiet active mark.
 class AirNavigation extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onSelect;
   final VoidCallback onMeku;
+  final VoidCallback onSettings;
+  final MekuEmotion emotion;
 
   const AirNavigation({
     super.key,
     required this.selectedIndex,
     required this.onSelect,
     required this.onMeku,
+    required this.onSettings,
+    this.emotion = MekuEmotion.smug,
   });
 
   @override
@@ -69,6 +75,14 @@ class AirNavigation extends StatelessWidget {
                       ),
                       _destination(
                         context,
+                        kind: AppIconKind.meku,
+                        label: 'Meku',
+                        showLabel: showLabels,
+                        onTap: onMeku,
+                        controlKey: const Key('meku_launcher'),
+                      ),
+                      _destination(
+                        context,
                         kind: AppIconKind.progress,
                         label: 'Прогрес',
                         selected: selectedIndex == 2,
@@ -77,11 +91,10 @@ class AirNavigation extends StatelessWidget {
                       ),
                       _destination(
                         context,
-                        kind: AppIconKind.meku,
-                        label: 'Meku',
+                        kind: AppIconKind.settings,
+                        label: 'Налаштування',
                         showLabel: showLabels,
-                        onTap: onMeku,
-                        controlKey: const Key('meku_launcher'),
+                        onTap: onSettings,
                       ),
                     ],
                   ),
@@ -139,7 +152,9 @@ class AirNavigation extends StatelessWidget {
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(11),
                         ),
-                        child: AppIcon(kind, size: 23, color: ink),
+                        child: kind == AppIconKind.meku
+                            ? MekuAvatar(size: 28, emotion: emotion)
+                            : AppIcon(kind, size: 23, color: ink),
                       ),
                       if (showLabel) ...[
                         const SizedBox(height: 1),
@@ -148,7 +163,7 @@ class AirNavigation extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.fade,
                           style: TextStyle(
-                            fontSize: 10.5,
+                            fontSize: kind == AppIconKind.settings ? 8.5 : 10.5,
                             height: 1.15,
                             fontWeight:
                                 selected ? FontWeight.w600 : FontWeight.w500,

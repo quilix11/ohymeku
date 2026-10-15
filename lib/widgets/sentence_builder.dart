@@ -83,12 +83,9 @@ class SentenceBuilder extends StatelessWidget {
             decoration: AppVisuals.panelDecoration(context,
                     radius: AppVisuals.radiusControl)
                 .copyWith(
-                    gradient: candidates.isEmpty
-                        ? AppVisuals.panelDecoration(context).gradient
-                        : LinearGradient(colors: [
-                            colors.primaryContainer.withValues(alpha: .96),
-                            colors.primaryContainer.withValues(alpha: .9),
-                          ]),
+                    color: candidates.isEmpty
+                        ? AppVisuals.panelColor(context)
+                        : colors.primaryContainer,
                     border: Border.all(
                         color: candidates.isEmpty
                             ? AppVisuals.panelBorder(context)

@@ -69,11 +69,7 @@ class StatBar extends StatelessWidget {
                       child: Container(
                         height: 18,
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [fillColor, shadowColor],
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                          ),
+                          color: fillColor,
                           borderRadius: BorderRadius.circular(100),
                         ),
                       ),

@@ -16,6 +16,7 @@ void main() {
         try {
           final selections = <int>[];
           var mekuOpens = 0;
+          var settingsOpens = 0;
           await tester.pumpWidget(MaterialApp(
               theme: dark ? buildDarkTheme() : buildAppTheme(),
               builder: (context, child) => MediaQuery(
@@ -26,6 +27,7 @@ void main() {
                   bottomNavigationBar: AirNavigation(
                       selectedIndex: 0,
                       onSelect: selections.add,
+                      onSettings: () => settingsOpens++,
                       onMeku: () => mekuOpens++))));
           await tester.pumpAndSettle();
           final panel = find.byKey(const Key('air_navigation_panel'));
@@ -35,7 +37,13 @@ void main() {
               .ancestor(of: panel, matching: find.byType(DecoratedBox))
               .first);
           expect((surface.decoration as BoxDecoration).color!.a, lessThan(.3));
-          for (final label in ['Пригода', 'Слова', 'Прогрес', 'Meku']) {
+          for (final label in [
+            'Пригода',
+            'Слова',
+            'Meku',
+            'Прогрес',
+            'Налаштування'
+          ]) {
             expect(find.bySemanticsLabel(label), findsOneWidget);
             final control = find.descendant(
                 of: find.byTooltip(label), matching: find.byType(InkWell));
@@ -46,6 +54,10 @@ void main() {
           }
           expect(selections, [0, 1, 2]);
           expect(mekuOpens, 1);
+          expect(settingsOpens, 1);
+          expect(tester.getCenter(find.byTooltip('Meku')).dx, 160);
+          expect(tester.getCenter(find.byTooltip('Налаштування')).dx,
+              greaterThan(tester.getCenter(find.byTooltip('Прогрес')).dx));
           expect(tester.takeException(), isNull);
         } finally {
           semantics.dispose();
