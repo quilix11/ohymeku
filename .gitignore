@@ -1,6 +1,9 @@
 # DialectDuel - .gitignore
 # Environment variables (keep API key secret!)
 .env
+firebase-debug.log
+firebase-debug.*.log
+.firebase/
 
 # Flutter/Dart
 .dart_tool/
@@ -10,6 +13,7 @@
 .pub-cache/
 .pub/
 build/
+/release/
 *.iml
 *.ipr
 *.iws

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'services/settings_service.dart';
 import 'services/progress_service.dart';
 import 'theme/app_theme.dart';
@@ -11,6 +13,10 @@ import 'screens/placement_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Force portrait
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

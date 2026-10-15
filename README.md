@@ -4,6 +4,29 @@ Flutter mobile app for practicing spoken English through short, AI-driven role-p
 
 ## Run locally
 
+### Firebase
+
+The app initializes Firebase project `ohymeku` using `firebase_core` and
+`lib/firebase_options.dart`. Android, iOS and web apps are registered with their
+existing application/bundle IDs. `.firebaserc` selects the same project for CLI
+work. Client Firebase config files contain public identifiers; never put service
+account credentials or personal AI keys in them.
+
+This is the base SDK connection only. User sign-in, cloud progress sync,
+Firestore access, Analytics and Crashlytics are not implemented by this setup;
+existing learning data still uses local storage. No hosting or rules deployment
+is part of this change.
+
+Android includes `android/app/google-services.json` and the Google Services
+Gradle plugin. Web uses the explicit options in Dart. For iOS, the config is
+available in `ios/Runner/GoogleService-Info.plist`, and Dart supplies the same
+options at initialization. Before building iOS on a Mac, raise the Runner
+deployment target from iOS 13 to **iOS 15 or newer** in Xcode and resolve the
+Flutter plugin dependencies. Native iOS setup/build could not be verified on
+Windows. Linux, Windows and macOS Firebase app registrations are not configured.
+
+Setup reference: [Firebase for Flutter](https://firebase.google.com/docs/flutter/setup).
+
 Requirements: Flutter SDK with Dart 3, Android Studio/Xcode for device builds.
 
 ```powershell
