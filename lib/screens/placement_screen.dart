@@ -61,13 +61,38 @@ class _PlacementScreenState extends State<PlacementScreen> {
     }
   }
 
+  Future<void> _skip() async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      // Bypass onboarding without inventing a placement score or changing level.
+      if (!widget.retake) await widget.settings.setHasTakenPlacement(true);
+      if (mounted && widget.retake) Navigator.pop(context);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Не вдалося зберегти. Спробуй ще раз.');
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context), c = theme.colorScheme;
     final question = placementExercises[
         _answers.length.clamp(0, placementExercises.length - 1)];
     return Scaffold(
-        appBar: AppBar(title: const Text('Твій старт')),
+        appBar: AppBar(title: const Text('Твій старт'), actions: [
+          if (_result == null)
+            TextButton(
+              onPressed: _busy ? null : _skip,
+              child: Text(widget.retake ? 'Закрити' : 'Пропустити'),
+            ),
+        ]),
         body: SilkBackground(
             child: SafeArea(
                 top: false,
@@ -95,10 +120,20 @@ class _PlacementScreenState extends State<PlacementScreen> {
                                       ])),
                               const SizedBox(height: 20),
                               FilledButton.icon(
-                                  onPressed: () =>
-                                      setState(() => _started = true),
+                                  onPressed: _busy
+                                      ? null
+                                      : () => setState(() => _started = true),
                                   icon: const Icon(Icons.play_arrow_rounded),
                                   label: const Text('Почати тест')),
+                              if (!widget.retake) ...[
+                                const SizedBox(height: 12),
+                                TextButton(
+                                    onPressed: _busy ? null : _skip,
+                                    child: const Text(
+                                        'Пропустити — пройти пізніше')),
+                                const Text(
+                                    'Тест можна пройти з профілю. Поточний рівень залишиться без змін.'),
+                              ],
                               const SectionTitle('Твої інтереси'),
                               SilkPanel(
                                   child: Column(

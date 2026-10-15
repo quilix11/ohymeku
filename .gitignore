@@ -60,3 +60,6 @@ build/
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
 .aider*
+
+# Kotlin compiler cache
+**/android/.kotlin/

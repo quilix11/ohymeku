@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'google_identity.dart';
 
 /// Firebase public web config, not an admin credential. Tokens stay in memory.
 /// Session expiry requires a fresh login; passwords and tokens never enter prefs.
@@ -12,11 +13,15 @@ class AccountService extends ChangeNotifier {
   static final shared = AccountService();
   final String apiKey, projectId;
   final http.Client _client;
+  final Future<GoogleIdentity?> Function() _googleIdentity;
+  bool get googleAvailable => googleSupported;
   AccountService(
       {http.Client? client,
+      Future<GoogleIdentity?> Function()? googleIdentity,
       this.apiKey = configuredApiKey,
       this.projectId = configuredProject})
-      : _client = client ?? http.Client();
+      : _client = client ?? http.Client(),
+        _googleIdentity = googleIdentity ?? acquireGoogleIdentity;
   bool get configured =>
       apiKey.isNotEmpty &&
       RegExp(r'^[a-z][a-z0-9-]{4,29}$').hasMatch(projectId);
@@ -52,6 +57,11 @@ class AccountService extends ChangeNotifier {
           'EMAIL_NOT_FOUND' ||
           'INVALID_PASSWORD' =>
             'Перевір email і пароль.',
+          'FEDERATED_USER_ID_ALREADY_LINKED' ||
+          'EMAIL_EXISTS_WITH_DIFFERENT_CREDENTIAL' =>
+            'Цей email уже має інший спосіб входу. Увійди ним; акаунти автоматично не об’єднуються.',
+          'INVALID_IDP_RESPONSE' =>
+            'Google не підтвердив вхід. Спробуй ще раз.',
           'INVALID_EMAIL' => 'Перевір формат email.',
           'TOO_MANY_ATTEMPTS_TRY_LATER' => 'Забагато спроб. Спробуй пізніше.',
           'OPERATION_NOT_ALLOWED' =>
@@ -81,16 +91,65 @@ class AccountService extends ChangeNotifier {
         'password': password,
         'returnSecureToken': true
       });
-      if (j['idToken'] is! String ||
-          j['localId'] is! String ||
-          j['email'] is! String) {
-        throw const FormatException();
+      _acceptSession(j);
+    } finally {
+      busy = false;
+      _changed();
+    }
+  }
+
+  void _acceptSession(Map<String, dynamic> j) {
+    final token = j['idToken'], uid = j['localId'], email = j['email'];
+    final seconds = int.tryParse('${j['expiresIn']}');
+    if (token is! String ||
+        token.isEmpty ||
+        uid is! String ||
+        uid.isEmpty ||
+        email is! String ||
+        email.isEmpty ||
+        seconds == null ||
+        seconds <= 0) {
+      throw StateError('Сервер повернув неповні дані входу. Спробуй ще раз.');
+    }
+    _token = token;
+    _uid = uid;
+    _email = email;
+    _expires = DateTime.now().add(Duration(seconds: seconds.clamp(1, 3600)));
+  }
+
+  Future<bool> authenticateGoogle() async {
+    if (busy) return false;
+    if (!configured) {
+      throw StateError('Firebase ще не підключено до цієї збірки.');
+    }
+    busy = true;
+    _changed();
+    try {
+      final identity = await _googleIdentity();
+      if (identity == null) return false;
+      if (identity.session != null) {
+        _acceptSession(identity.session!);
+      } else {
+        final token = identity.idToken;
+        if (token == null || token.isEmpty) {
+          throw StateError('Google не повернув підтвердження входу.');
+        }
+        final j = await _auth('signInWithIdp', {
+          'postBody': Uri(queryParameters: {
+            'id_token': token,
+            'providerId': 'google.com'
+          }).query,
+          'requestUri': 'https://$projectId.firebaseapp.com',
+          'returnSecureToken': true,
+          'returnIdpCredential': false,
+        });
+        if (j['needConfirmation'] == true) {
+          throw StateError(
+              'Увійди наявним способом для цього email. Акаунти автоматично не об’єднуються.');
+        }
+        _acceptSession(j);
       }
-      _token = j['idToken'];
-      _uid = j['localId'];
-      _email = j['email'];
-      _expires = DateTime.now().add(Duration(
-          seconds: (int.tryParse('${j['expiresIn']}') ?? 3600).clamp(1, 3600)));
+      return true;
     } finally {
       busy = false;
       _changed();

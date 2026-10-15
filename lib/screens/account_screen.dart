@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/account_service.dart';
+import '../services/google_identity.dart';
 import '../services/progress_service.dart';
 import '../widgets/ohymeku_design.dart';
 
@@ -30,6 +31,12 @@ class _AccountScreenState extends State<AccountScreen> {
     } finally {
       if (mounted) setState(() => _working = false);
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (account.configured && account.googleAvailable) prepareGoogleIdentity();
   }
 
   void _say(String text) {
@@ -121,6 +128,24 @@ class _AccountScreenState extends State<AccountScreen> {
                               onPressed: _working ? null : account.signOut,
                               child: const Text('Вийти з акаунта')),
                         ] else ...[
+                          if (account.googleAvailable) ...[
+                            OutlinedButton(
+                              onPressed: _working
+                                  ? null
+                                  : () => _run(() async {
+                                        if (await account
+                                            .authenticateGoogle()) {
+                                          _password.clear();
+                                          _say(
+                                              'Ти увійшов через Google. Обери, зберегти локальний профіль чи завантажити хмарний.');
+                                        }
+                                      }),
+                              child: const Text('Продовжити з Google'),
+                            ),
+                            const SizedBox(height: 20),
+                            const Center(child: Text('або через email')),
+                            const SizedBox(height: 20),
+                          ],
                           TextField(
                               controller: _email,
                               keyboardType: TextInputType.emailAddress,

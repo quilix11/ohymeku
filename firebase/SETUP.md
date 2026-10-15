@@ -1,7 +1,6 @@
 # Firebase accounts for Ohymeku
 
-The app uses Firebase Authentication and Firestore REST APIs. No admin key or
-Firebase SDK is shipped. Passwords go directly to Firebase over HTTPS; ID tokens
+The app uses Firebase Authentication and Firestore REST APIs. No admin key is shipped. Google sign-in uses the official Google Sign-In SDK on Android and Firebase Auth popup on web. Passwords go directly to Firebase over HTTPS; ID tokens
 stay in memory and expire after at most one hour. Reopen/reload requires login.
 Only the profile is synced. Learning progress, stories and words remain local.
 
@@ -31,3 +30,31 @@ The UI clearly says accounts are not connected when config is absent. This repo
 cannot create a Firebase project or change your billing without a connected Google
 identity. Use Firebase's free limits, configure monitoring, and test the rules in
 Firebase's Rules Playground before accepting real users.
+
+## Google sign-in (Android and web)
+
+Enable Google in Firebase Authentication. Android uses the OAuth client in
+`android/app/google-services.json`; register every signing SHA-1 in Firebase
+before downloading that file. The current test APK certificate is registered;
+Play signing or another release keystore needs its own SHA-1. Google ID tokens
+are exchanged for Firebase ID tokens with `accounts:signInWithIdp`. Only the
+Firebase UID identifies the profile. Cancellation does not sign a user in.
+
+Web uses Firebase Auth `signInWithPopup` with `Persistence.NONE`, then signs out
+of the SDK after handing the short-lived token to AccountService. Public build
+settings remain `FIREBASE_API_KEY` and `FIREBASE_PROJECT_ID`. For a different
+project also set `FIREBASE_WEB_APP_ID` and `FIREBASE_MESSAGING_SENDER_ID` (defaults
+are the registered ohymeku web app). Allow the hosting domain in Firebase Auth.
+Popups must be allowed. Existing email-account conflicts require using the
+existing method; this implementation does not silently link accounts.
+
+Google login is offered on Android and web. iOS requires separate URL scheme,
+client configuration, deployment-target setup and validation on macOS; it is
+not enabled by this change. No token/password is stored in preferences. Profile
+sync remains explicit, with the existing Firestore security rules.
+
+The initial placement screen now supports skipping before or during the test.
+Skipping only bypasses onboarding, keeps the current level, and never records a
+score. Placement can be taken later from the profile.
+
+Android uses Kotlin 2.4.21 and the compilerOptions DSL to match the Firebase Auth SDK metadata.

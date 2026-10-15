@@ -74,3 +74,8 @@ Read this map before exploring; inspect target source before edits.
 - Web: flutter build web; serve build/web over localhost. Android/iOS requires its SDK.
 - test/game_session_test.dart covers outcome/retry/persistence; test/widget_test.dart covers menus, profile and chat. Native voice needs device validation.
 - Keep existing user changes and inspect source around the target before editing.
+
+## Google account and optional placement (2026-10-15)
+- `google_identity.dart` conditionally selects Android Google Sign-In or web Firebase Auth popup. Android Google ID tokens are exchanged by AccountService REST for Firebase ID tokens; cloud profiles continue using Firebase UID. Web persistence is NONE and the temporary SDK session is cleared after token handoff. Credentials remain in memory.
+- Android Google OAuth uses checked-in public google-services.json and the registered test signing SHA-1. A different signing certificate must be registered separately. Google login is not enabled on iOS in this change.
+- Placement skip marks onboarding completed without a fabricated score or level change; retake close only pops the route.

@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "933394961865",
+    "project_id": "ohymeku",
+    "storage_bucket": "ohymeku.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:933394961865:android:0242853e91b8ef28100418",
+        "android_client_info": {
+          "package_name": "com.dialectduel.dialect_duel"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "933394961865-latj2foh4bmjg7a4t3vbu24ch4tph7sl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.dialectduel.dialect_duel",
+            "certificate_hash": "09dca7d3835e395dc65442b360bbcbec28c0f6e3"
+          }
+        },
+        {
+          "client_id": "933394961865-agh2gdk0r3lgvnvsj3dida74m8slp00u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBzQUwJT_RLdjYtuqq6p3JYfqb8xZvXDQE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "933394961865-agh2gdk0r3lgvnvsj3dida74m8slp00u.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "933394961865-6kaspsg98cv8grbe5kagl89384oi5fnq.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.dialectduel.dialectDuel"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

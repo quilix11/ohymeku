@@ -3,8 +3,90 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:dialect_duel/services/account_service.dart';
+import 'package:dialect_duel/services/google_identity_model.dart';
 
 void main() {
+  test(
+      'Google credential is exchanged with Firebase and cloud uses Firebase UID',
+      () async {
+    final client = MockClient((request) async {
+      if (request.url.host == 'identitytoolkit.googleapis.com') {
+        expect(request.url.path, '/v1/accounts:signInWithIdp');
+        final body = jsonDecode(request.body) as Map;
+        final post = Uri.splitQueryString(body['postBody'] as String);
+        expect(post['providerId'], 'google.com');
+        expect(post['id_token'], 'synthetic+google/token');
+        expect(body['returnSecureToken'], true);
+        expect(body.containsKey('password'), false);
+        return http.Response(
+            jsonEncode({
+              'idToken': 'firebase-token',
+              'localId': 'firebase-uid',
+              'email': 'tester@example.com',
+              'expiresIn': '3600'
+            }),
+            200);
+      }
+      expect(request.url.path, endsWith('/profiles/firebase-uid'));
+      expect(request.headers['Authorization'], 'Bearer firebase-token');
+      return http.Response('{"fields":{}}', 200);
+    });
+    final service = AccountService(
+        client: client,
+        apiKey: 'public',
+        projectId: 'test-project',
+        googleIdentity: () async =>
+            const GoogleIdentity.token('synthetic+google/token'));
+    addTearDown(service.dispose);
+    expect(await service.authenticateGoogle(), true);
+    expect(service.email, 'tester@example.com');
+    await service.cloudProfile();
+    service.signOut();
+    expect(service.signedIn, false);
+  });
+  test('Google cancellation never calls Firebase and clears busy', () async {
+    final service = AccountService(
+        apiKey: 'public',
+        projectId: 'test-project',
+        client: MockClient((_) async => throw StateError('must not send')),
+        googleIdentity: () async => null);
+    addTearDown(service.dispose);
+    expect(await service.authenticateGoogle(), false);
+    expect(service.busy, false);
+    expect(service.signedIn, false);
+  });
+  test('Google rejects malformed responses without accepting a partial session',
+      () async {
+    final service = AccountService(
+        apiKey: 'public',
+        projectId: 'test-project',
+        client: MockClient(
+            (_) async => http.Response('{"idToken":"partial"}', 200)),
+        googleIdentity: () async => const GoogleIdentity.token('synthetic'));
+    addTearDown(service.dispose);
+    await expectLater(service.authenticateGoogle(), throwsStateError);
+    expect(service.busy, false);
+    expect(service.signedIn, false);
+    expect(service.email, null);
+  });
+  test('Google failure does not expose provider details', () async {
+    final service = AccountService(
+        apiKey: 'public',
+        projectId: 'test-project',
+        client: MockClient((_) async =>
+            http.Response('{"error":{"message":"synthetic-secret"}}', 400)),
+        googleIdentity: () async => const GoogleIdentity.token('synthetic'));
+    addTearDown(service.dispose);
+    try {
+      await service.authenticateGoogle();
+      fail('must reject');
+    } catch (e) {
+      expect(e.toString(), isNot(contains('synthetic-secret')));
+    }
+    expect(service.signedIn, false);
+    expect(service.busy, false);
+  });
+
   test('no config never calls auth or pretends to log in', () async {
     final s = AccountService(
         client:
