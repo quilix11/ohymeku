@@ -216,7 +216,7 @@ const mekuCapabilities = [
   {
     'type': 'profile_avatar',
     'description': 'Choose a local profile icon.',
-    'value': 'integer 0..3'
+    'value': 'integer 0..11'
   },
   {
     'type': 'reminder_time',

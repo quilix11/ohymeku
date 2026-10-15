@@ -40,7 +40,9 @@ jobs:
       - name: Build project Pages site
         env:
           GEMINI_GATEWAY_URL: ${{ vars.GEMINI_GATEWAY_URL }}
-        run: flutter build web --no-pub --no-web-resources-cdn --base-href "/${{ github.event.repository.name }}/" --dart-define="GEMINI_GATEWAY_URL=$GEMINI_GATEWAY_URL"
+          FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
+          FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+        run: flutter build web --no-pub --no-web-resources-cdn --base-href "/${{ github.event.repository.name }}/" --dart-define="GEMINI_GATEWAY_URL=$GEMINI_GATEWAY_URL" --dart-define="FIREBASE_API_KEY=$FIREBASE_API_KEY" --dart-define="FIREBASE_PROJECT_ID=$FIREBASE_PROJECT_ID"
       - uses: actions/configure-pages@v5
       - name: Name build artifact
         id: artifact

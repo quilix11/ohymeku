@@ -1,3 +1,4 @@
+import 'story_portrait.dart';
 import 'dart:convert';
 import 'willow_portrait.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +26,17 @@ class ScenarioPortrait extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (scenario.customId?.startsWith('cast_') == true) {
+      return ExcludeSemantics(
+          excluding: excludeFromSemantics,
+          child: SizedBox(
+              width: width,
+              height: height,
+              child: Center(
+                  child: StoryPortrait(
+                      name: scenario.name,
+                      size: width < height ? width : height))));
+    }
     if (scenario.voiceKey == 'willow') {
       return WillowPortrait(
           width: width,

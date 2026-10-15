@@ -52,5 +52,13 @@ const profileIcons = [
   Icons.person_rounded,
   Icons.flight_rounded,
   Icons.auto_awesome_rounded,
-  Icons.local_florist_rounded
+  Icons.local_florist_rounded,
+  Icons.pets_rounded,
+  Icons.nightlight_round,
+  Icons.emoji_nature_rounded,
+  Icons.sailing_rounded,
+  Icons.palette_rounded,
+  Icons.forest_rounded,
+  Icons.auto_stories_rounded,
+  Icons.rocket_launch_rounded,
 ];

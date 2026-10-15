@@ -75,6 +75,12 @@ class AppMenu extends StatelessWidget {
                                   _section(context, 'Пригода й розмови'),
                                   _item(
                                       context,
+                                      'Хроніки листів',
+                                      Icons.auto_stories_rounded,
+                                      () => navigate('chronicles'),
+                                      key: const Key('menu_chronicles')),
+                                  _item(
+                                      context,
                                       'Карта пригоди',
                                       Icons.route_rounded,
                                       () => navigate('journey')),

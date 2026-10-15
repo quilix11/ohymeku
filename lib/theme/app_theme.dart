@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/story_motion.dart';
 
 // Legacy names retained for small reusable components.
 class AppColors {
@@ -246,6 +247,13 @@ ThemeData _theme(Brightness brightness) {
           width: .7));
 
   return base.copyWith(
+    pageTransitionsTheme: const PageTransitionsTheme(builders: {
+      TargetPlatform.android: GentlePageTransitions(),
+      TargetPlatform.iOS: GentlePageTransitions(),
+      TargetPlatform.macOS: GentlePageTransitions(),
+      TargetPlatform.windows: GentlePageTransitions(),
+      TargetPlatform.linux: GentlePageTransitions(),
+    }),
     chipTheme: ChipThemeData(
       shape: const StadiumBorder(),
       backgroundColor: glassSurface,

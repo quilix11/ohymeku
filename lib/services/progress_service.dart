@@ -15,6 +15,16 @@ class ProgressService extends ChangeNotifier {
   int get grammarAttempts =>
       activities.keys.where((k) => k.contains('|grammar:')).length;
   String _name = '';
+  String _nickname = '', _bio = '';
+  int _avatarColor = 0;
+  String get nickname => _nickname;
+  String get bio => _bio;
+  int get avatarColor => _avatarColor;
+  String get dialogueName => _nickname.isNotEmpty
+      ? _nickname
+      : _name.isNotEmpty
+          ? _name
+          : 'Мандрівник';
   int _avatar = 0, _xp = 0;
   DateTime _joined = DateTime.now();
   static const _key = 'practice_progress_v2';
@@ -103,7 +113,10 @@ class ProgressService extends ChangeNotifier {
           if (e.value is int) activities[e.key.toString()] = e.value;
         }
         _name = data['name'] as String? ?? '';
-        _avatar = (data['avatar'] as int? ?? 0).clamp(0, 3);
+        _nickname = data['nickname'] as String? ?? '';
+        _bio = data['bio'] as String? ?? '';
+        _avatarColor = (data['avatarColor'] as int? ?? 0).clamp(0, 5);
+        _avatar = (data['avatar'] as int? ?? 0).clamp(0, 11);
         _xp = data['xp'] as int? ?? _xp;
         _joined = DateTime.tryParse(data['joined'] as String? ?? '') ?? _joined;
         for (final item in data['records'] as List? ?? []) {
@@ -120,10 +133,40 @@ class ProgressService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> saveProfile(String name, int avatar) async {
-    _name = name.trim();
-    _avatar = avatar.clamp(0, 3);
-    await _persist();
+  Map<String, dynamic> profileData() => {
+        'name': _name,
+        'nickname': _nickname,
+        'bio': _bio,
+        'avatar': _avatar,
+        'avatarColor': _avatarColor
+      };
+
+  Future<void> saveProfile(String name, int avatar,
+      {String? nickname, String? bio, int? avatarColor}) async {
+    final clean = name.trim();
+    final nick = (nickname ?? _nickname).trim().replaceFirst(RegExp(r'^@'), '');
+    final description = (bio ?? _bio).trim();
+    if (clean.length > 24 ||
+        nick.length > 24 ||
+        description.length > 160 ||
+        nick.isNotEmpty &&
+            !RegExp(r'^[\p{L}\p{N}_ .-]+$', unicode: true).hasMatch(nick)) {
+      throw ArgumentError('Ім’я та нік — до 24 символів, про себе — до 160.');
+    }
+    final next = {
+      ...profileData(),
+      'name': clean,
+      'nickname': nick,
+      'bio': description,
+      'avatar': avatar.clamp(0, 11),
+      'avatarColor': (avatarColor ?? _avatarColor).clamp(0, 5)
+    };
+    await _persist(profileOverride: next);
+    _name = clean;
+    _nickname = nick;
+    _bio = description;
+    _avatar = next['avatar'] as int;
+    _avatarColor = next['avatarColor'] as int;
     notifyListeners();
   }
 
@@ -144,12 +187,11 @@ class ProgressService extends ChangeNotifier {
           r.character == character && r.scenarioId == scenarioId && r.won)
       .length;
 
-  Future<void> _persist() {
+  Future<void> _persist({Map<String, dynamic>? profileOverride}) {
     final value = jsonEncode({
       'achievements': achievements,
       'activities': activities,
-      'name': _name,
-      'avatar': _avatar,
+      ...profileOverride ?? profileData(),
       'xp': _xp,
       'joined': _joined.toIso8601String(),
       'records': _records.map((r) => r.toJson()).toList()

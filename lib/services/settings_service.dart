@@ -14,11 +14,13 @@ import 'notification_service.dart';
 import 'cloud_speech_service.dart';
 import 'reading_service.dart';
 import 'journey_service.dart';
+import '../story/story_service.dart';
 
 enum AppThemeMode { light, dark, system }
 
 class SettingsService extends ChangeNotifier {
   late SharedPreferences _prefs;
+  final story = StoryService();
   final PortraitGenerator? _portraitGenerator;
   http.Client? _portraitClient;
   bool _portraitBusy = false, _disposed = false;
@@ -146,6 +148,7 @@ class SettingsService extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _portraitClient?.close();
+    story.dispose();
     super.dispose();
   }
 
@@ -415,6 +418,7 @@ class SettingsService extends ChangeNotifier {
     await vocabulary.load();
     await reading.load();
     await journey.load(preferences: _prefs);
+    await story.load(preferences: _prefs);
     adaptiveLearning = _prefs.getBool('adaptive_learning') ?? true;
     offlineMode = _prefs.getBool('offline_mode') ?? false;
     reminderHour = (_prefs.getInt('reminder_hour') ?? 19).clamp(0, 23);

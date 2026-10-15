@@ -142,7 +142,11 @@ class AirNavigation extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
+                      AnimatedContainer(
+                        duration: MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 300),
+                        curve: Curves.easeOutCubic,
                         width: 34,
                         height: 27,
                         alignment: Alignment.center,

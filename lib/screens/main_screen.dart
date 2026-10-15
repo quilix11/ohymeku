@@ -10,6 +10,7 @@ import 'vocabulary_screen.dart';
 import 'meku_screen.dart';
 import '../widgets/air_navigation.dart';
 import '../widgets/app_icon.dart';
+import '../widgets/profile_avatar.dart';
 import '../widgets/ohymeku_design.dart';
 import 'settings_screen.dart';
 import 'practice_screen.dart';
@@ -23,6 +24,7 @@ import 'reading_screen.dart';
 import 'reader_screen.dart';
 import 'game_screen.dart';
 import 'journey_screen.dart';
+import 'chronicles_screen.dart';
 import 'journey_chat_sheet.dart';
 import '../widgets/app_menu.dart';
 import '../theme/app_theme.dart';
@@ -35,7 +37,10 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _tabFade = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 380), value: 1);
   final _shell = GlobalKey<ScaffoldState>();
   int _index = 0;
   final _visited = <int>{0};
@@ -52,6 +57,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   void dispose() {
+    _tabFade.dispose();
     _meku.dispose();
     super.dispose();
   }
@@ -87,6 +93,9 @@ class _MainScreenState extends State<MainScreen> {
     }
     final Widget screen;
     switch (destination) {
+      case 'chronicles':
+        screen = ChroniclesScreen(
+            settings: widget.settings, progress: widget.progress);
       case 'reading':
         screen =
             ReadingScreen(settings: widget.settings, progress: widget.progress);
@@ -220,6 +229,7 @@ class _MainScreenState extends State<MainScreen> {
 
   void _select(int index) {
     if (_index == index) return;
+    if (!MediaQuery.disableAnimationsOf(context)) _tabFade.forward(from: .25);
     setState(() {
       _index = index;
       _visited.add(index);
@@ -261,7 +271,10 @@ class _MainScreenState extends State<MainScreen> {
                   IconButton(
                       tooltip: 'Профіль',
                       onPressed: () => _select(3),
-                      icon: const AppIcon(AppIconKind.profile)),
+                      icon: ProfileAvatar(
+                          avatar: widget.progress.avatar,
+                          color: widget.progress.avatarColor,
+                          size: 30)),
                   const SizedBox(width: 8),
                 ],
               ),
@@ -272,40 +285,43 @@ class _MainScreenState extends State<MainScreen> {
                       child: Center(
                           child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 720),
-                        child: IndexedStack(index: _index, children: [
-                          if (_visited.contains(0))
-                            RepaintBoundary(
-                                child: JourneyScreen(
-                                    settings: widget.settings,
-                                    progress: widget.progress))
-                          else
-                            const SizedBox.shrink(),
-                          if (_visited.contains(1))
-                            RepaintBoundary(
-                                child: VocabularyScreen(
-                                    settings: widget.settings,
-                                    progress: widget.progress,
-                                    initialDeck: _wordDeck,
-                                    reviewAll: _wordAll,
-                                    requestNonce: _wordRequest,
-                                    active: _index == 1))
-                          else
-                            const SizedBox.shrink(),
-                          if (_visited.contains(2))
-                            RepaintBoundary(
-                                child: ProgressScreen(
-                                    progress: widget.progress,
-                                    onStart: () => _select(0)))
-                          else
-                            const SizedBox.shrink(),
-                          if (_visited.contains(3))
-                            RepaintBoundary(
-                                child: ProfileScreen(
-                                    settings: widget.settings,
-                                    progress: widget.progress))
-                          else
-                            const SizedBox.shrink(),
-                        ]),
+                        child: FadeTransition(
+                            opacity: _tabFade
+                                .drive(CurveTween(curve: Curves.easeOutCubic)),
+                            child: IndexedStack(index: _index, children: [
+                              if (_visited.contains(0))
+                                RepaintBoundary(
+                                    child: JourneyScreen(
+                                        settings: widget.settings,
+                                        progress: widget.progress))
+                              else
+                                const SizedBox.shrink(),
+                              if (_visited.contains(1))
+                                RepaintBoundary(
+                                    child: VocabularyScreen(
+                                        settings: widget.settings,
+                                        progress: widget.progress,
+                                        initialDeck: _wordDeck,
+                                        reviewAll: _wordAll,
+                                        requestNonce: _wordRequest,
+                                        active: _index == 1))
+                              else
+                                const SizedBox.shrink(),
+                              if (_visited.contains(2))
+                                RepaintBoundary(
+                                    child: ProgressScreen(
+                                        progress: widget.progress,
+                                        onStart: () => _select(0)))
+                              else
+                                const SizedBox.shrink(),
+                              if (_visited.contains(3))
+                                RepaintBoundary(
+                                    child: ProfileScreen(
+                                        settings: widget.settings,
+                                        progress: widget.progress))
+                              else
+                                const SizedBox.shrink(),
+                            ])),
                       )))),
               bottomNavigationBar: AirNavigation(
                 selectedIndex: _index,

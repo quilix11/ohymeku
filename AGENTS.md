@@ -17,6 +17,13 @@ Read this map before exploring; inspect target source before edits.
 - No on-device validation or automated tests were performed during this expansion. See README/IMPLEMENTATION for exact offline limits and follow-up checks.
 
 
+## Story and profile expansion
+- `SettingsService.story` owns `StoryService`; saved `letter_chronicles_v1` has authored/generated chapters, per-scene progress, clues and immutable decision consequences. `story_auto_continue` persists the continuation preference. Authored chapters work offline; AI generation requires existing Gemini setup and connectivity. Model/schema validation rejects incomplete chapters; choose operations are serialized and persisted before publishing. Do not treat free conversation as story completion.
+- `story/story_catalog.dart` defines five authored chapters and the Lumen canon. `story_cast.dart` defines five free-chat partners. `StoryPortrait` draws the bundled vector cast; do not fall back to Hannah artwork for these IDs. `ChroniclesScreen` is linked from the home map and drawer.
+- `ProgressService` preserves legacy XP/records and adds nickname/bio/12 avatars/6 colors. `dialogueName` prefers nickname, then name. `GameSession` passes it to `AiService` as data; Meku gets preferred_name. Never interpret profile strings as prompt instructions.
+- `AccountService` uses Firebase Auth/Firestore REST with public compile-time FIREBASE_API_KEY and FIREBASE_PROJECT_ID. No configured project means accounts are unavailable. Session ID token only in memory (one hour max), no password/token in local storage. Cloud sync is profile-only and explicit. `firebase/firestore.rules` restricts profiles to owner UID and verified-email writes; setup in `firebase/SETUP.md`. Real project integration needs external configuration.
+- `StoryArrival`, page transitions, navigation selection and tab fade are finite and honor reduced motion. Do not rebuild gameplay state to animate tab switches.
+
 ## Active architecture
 - `api_credentials.dart`: personal Gemini key in session memory; local dotenv fallback. Public Pages builds include no API key; optional compile-time GEMINI_GATEWAY_URL routes shared requests to gateway/worker.mjs. Personal keys take precedence.
 - `character_portrait_service.dart`: Gemini Interactions image request with two style references; nine-emotion sheet, chroma removal and bounded transparent PNGs. `SettingsService` owns a persisted serial background queue for all new characters, including Meku tools. `LearningService.generate` returns metadata immediately. Preserve portrait status/error as well as artwork; scenario writes are serialized.

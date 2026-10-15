@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /profiles/{uid} {
+      function owner() { return request.auth != null && request.auth.uid == uid; }
+      allow read: if owner();
+      allow create, update: if owner() && request.auth.token.email_verified == true
+        && request.resource.data.keys().hasOnly(['name', 'nickname', 'bio', 'avatar', 'avatarColor'])
+        && request.resource.data.keys().hasAll(['name', 'nickname', 'bio', 'avatar', 'avatarColor'])
+        && request.resource.data.name is string && request.resource.data.name.size() <= 24
+        && request.resource.data.nickname is string && request.resource.data.nickname.size() <= 24
+        && request.resource.data.bio is string && request.resource.data.bio.size() <= 160
+        && request.resource.data.avatar is int && request.resource.data.avatar >= 0 && request.resource.data.avatar <= 11
+        && request.resource.data.avatarColor is int && request.resource.data.avatarColor >= 0 && request.resource.data.avatarColor <= 5;
+      allow delete: if owner();
+    }
+  }
+}

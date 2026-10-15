@@ -12,6 +12,7 @@ import '../widgets/scenario_portrait.dart';
 import '../widgets/ohymeku_design.dart';
 import '../theme/app_theme.dart';
 import 'journey_level_screen.dart';
+import 'chronicles_screen.dart';
 import 'journey_boss_screen.dart';
 
 class JourneyScreen extends StatefulWidget {
@@ -213,14 +214,34 @@ class _JourneyScreenState extends State<JourneyScreen>
                         const SizedBox(height: 12),
                         FilledButton.icon(
                             key: const Key('journey_continue'),
-                            onPressed: () => _open(journey.current),
+                            onPressed: allDone
+                                ? () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute<void>(
+                                        builder: (_) => ChroniclesScreen(
+                                            settings: widget.settings,
+                                            progress: widget.progress)))
+                                : () => _open(journey.current),
                             icon: const Icon(CupertinoIcons.play),
                             label: Text(allDone
-                                ? 'Повторити фінал'
+                                ? 'Продовжити історію'
                                 : large
                                     ? 'Рівень ${journey.current.number}'
                                     : 'Рівень ${journey.current.number} · Почати')),
                       ])),
+                  const SizedBox(height: 16),
+                  LearningTile(
+                    title: 'Хроніки листів',
+                    subtitle:
+                        'Сюжетна пригода · докази, рішення й нові розділи',
+                    icon: CupertinoIcons.envelope_open,
+                    onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                            builder: (_) => ChroniclesScreen(
+                                settings: widget.settings,
+                                progress: widget.progress))),
+                  ),
                   const SizedBox(height: 16),
                   LayoutBuilder(builder: (context, constraints) {
                     final width = constraints.maxWidth,

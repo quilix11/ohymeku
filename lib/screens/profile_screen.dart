@@ -8,6 +8,9 @@ import 'settings_screen.dart';
 import 'placement_screen.dart';
 import 'practice_screen.dart';
 import '../widgets/ohymeku_design.dart';
+import '../widgets/profile_avatar.dart';
+import '../widgets/story_motion.dart';
+import 'account_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final ProgressService progress;
@@ -68,18 +71,21 @@ class ProfileScreen extends StatelessWidget {
           SilkPanel(
               padding: const EdgeInsets.all(16),
               child: Row(children: [
-                Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: AppVisuals.panelDecoration(context,
-                        radius: AppVisuals.radiusControl),
-                    child: Icon(profileIcons[progress.avatar],
-                        size: 28, color: c.primary)),
+                ProfileAvatar(
+                    avatar: progress.avatar, color: progress.avatarColor),
                 const SizedBox(width: 14),
                 Expanded(
                     child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                       Text(progress.name, style: theme.textTheme.titleLarge),
+                      if (progress.nickname.isNotEmpty)
+                        Text('@${progress.nickname}',
+                            style: theme.textTheme.bodySmall),
+                      if (progress.bio.isNotEmpty)
+                        Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(progress.bio)),
                       const SizedBox(height: 4),
                       Text(
                           'З нами з ${progress.joined.day}.${progress.joined.month}.${progress.joined.year}',
@@ -93,6 +99,14 @@ class ProfileScreen extends StatelessWidget {
                         builder: (_) => _EditProfile(progress: progress)),
                     icon: const Icon(CupertinoIcons.pencil)),
               ])),
+          const SizedBox(height: 12),
+          StoryArrival(
+              child: LearningTile(
+                  title: 'Акаунт і хмарний профіль',
+                  subtitle:
+                      'Вхід, реєстрація та перенесення профілю між пристроями',
+                  icon: CupertinoIcons.cloud,
+                  onTap: () => open(AccountScreen(progress: progress)))),
           const SectionTitle('Навчальний профіль'),
           SilkPanel(
               child: Column(
@@ -197,7 +211,8 @@ class _EditProfile extends StatefulWidget {
 }
 
 class _EditProfileState extends State<_EditProfile> {
-  late final TextEditingController _name;
+  late final TextEditingController _name, _nickname, _bio;
+  late int _color;
   late int _avatar;
   bool _saving = false;
   String? _error;
@@ -206,11 +221,16 @@ class _EditProfileState extends State<_EditProfile> {
     super.initState();
     _name = TextEditingController(text: widget.progress.editableName);
     _avatar = widget.progress.avatar;
+    _color = widget.progress.avatarColor;
+    _nickname = TextEditingController(text: widget.progress.nickname);
+    _bio = TextEditingController(text: widget.progress.bio);
   }
 
   @override
   void dispose() {
     _name.dispose();
+    _nickname.dispose();
+    _bio.dispose();
     super.dispose();
   }
 
@@ -221,7 +241,8 @@ class _EditProfileState extends State<_EditProfile> {
     }
     setState(() => _saving = true);
     try {
-      await widget.progress.saveProfile(_name.text, _avatar);
+      await widget.progress.saveProfile(_name.text, _avatar,
+          nickname: _nickname.text, bio: _bio.text, avatarColor: _color);
       if (mounted) Navigator.pop(context);
     } catch (_) {
       if (mounted) {
@@ -238,12 +259,44 @@ class _EditProfileState extends State<_EditProfile> {
         title: const Text('Твій профіль'),
         content: SingleChildScrollView(
             child: Column(mainAxisSize: MainAxisSize.min, children: [
+          ProfileAvatar(avatar: _avatar, color: _color, size: 80),
+          const SizedBox(height: 16),
           TextField(
               key: const Key('profile_name'),
               controller: _name,
               maxLength: 24,
               decoration: InputDecoration(
                   labelText: 'Як тебе звати?', errorText: _error)),
+          const SizedBox(height: 12),
+          TextField(
+              key: const Key('profile_nickname'),
+              controller: _nickname,
+              maxLength: 24,
+              decoration: const InputDecoration(
+                  labelText: 'Нік у діалогах',
+                  prefixText: '@',
+                  helperText: 'Так до тебе звертатимуться персонажі')),
+          const SizedBox(height: 12),
+          TextField(
+              key: const Key('profile_bio'),
+              controller: _bio,
+              maxLength: 160,
+              maxLines: 3,
+              decoration: const InputDecoration(labelText: 'Про себе')),
+          const SizedBox(height: 16),
+          Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: List.generate(
+                  profileColors.length,
+                  (i) => IconButton(
+                      tooltip: 'Колір ${i + 1}',
+                      onPressed: () => setState(() => _color = i),
+                      icon: Icon(
+                          _color == i
+                              ? CupertinoIcons.checkmark_circle_fill
+                              : CupertinoIcons.circle_fill,
+                          color: profileColors[i])))),
           const SizedBox(height: 16),
           Wrap(
               spacing: 8,

@@ -103,7 +103,7 @@ class GameSession extends ChangeNotifier {
     state = state.copyWith(messages: [..._confirmed, player], isLoading: true);
     notifyListeners();
     try {
-      final result = await ai.sendMessage(
+      final result = await (ai..playerName = progress.dialogueName).sendMessage(
           character: character,
           chatHistory: List.unmodifiable(_confirmed),
           currentTrust: state.trust,
