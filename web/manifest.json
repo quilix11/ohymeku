@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "Ohymeku — англійська з Meku",
+  "short_name": "Ohymeku",
+  "description": "Пригоди, слова й розмови англійською разом із Meku. Відкрита тестова версія.",
+  "lang": "uk",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F8F5F0",
+  "theme_color": "#F8F5F0",
+  "icons": [
+    {"src": "icons/meku-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icons/meku-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icons/meku-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "icons/meku-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

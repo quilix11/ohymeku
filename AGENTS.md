@@ -74,3 +74,5 @@ Read this map before exploring; inspect target source before edits.
 - Web: flutter build web; serve build/web over localhost. Android/iOS requires its SDK.
 - test/game_session_test.dart covers outcome/retry/persistence; test/widget_test.dart covers menus, profile and chat. Native voice needs device validation.
 - Keep existing user changes and inspect source around the target before editing.
+
+- Installation: `web/install.html`, `install.js`, `manifest.json`, `pwa-worker.js` provide public PWA installation with Android/iOS manual fallbacks. Keep URLs relative to Pages base; never cache API/auth requests. Native/web app icons are packaged from existing Meku artwork with `scripts/generate_app_icons.py`. AppMenu links install guide and feedback email adminnovik@gmail.com (contact only, no admin role).

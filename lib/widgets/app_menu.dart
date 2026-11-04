@@ -1,5 +1,7 @@
 import 'dart:ui' show ImageFilter;
 import 'dart:math';
+import 'package:flutter/foundation.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import '../models/journey_level.dart';
@@ -25,6 +27,16 @@ class AppMenu extends StatelessWidget {
       required this.dictionary,
       required this.meku,
       required this.close});
+  Future<void> _openLink(BuildContext context, Uri uri) async {
+    try {
+      if (await launchUrl(uri, webOnlyWindowName: '_blank')) return;
+    } catch (_) {/* Show the fallback below. */}
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Не вдалося відкрити посилання: $uri')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Drawer(
       width: min(380, MediaQuery.sizeOf(context).width * .9),
@@ -165,6 +177,32 @@ class AppMenu extends StatelessWidget {
                                   _item(context, 'Поговорити з Meku',
                                       Icons.pets_rounded, meku,
                                       key: const Key('menu_meku')),
+                                  _section(context, 'Тестова версія'),
+                                  _item(
+                                      context,
+                                      'Встановити Ohymeku',
+                                      CupertinoIcons.square_arrow_down,
+                                      () => _openLink(
+                                          context,
+                                          kIsWeb
+                                              ? Uri.base.resolve('install.html')
+                                              : Uri.parse(
+                                                  'https://quilix11.github.io/ohymeku/install.html')),
+                                      key: const Key('menu_install'),
+                                      subtitle: 'Посилання для всіх охочих'),
+                                  _item(
+                                      context,
+                                      'Надіслати відгук',
+                                      CupertinoIcons.envelope,
+                                      () => _openLink(
+                                          context,
+                                          Uri(
+                                              scheme: 'mailto',
+                                              path: 'adminnovik@gmail.com',
+                                              query:
+                                                  'subject=Ohymeku%20feedback')),
+                                      key: const Key('menu_feedback'),
+                                      subtitle: 'adminnovik@gmail.com'),
                                 ])),
                           ]))))));
   Widget _section(BuildContext context, String title) => Padding(
