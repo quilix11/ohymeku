@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#F8F5F0">
-  <meta name="description" content="Встанови тестову версію Ohymeku з Meku на телефон. Відкрито для всіх.">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Ohymeku">
+  <meta name="description" content="Тестова Android-версія Ohymeku через Firebase App Distribution.">
+
+
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -18,8 +18,8 @@
     main{max-width:520px;margin:auto}header{text-align:center}img{width:120px;height:120px;border-radius:28px}h1{font-size:32px;margin:12px 0 0}h2{font-size:21px;margin:0 0 8px}p{margin:12px 0}
     .badge{display:inline-block;border:1px solid var(--line);border-radius:20px;padding:3px 12px;font-size:14px;margin:12px 0 0}
     section{border:1px solid var(--line);border-radius:22px;padding:20px;background:var(--card);margin-top:20px}
-    .actions{display:grid;gap:12px;margin:24px 0}button,.open{display:block;width:100%;border-radius:16px;padding:16px;text-align:center;font:inherit;font-weight:650;border:1px solid var(--accent);text-decoration:none;cursor:pointer}
-    button{background:var(--accent);color:var(--bg)}.open{color:var(--ink);background:var(--card)}button:disabled{opacity:.6;cursor:wait}
+    .actions{display:grid;gap:12px;margin:24px 0}button,.open,.install{display:block;width:100%;border-radius:16px;padding:16px;text-align:center;font:inherit;font-weight:650;border:1px solid var(--accent);text-decoration:none;cursor:pointer}
+    .install{background:var(--accent);color:var(--bg)}.open{color:var(--ink);background:var(--card)}button:disabled{opacity:.6;cursor:wait}
     a{color:var(--accent);overflow-wrap:anywhere}li+li{margin-top:10px}ol{padding-left:24px;margin-bottom:0}[hidden]{display:none!important}:focus-visible{outline:3px solid var(--accent);outline-offset:4px}
   </style>
   <script src="install.js" defer></script>
@@ -29,27 +29,25 @@
   <header>
     <img src="icons/meku-192.png" alt="Лисичка Meku" width="120" height="120">
     <h1>Ohymeku</h1>
-    <span class="badge">Відкрита тестова версія</span>
+    <span class="badge">Android · Firebase App Distribution</span>
     <p>Вчи англійську з Meku: проходь пригоди, збирай слова та спілкуйся з персонажами.</p>
   </header>
   <div class="actions">
-    <button id="install" type="button">Як встановити на телефон</button>
-    <a class="open" href="./">Відкрити Ohymeku</a>
+    <a class="install" href="https://appdistribution.firebase.google.com/testerapps/1:933394961865:android:0242853e91b8ef28100418/releases/4k5a5lfmsncvg?utm_source=firebase-console">Завантажити через Firebase</a>
+    <a class="open" href="./">Відкрити вебверсію</a>
   </div>
-  <p id="install-status" role="status" aria-live="polite">Встановлення відкрите для всіх — запрошення тестера не потрібне.</p>
-  <section id="android"><h2>Android</h2><ol>
-    <li>Відкрий це посилання у <strong>Chrome</strong>.</li>
-    <li>Натисни «Встановити на телефон», якщо кнопка з’явиться. Або відкрий меню <strong>⋮ → Додати на головний екран → Встановити</strong>.</li>
-    <li>Шукай іконку Meku серед своїх застосунків.</li>
+  <section><h2>Як встановити на Android</h2><ol>
+    <li>Натисни «Завантажити через Firebase».</li>
+    <li>Увійди в Google-акаунт, на пошту якого отримав запрошення тестера, та прийми запрошення.</li>
+    <li>На сторінці Firebase відкрий цей реліз, завантаж і встанови Android-застосунок за інструкціями сервісу.</li>
   </ol></section>
-  <section id="ios"><h2>iPhone та iPad</h2><ol>
-    <li>Відкрий це посилання у <strong>Safari</strong>.</li>
-    <li>Натисни <strong>«Поділитися» → «На початковий екран» → «Додати»</strong>.</li>
-    <li>Відкривай Ohymeku через іконку Meku.</li>
-  </ol></section>
+  <section><h2>Немає доступу до релізу?</h2>
+    <p>Доступ до цієї збірки визначає Firebase. Якщо сервіс не пускає, потрібне запрошення для твоєї пошти або посилання для приєднання до тестування від власника проєкту.</p>
+    <p>Цей реліз призначений для Android. На iPhone можна скористатися <a href="./">вебверсією Ohymeku</a>.</p>
+  </section>
   <section><h2>Допоможи зробити Meku кращою</h2>
     <p>Помітив помилку? Надішли скриншот, модель телефона й короткий опис на <a href="mailto:adminnovik@gmail.com?subject=Ohymeku%20%E2%80%94%20%D0%B2%D1%96%D0%B4%D0%B3%D1%83%D0%BA%20%D1%82%D0%B5%D1%81%D1%82%D0%B5%D1%80%D0%B0">adminnovik@gmail.com</a>.</p>
-    <p>Це вебзастосунок, який встановлюється з браузера. Перший запуск і функції ШІ потребують інтернету. Прогрес зберігається на цьому пристрої; встановлення не підключає ШІ автоматично.</p>
+    <p>Встановлення тестової збірки не підключає ШІ автоматично. Доступ до завантаження перевіряється у Firebase.</p>
   </section>
 </main>
 </body>

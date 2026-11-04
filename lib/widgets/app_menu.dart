@@ -1,6 +1,5 @@
 import 'dart:ui' show ImageFilter;
 import 'dart:math';
-import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -184,12 +183,11 @@ class AppMenu extends StatelessWidget {
                                       CupertinoIcons.square_arrow_down,
                                       () => _openLink(
                                           context,
-                                          kIsWeb
-                                              ? Uri.base.resolve('install.html')
-                                              : Uri.parse(
-                                                  'https://quilix11.github.io/ohymeku/install.html')),
+                                          Uri.parse(
+                                              'https://appdistribution.firebase.google.com/testerapps/1:933394961865:android:0242853e91b8ef28100418/releases/4k5a5lfmsncvg?utm_source=firebase-console')),
                                       key: const Key('menu_install'),
-                                      subtitle: 'Посилання для всіх охочих'),
+                                      subtitle:
+                                          'Android · Firebase App Distribution'),
                                   _item(
                                       context,
                                       'Надіслати відгук',
