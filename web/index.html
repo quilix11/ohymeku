@@ -19,6 +19,7 @@
       --splash-art: url("assets/assets/images/meku_splash_pass_portrait.webp");
       position: fixed;
       inset: 0;
+      z-index: 10;
       display: flex;
       flex-direction: column;
       padding: 24px;
@@ -29,6 +30,7 @@
         var(--splash-art) center / cover no-repeat,
         #160F29;
     }
+    #startup.is-ready { opacity: 0; transition: opacity 140ms ease-out; }
     .startup-layout {
       width: min(100%, 824px);
       margin: auto;
@@ -88,7 +90,8 @@
     @media (min-width: 680px) {
       #startup { --splash-art: url("assets/assets/images/meku_splash_pass.webp"); }
       .startup-layout {
-        grid-template: "stage brand" auto "stage copy" auto / repeat(2, minmax(0, 1fr));
+        grid-template-areas: "stage brand" "stage copy";
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
       .startup-brand { text-align: left; align-self: end; }
       .startup-brand h1 { font-size: 3.375rem; }
@@ -129,7 +132,16 @@
   </div>
   <script>
     window.addEventListener('flutter-first-frame', () => {
-      document.getElementById('startup')?.remove();
+      const splash = document.getElementById('startup');
+      if (!splash || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        splash?.remove();
+        return;
+      }
+      // Keep the decoded HTML artwork visible while Flutter decodes its sprites.
+      setTimeout(() => {
+        splash.classList.add('is-ready');
+        setTimeout(() => splash.remove(), 140);
+      }, 480);
     }, { once: true });
   </script>
   <script src="flutter_bootstrap.js" async></script>
