@@ -1,5 +1,7 @@
 import 'story_model.dart';
 
+part 'story_across_river.dart';
+
 const storyCanon =
     '''World: Lumen, a cozy town where letters preserve shared memories.
 A memory storm is approaching. Someone edits letters, but the apparent thief is
@@ -35,9 +37,23 @@ StoryScene _scene(
         choices: choices,
         consequences: consequences);
 
-final storyChapters = <StoryChapter>[
+final storySeasons = List<StorySeason>.unmodifiable([
+  StorySeason('lumen', 'Листи Люмена', _lumenChapters),
+  StorySeason('across_river', 'Місто за річкою', _acrossRiverChapters),
+]);
+
+final storyChapters = List<StoryChapter>.unmodifiable(
+    storySeasons.expand((season) => season.chapters));
+
+final storyByJourneyLevel = Map<String, StoryChapter>.unmodifiable({
+  for (final chapter in storyChapters)
+    if (chapter.journeyLevelId case final levelId?) levelId: chapter,
+});
+
+final _lumenChapters = <StoryChapter>[
   StoryChapter(
       id: 'letters_1',
+      journeyLevelId: 'j1',
       title: 'Лист, який пахне корицею',
       location: 'Пекарня Нори',
       summary:
@@ -96,6 +112,7 @@ final storyChapters = <StoryChapter>[
       ]),
   StoryChapter(
       id: 'letters_2',
+      journeyLevelId: 'j2',
       title: 'Потяг без учора',
       location: 'Нічний вокзал',
       summary:
@@ -146,6 +163,7 @@ final storyChapters = <StoryChapter>[
       ]),
   StoryChapter(
       id: 'letters_3',
+      journeyLevelId: 'j3',
       title: 'Маяк, що світить усередину',
       location: 'Узбережжя Ірис',
       summary:
@@ -199,6 +217,7 @@ final storyChapters = <StoryChapter>[
       ]),
   StoryChapter(
       id: 'letters_4',
+      journeyLevelId: 'j4',
       title: 'Архів чужих обіцянок',
       location: 'Сховище Сола',
       summary:
@@ -250,6 +269,7 @@ final storyChapters = <StoryChapter>[
       ]),
   StoryChapter(
       id: 'letters_5',
+      journeyLevelId: 'j5',
       title: 'Міст добровільних спогадів',
       location: 'Міст світанку',
       summary:

@@ -30,8 +30,7 @@ class JourneyService extends ChangeNotifier {
   int best(JourneyLevel level) => _scores[level.id] ?? 0;
   bool wordLearned(JourneyLevel level, String id) =>
       _words[level.id]?.contains(id) ?? false;
-  bool readyForTest(JourneyLevel level) =>
-      wordsReady(level) && questsDone(level);
+  bool readyForTest(JourneyLevel level) => wordsReady(level);
   bool completed(JourneyLevel level) =>
       unlocked(level) &&
       readyForTest(level) &&

@@ -7,6 +7,8 @@ import '../models/meku_emotion.dart';
 import '../models/game_state.dart';
 import '../services/settings_service.dart';
 import '../services/progress_service.dart';
+import '../story/story_catalog.dart';
+import '../story/story_model.dart';
 import '../widgets/meku_avatar.dart';
 import '../widgets/scenario_portrait.dart';
 import '../widgets/ohymeku_design.dart';
@@ -38,6 +40,23 @@ class _JourneyScreenState extends State<JourneyScreen>
     _walk.addListener(_followWalk);
     _from = widget.settings.journey.current.number - 1.0;
     _to = _from;
+  }
+
+  Future<void> _openStory(StoryChapter chapter) async {
+    if (_opening || !widget.settings.story.unlocked(chapter)) return;
+    _opening = true;
+    try {
+      await Navigator.push(
+          context,
+          MaterialPageRoute<void>(
+              builder: (_) => StoryReaderScreen(
+                    settings: widget.settings,
+                    progress: widget.progress,
+                    chapter: chapter,
+                  )));
+    } finally {
+      _opening = false;
+    }
   }
 
   bool _opening = false;
@@ -127,9 +146,9 @@ class _JourneyScreenState extends State<JourneyScreen>
     return level.boss
         ? journey.bossReady(level)
             ? 'Здобудь печатку'
-            : 'Вартовий · квести + дуель'
+            : 'Вартовий · тест і дуель'
         : journey.unlocked(level)
-            ? 'Слова · текст · міст'
+            ? 'Слова · тест'
             : 'Пройди рівень ${level.number - 1}';
   }
 
@@ -142,9 +161,11 @@ class _JourneyScreenState extends State<JourneyScreen>
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
-      listenable: Listenable.merge([widget.settings.journey, widget.settings]),
+      listenable: Listenable.merge(
+          [widget.settings.journey, widget.settings.story, widget.settings]),
       builder: (context, _) {
         final journey = widget.settings.journey,
+            story = widget.settings.story,
             theme = Theme.of(context),
             c = theme.colorScheme;
         final large = MediaQuery.textScalerOf(context).scale(16) > 21;
@@ -199,7 +220,7 @@ class _JourneyScreenState extends State<JourneyScreen>
                                     const SizedBox(height: 6),
                                     Text(large
                                         ? 'Слова · історії · 3 боси'
-                                        : 'На стежці — загублені квитки, таємні листи й міст слів. Збери три печатки у вартових світу.'),
+                                        : 'Проходь рівні, читай сюжет або поєднуй обидва маршрути. У кожного свій прогрес.'),
                                   ]))
                             ]),
                         const SizedBox(height: 12),
@@ -245,7 +266,7 @@ class _JourneyScreenState extends State<JourneyScreen>
                   const SizedBox(height: 16),
                   LayoutBuilder(builder: (context, constraints) {
                     final width = constraints.maxWidth,
-                        cardWidth = min(230.0, width * .55);
+                        cardWidth = min(230.0, width * .43);
                     final scaler = MediaQuery.textScalerOf(context);
                     double measure(
                         String text, TextStyle? style, double maxWidth) {
@@ -286,7 +307,18 @@ class _JourneyScreenState extends State<JourneyScreen>
                               cardWidth);
                       final bottom =
                           center + 34 + 8 + titleHeight + 6 + captionHeight;
-                      cursor = max(bottom + 42, center + 160);
+                      final chapter = storyByJourneyLevel[level.id];
+                      final storyBottom = chapter == null
+                          ? center
+                          : center +
+                              34 +
+                              8 +
+                              measure('Сюжет ${level.number}',
+                                  theme.textTheme.titleSmall, cardWidth) +
+                              6 +
+                              measure(chapter.title, theme.textTheme.bodySmall,
+                                  cardWidth);
+                      cursor = max(max(bottom, storyBottom) + 42, center + 160);
                     }
                     _centers = centers;
                     _worldTops = worldTops;
@@ -419,6 +451,25 @@ class _JourneyScreenState extends State<JourneyScreen>
                                                 style:
                                                     theme.textTheme.bodySmall),
                                         ])),
+                              for (final level in journeyLevels)
+                                if (storyByJourneyLevel[level.id]
+                                    case final chapter?)
+                                  Positioned(
+                                    top: centers[level.number - 1] - 34,
+                                    left: width *
+                                            (level.number.isOdd ? .72 : .28) -
+                                        cardWidth / 2,
+                                    width: cardWidth,
+                                    child: _StoryStop(
+                                      key: Key('journey_story_${level.id}'),
+                                      number: level.number,
+                                      chapter: chapter,
+                                      read: story.finished(chapter),
+                                      onTap: story.unlocked(chapter)
+                                          ? () => _openStory(chapter)
+                                          : null,
+                                    ),
+                                  ),
                               AnimatedBuilder(
                                   animation: _walk,
                                   builder: (_, child) {
@@ -510,10 +561,82 @@ class _JourneyScreenState extends State<JourneyScreen>
                   }),
                   const SizedBox(height: 16),
                   const Text(
-                      'Квести й сюжетні дуелі працюють без інтернету. Для живої AI-розмови потрібне підключення. Прогрес зберігається на цьому пристрої.',
+                      'Рівні, сюжет і записані дуелі доступні офлайн. Для живої AI-розмови потрібне підключення. Прогрес зберігається на цьому пристрої.',
                       textAlign: TextAlign.center),
                 ]));
       });
+}
+
+class _StoryStop extends StatelessWidget {
+  final int number;
+  final StoryChapter chapter;
+  final bool read;
+  final VoidCallback? onTap;
+  const _StoryStop({
+    super.key,
+    required this.number,
+    required this.chapter,
+    required this.read,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final enabled = onTap != null;
+    final status = read
+        ? 'Прочитано'
+        : enabled
+            ? 'Доступно'
+            : 'Після попереднього розділу';
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: 'Сюжет $number. ${chapter.title}. $status',
+      excludeSemantics: true,
+      onTap: onTap,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppVisuals.radiusControl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox.square(
+                dimension: 68,
+                child: DecoratedBox(
+                  decoration: AppVisuals.panelDecoration(
+                    context,
+                    radius: AppVisuals.radiusControl,
+                    rose: enabled,
+                  ),
+                  child: Icon(
+                    read
+                        ? CupertinoIcons.checkmark_seal
+                        : enabled
+                            ? CupertinoIcons.book
+                            : CupertinoIcons.lock,
+                    color: enabled ? colors.primary : colors.onSurfaceVariant,
+                    size: 28,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text('Сюжет $number',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.titleSmall),
+              const SizedBox(height: 6),
+              Text(chapter.title,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 Offset _nodePoint(int i, double width, List<double> centers) =>

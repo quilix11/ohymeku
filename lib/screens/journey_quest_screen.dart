@@ -79,7 +79,7 @@ class _JourneyQuestScreenState extends State<JourneyQuestScreen> {
     if (_step == 3) {
       action = FilledButton(
         onPressed: () => Navigator.pop(context, true),
-        child: const Text('До перевірки'),
+        child: const Text('До рівня'),
       );
     } else if (_correct == true) {
       action = FilledButton(
@@ -97,7 +97,7 @@ class _JourneyQuestScreenState extends State<JourneyQuestScreen> {
     return PopScope(
         canPop: !_busy,
         child: Scaffold(
-            appBar: AppBar(title: Text('Квести · ${widget.level.title}')),
+            appBar: AppBar(title: const Text('Додаткова вправа')),
             body: SafeArea(
                 top: false,
                 child: Center(
@@ -121,7 +121,7 @@ class _JourneyQuestScreenState extends State<JourneyQuestScreen> {
                                         const SizedBox(width: 12),
                                         Expanded(
                                             child: Text(_step == 3
-                                                ? 'Знайшли підказки! Тепер перевіримо, що запам’ятали.'
+                                                ? 'Знайшли підказки! Можеш повернутися до рівня.'
                                                 : _step < 2
                                                     ? 'Прочитай знахідку. Відповідь захована в тексті!'
                                                     : 'Міст зламався! Склади речення з дощечок, щоб ми перейшли далі.'))

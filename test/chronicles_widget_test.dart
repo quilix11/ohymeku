@@ -26,13 +26,16 @@ void main() {
           theme: dark ? buildDarkTheme() : buildAppTheme(),
           builder: (context, child) => MediaQuery(
               data: MediaQuery.of(context).copyWith(
-                  textScaler: const TextScaler.linear(2), disableAnimations: true),
+                  textScaler: const TextScaler.linear(2),
+                  disableAnimations: true),
               child: child!),
           home: ChroniclesScreen(settings: settings, progress: progress)));
       await tester.pumpAndSettle();
       final chapter = find.text('1. Лист, який пахне корицею');
       await tester.scrollUntilVisible(chapter, 180,
           scrollable: find.byType(Scrollable).first);
+      await Scrollable.ensureVisible(tester.element(chapter), alignment: .3);
+      await tester.pumpAndSettle();
       await tester.tap(chapter);
       await tester.pumpAndSettle();
       expect(find.textContaining('Fox, я знайшла'), findsOneWidget);

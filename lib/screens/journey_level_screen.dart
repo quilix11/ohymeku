@@ -75,16 +75,15 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
     }
   }
 
-  Future<void> _startTest() async {
-    if (!widget.settings.journey.wordsReady(widget.level)) return;
-    if (!widget.settings.journey.questsDone(widget.level)) {
-      final done = await Navigator.push<bool>(
-          context,
-          MaterialPageRoute<bool>(
-              builder: (_) => JourneyQuestScreen(
-                  level: widget.level, settings: widget.settings)));
-      if (done != true || !mounted) return;
-    }
+  void _openExtraPractice() {
+    Navigator.push<bool>(
+        context,
+        MaterialPageRoute<bool>(
+            builder: (_) => JourneyQuestScreen(
+                level: widget.level, settings: widget.settings)));
+  }
+
+  void _startTest() {
     if (!widget.settings.journey.readyForTest(widget.level)) return;
     setState(() {
       _questions = widget.level.questions();
@@ -214,7 +213,7 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                   _startTest();
                 }
               },
-        child: Text(_word == 0 ? 'Друге слово' : 'До квестів'),
+        child: Text(_word == 0 ? 'Друге слово' : 'Почати тест'),
       );
     } else if (_phase == _Phase.test && _answer != null) {
       action = FilledButton(
@@ -309,11 +308,15 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                                   'Перевірити слово')),
                                           if (journey.wordsReady(level)) ...[
                                             const SizedBox(height: 12),
-                                            TextButton(
+                                            FilledButton.tonal(
                                                 onPressed:
                                                     _busy ? null : _startTest,
+                                                child:
+                                                    const Text('Почати тест')),
+                                            TextButton(
+                                                onPressed: _openExtraPractice,
                                                 child: const Text(
-                                                    'Продовжити квести')),
+                                                    'Додаткова вправа')),
                                           ],
                                         ],
                                         if (_phase == _Phase.recall) ...[
@@ -358,6 +361,12 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                                       _phase = _Phase.words),
                                               child: const Text(
                                                   'Повернутися до картки')),
+                                          if (_wordCorrect == true &&
+                                              journey.wordsReady(level))
+                                            TextButton(
+                                                onPressed: _openExtraPractice,
+                                                child: const Text(
+                                                    'Додаткова вправа')),
                                         ],
                                         if (_phase == _Phase.test) ...[
                                           Text(

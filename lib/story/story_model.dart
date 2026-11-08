@@ -68,6 +68,7 @@ class StoryScene {
 
 class StoryChapter {
   final String id, title, location, summary;
+  final String? journeyLevelId;
   final bool generated;
   final List<StoryScene> scenes;
   const StoryChapter(
@@ -76,6 +77,7 @@ class StoryChapter {
       required this.location,
       required this.summary,
       required this.scenes,
+      this.journeyLevelId,
       this.generated = false});
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -109,4 +111,12 @@ class StoryChapter {
                 (s) => StoryScene.fromJson(Map<String, dynamic>.from(s as Map)))
             .toList());
   }
+}
+
+class StorySeason {
+  final String id, title;
+  final List<StoryChapter> chapters;
+
+  StorySeason(this.id, this.title, List<StoryChapter> chapters)
+      : chapters = List.unmodifiable(chapters);
 }
