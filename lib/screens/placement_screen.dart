@@ -1,3 +1,4 @@
+import '../widgets/exercise_layout.dart';
 import '../widgets/ohymeku_design.dart';
 import 'package:flutter/material.dart';
 import '../models/learning_exercise.dart';
@@ -74,8 +75,16 @@ class _PlacementScreenState extends State<PlacementScreen> {
                 child: Center(
                   child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 620),
-                      child: ListView(
-                          padding: const EdgeInsets.all(20),
+                      child: ExerciseLayout(
+                          step: (_started, _result, question.id),
+                          action: _started && _result == null
+                              ? FilledButton.icon(
+                                  onPressed:
+                                      _busy || _selected == null ? null : _next,
+                                  icon: const Icon(Icons.arrow_forward_rounded),
+                                  label: Text(_busy ? 'Зберігаємо…' : 'Далі'),
+                                )
+                              : null,
                           children: [
                             if (!_started) ...[
                               SilkPanel(
@@ -196,12 +205,6 @@ class _PlacementScreenState extends State<PlacementScreen> {
                                             ? null
                                             : () =>
                                                 setState(() => _selected = i))),
-                              const SizedBox(height: 10),
-                              FilledButton.icon(
-                                  onPressed:
-                                      _busy || _selected == null ? null : _next,
-                                  icon: const Icon(Icons.arrow_forward_rounded),
-                                  label: Text(_busy ? 'Зберігаємо…' : 'Далі')),
                               const SizedBox(height: 10),
                               TextButton(
                                   onPressed: _busy

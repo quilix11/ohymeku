@@ -5,6 +5,7 @@ import '../models/meku_emotion.dart';
 import '../services/settings_service.dart';
 import '../services/progress_service.dart';
 import '../widgets/meku_avatar.dart';
+import '../widgets/exercise_layout.dart';
 import '../widgets/ohymeku_design.dart';
 import 'journey_quest_screen.dart';
 import 'journey_boss_screen.dart';
@@ -197,6 +198,33 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
     }
 
     final word = level.words[_word];
+    final Widget? action;
+    if (_phase == _Phase.recall && _wordCorrect == true) {
+      action = FilledButton(
+        onPressed: _busy
+            ? null
+            : () {
+                if (_word == 0) {
+                  setState(() {
+                    _word = 1;
+                    _phase = _Phase.words;
+                    _wordCorrect = null;
+                  });
+                } else {
+                  _startTest();
+                }
+              },
+        child: Text(_word == 0 ? 'Друге слово' : 'До квестів'),
+      );
+    } else if (_phase == _Phase.test && _answer != null) {
+      action = FilledButton(
+        onPressed: _busy ? null : _next,
+        child: Text(
+            _question == _questions.length - 1 ? 'Завершити тест' : 'Далі'),
+      );
+    } else {
+      action = null;
+    }
     return PopScope(
         canPop: !_busy,
         child: Scaffold(
@@ -207,8 +235,9 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                 child: Center(
                     child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 620),
-                        child: ListView(
-                            padding: const EdgeInsets.all(20),
+                        child: ExerciseLayout(
+                            step: (_phase, _word, _question),
+                            action: action,
                             children: [
                               SilkPanel(
                                   rose: true,
@@ -321,25 +350,6 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                                     EdgeInsets.only(bottom: 12),
                                                 child: Text(
                                                     'Ще спроба! Пригадай переклад — або повернися до картки.')),
-                                          if (_wordCorrect == true)
-                                            FilledButton(
-                                                onPressed: _busy
-                                                    ? null
-                                                    : () {
-                                                        if (_word == 0) {
-                                                          setState(() {
-                                                            _word = 1;
-                                                            _phase =
-                                                                _Phase.words;
-                                                            _wordCorrect = null;
-                                                          });
-                                                        } else {
-                                                          _startTest();
-                                                        }
-                                                      },
-                                                child: Text(_word == 0
-                                                    ? 'Друге слово'
-                                                    : 'До квестів')),
                                           const SizedBox(height: 12),
                                           TextButton(
                                               onPressed: _busy
@@ -397,12 +407,6 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                                 child: Text(
                                                     _questions[_question]
                                                         .explanation)),
-                                            const SizedBox(height: 12),
-                                            FilledButton(
-                                                onPressed: _busy ? null : _next,
-                                                child: Text(_question == 4
-                                                    ? 'Завершити тест'
-                                                    : 'Далі')),
                                           ],
                                         ],
                                         if (_phase == _Phase.result) ...[

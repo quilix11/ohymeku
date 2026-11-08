@@ -8,25 +8,60 @@ import 'services/progress_service.dart';
 import 'theme/app_theme.dart';
 import 'screens/main_screen.dart';
 import 'screens/placement_screen.dart';
+import 'screens/splash_screen.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  runApp(const AppStartup());
+}
 
-  // Force portrait
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+class AppStartup extends StatefulWidget {
+  const AppStartup({super.key});
 
-  // Load .env
-  await dotenv.load(fileName: '.env', isOptional: true);
+  @override
+  State<AppStartup> createState() => _AppStartupState();
+}
 
-  // Load settings
-  final settings = SettingsService();
-  await settings.load();
+class _AppStartupState extends State<AppStartup> {
+  late Future<DialectDuelApp> _startup = _loadApp();
+  final _lightTheme = buildAppTheme();
+  final _darkTheme = buildDarkTheme();
 
-  // Load progress
-  final progress = ProgressService();
-  await progress.initialize();
+  Future<DialectDuelApp> _loadApp() async {
+    final settings = SettingsService();
+    final progress = ProgressService();
+    try {
+      await SystemChrome.setPreferredOrientations(
+          [DeviceOrientation.portraitUp]);
+      await dotenv.load(fileName: '.env', isOptional: true);
+      await settings.load();
+      await progress.initialize();
+      return DialectDuelApp(settings: settings, progress: progress);
+    } catch (_) {
+      settings.dispose();
+      progress.dispose();
+      rethrow;
+    }
+  }
 
-  runApp(DialectDuelApp(settings: settings, progress: progress));
+  @override
+  Widget build(BuildContext context) => FutureBuilder<DialectDuelApp>(
+        future: _startup,
+        builder: (context, snapshot) =>
+            snapshot.data ??
+            MaterialApp(
+              title: 'Ohymeku',
+              debugShowCheckedModeBanner: false,
+              theme: _lightTheme,
+              darkTheme: _darkTheme,
+              home: SplashScreen(
+                onRetry: snapshot.connectionState == ConnectionState.done &&
+                        snapshot.hasError
+                    ? () => setState(() => _startup = _loadApp())
+                    : null,
+              ),
+            ),
+      );
 }
 
 class DialectDuelApp extends StatefulWidget {
