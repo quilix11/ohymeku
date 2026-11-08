@@ -141,6 +141,12 @@ class AppMenu extends StatelessWidget {
                                       key: const Key('menu_practice')),
                                   _item(
                                       context,
+                                      'Подвійна доставка',
+                                      Icons.forward_to_inbox_rounded,
+                                      () => navigate('phrase_delivery'),
+                                      key: const Key('menu_phrase_delivery')),
+                                  _item(
+                                      context,
                                       'Перевірити свій рівень',
                                       Icons.quiz_outlined,
                                       () => navigate('placement'),

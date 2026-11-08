@@ -15,6 +15,8 @@ import 'package:dialect_duel/services/progress_service.dart';
 import 'package:dialect_duel/theme/app_theme.dart';
 import 'package:dialect_duel/widgets/willow_portrait.dart';
 
+final willowLevel = journeyLevels.singleWhere((level) => level.id == 'j12');
+
 Future<(SettingsService, ProgressService)> setup(
     [Map<String, Object> initial = const {}]) async {
   SharedPreferences.setMockInitialValues(
@@ -45,8 +47,8 @@ void main() {
     addTearDown(settings.dispose);
     await settings.setScenarioVoice(Scenario.willow, 'Zephyr', cloud: true);
     await settings.setScenarioVoice(Scenario.willow, 'teacher-system');
-    expect(settings.scenarioCloudVoice(journeyLevels.last.opponent!), 'Zephyr');
-    for (final scene in freeJourneyScenes(journeyLevels.last)) {
+    expect(settings.scenarioCloudVoice(willowLevel.opponent!), 'Zephyr');
+    for (final scene in freeJourneyScenes(willowLevel)) {
       expect(settings.scenarioCloudVoice(scene), 'Zephyr');
       expect(settings.scenarioVoice(scene), 'teacher-system');
     }
@@ -56,7 +58,7 @@ void main() {
     final restored = SettingsService();
     await restored.load();
     addTearDown(restored.dispose);
-    expect(restored.scenarioCloudVoice(journeyLevels.last.opponent!), 'Zephyr');
+    expect(restored.scenarioCloudVoice(willowLevel.opponent!), 'Zephyr');
   });
   test(
       'existing custom selection migrates by ID and Willow selection survives reload',
@@ -127,7 +129,7 @@ void main() {
           home: Scaffold(
               body: JourneyScreen(settings: settings, progress: progress))));
       await tester.pumpAndSettle();
-      for (var world = 1; world < 3; world++) {
+      for (var world = 1; world < journeyWorldTitles.length; world++) {
         final header = find.byKey(Key('journey_world_$world'));
         await scrollTo(tester, header);
         final previous = find.byKey(Key('journey_description_j${world * 4}'));
@@ -168,7 +170,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Zephyr').last);
     await tester.pumpAndSettle();
-    expect(settings.scenarioCloudVoice(journeyLevels.last.opponent!), 'Zephyr');
+    expect(settings.scenarioCloudVoice(willowLevel.opponent!), 'Zephyr');
     expect(tester.takeException(), isNull);
   });
 }

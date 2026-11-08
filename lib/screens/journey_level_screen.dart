@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/journey_level.dart';
 import '../models/meku_emotion.dart';
+import '../models/phrase_delivery.dart';
 import '../services/settings_service.dart';
 import '../services/progress_service.dart';
 import '../widgets/meku_avatar.dart';
@@ -9,6 +10,7 @@ import '../widgets/exercise_layout.dart';
 import '../widgets/ohymeku_design.dart';
 import 'journey_quest_screen.dart';
 import 'journey_boss_screen.dart';
+import 'phrase_delivery_screen.dart';
 
 enum _Phase { words, recall, test, result }
 
@@ -197,6 +199,7 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
     }
 
     final word = level.words[_word];
+    final delivery = phraseDeliveries[level.id];
     final Widget? action;
     if (_phase == _Phase.recall && _wordCorrect == true) {
       action = FilledButton(
@@ -252,6 +255,20 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                                     theme.textTheme.bodyLarge)),
                                       ])),
                               const SizedBox(height: 20),
+                              if (delivery != null && _phase == _Phase.words)
+                                TextButton.icon(
+                                  onPressed: () => Navigator.push<void>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PhraseDeliveryDrillScreen(
+                                          settings: widget.settings,
+                                          drill: delivery),
+                                    ),
+                                  ),
+                                  icon: const Icon(
+                                      Icons.forward_to_inbox_rounded),
+                                  label: const Text('Подвійна доставка'),
+                                ),
                               if (_busy) const LinearProgressIndicator(),
                               if (_error != null)
                                 Padding(
@@ -313,10 +330,11 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                                     _busy ? null : _startTest,
                                                 child:
                                                     const Text('Почати тест')),
-                                            TextButton(
-                                                onPressed: _openExtraPractice,
-                                                child: const Text(
-                                                    'Додаткова вправа')),
+                                            if (level.hasExtraPractice)
+                                              TextButton(
+                                                  onPressed: _openExtraPractice,
+                                                  child: const Text(
+                                                      'Додаткова вправа')),
                                           ],
                                         ],
                                         if (_phase == _Phase.recall) ...[
@@ -361,7 +379,8 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                                       _phase = _Phase.words),
                                               child: const Text(
                                                   'Повернутися до картки')),
-                                          if (_wordCorrect == true &&
+                                          if (level.hasExtraPractice &&
+                                              _wordCorrect == true &&
                                               journey.wordsReady(level))
                                             TextButton(
                                                 onPressed: _openExtraPractice,
@@ -462,7 +481,7 @@ class _JourneyLevelScreenState extends State<JourneyLevelScreen> {
                                                       : level.number ==
                                                               journeyLevels
                                                                   .length
-                                                          ? 'Три світи пройдено! Повторюй рівні, щоб зібрати ${journeyLevels.length * 3} зірок.'
+                                                          ? 'Усі рівні пройдено! Повторюй їх, щоб зібрати ${journeyLevels.length * 3} зірок.'
                                                           : 'Рівень ${level.number + 1} тепер доступний на карті.'
                                                   : journey.completed(level)
                                                       ? 'Ця спроба не змінює твій попередній успіх. Наступний рівень залишається відкритим.'

@@ -12,6 +12,7 @@ class JourneyService extends ChangeNotifier {
   final Map<String, int> _scores = {};
   final Map<String, Set<String>> _quests = {};
   final Map<String, String> _bosses = {};
+  int _completedCount = 0;
   bool challengeDone(JourneyLevel level, String id) =>
       _quests[level.id]?.contains(id) ?? false;
   bool questsDone(JourneyLevel level) =>
@@ -24,24 +25,34 @@ class JourneyService extends ChangeNotifier {
   bool bossReady(JourneyLevel level) =>
       level.boss && unlocked(level) && readyForTest(level) && best(level) >= 4;
   Future<void> _pending = Future.value();
-  JourneyLevel get current => journeyLevels.firstWhere((l) => !completed(l),
-      orElse: () => journeyLevels.last);
-  int get completedCount => journeyLevels.where(completed).length;
+  JourneyLevel get current =>
+      journeyLevels[_completedCount.clamp(0, journeyLevels.length - 1)];
+  int get completedCount => _completedCount;
   int best(JourneyLevel level) => _scores[level.id] ?? 0;
   bool wordLearned(JourneyLevel level, String id) =>
       _words[level.id]?.contains(id) ?? false;
   bool readyForTest(JourneyLevel level) => wordsReady(level);
-  bool completed(JourneyLevel level) =>
-      unlocked(level) &&
-      readyForTest(level) &&
-      best(level) >= 4 &&
-      bossDefeated(level);
+  bool _meetsRequirements(JourneyLevel level) =>
+      readyForTest(level) && best(level) >= 4 && bossDefeated(level);
+  void _updateCompletedCount() {
+    _completedCount = journeyLevels.takeWhile(_meetsRequirements).length;
+  }
+
+  int _indexOf(JourneyLevel level) =>
+      journeyLevels.indexWhere((l) => l.id == level.id);
+  bool completed(JourneyLevel level) {
+    final index = _indexOf(level);
+    return index >= 0 && index < _completedCount;
+  }
+
   int stars(JourneyLevel level) =>
       completed(level) ? (best(level) == 5 ? 3 : 2) : 0;
-  int get totalStars => journeyLevels.fold(0, (sum, l) => sum + stars(l));
+  int get totalStars => journeyLevels
+      .take(_completedCount)
+      .fold(0, (sum, l) => sum + (best(l) == 5 ? 3 : 2));
   bool unlocked(JourneyLevel level) {
-    final index = journeyLevels.indexWhere((l) => l.id == level.id);
-    return index == 0 || (index > 0 && completed(journeyLevels[index - 1]));
+    final index = _indexOf(level);
+    return index >= 0 && index <= _completedCount;
   }
 
   JourneyLevel _level(String id) => journeyLevels.firstWhere((l) => l.id == id,
@@ -93,6 +104,7 @@ class JourneyService extends ChangeNotifier {
     } catch (_) {
       /* Damaged optional game progress does not prevent learning. */
     }
+    _updateCompletedCount();
     notifyListeners();
   }
 
@@ -133,6 +145,7 @@ class JourneyService extends ChangeNotifier {
         ..clear()
         ..addAll(bosses);
     }
+    _updateCompletedCount();
     notifyListeners();
   }
 
@@ -158,7 +171,7 @@ class JourneyService extends ChangeNotifier {
       _write(() async {
         final level = _level(levelId);
         if (!unlocked(level) || !readyForTest(level)) {
-          throw StateError('Спочатку перевір слова та заверши сюжетні квести.');
+          throw StateError('Відкрий рівень і перевір обидва слова.');
         }
         final expected = level.questions();
         if (questions.length != 5 ||
@@ -217,7 +230,7 @@ class JourneyService extends ChangeNotifier {
       _write(() async {
         final level = _level(levelId);
         if (!bossReady(level)) {
-          throw StateError('До боса ведуть слова, квести й тест 4/5.');
+          throw StateError('До боса ведуть перевірені слова й тест 4/5.');
         }
         final questions = bossDialogues[levelId]!;
         if (answers.length != questions.length ||

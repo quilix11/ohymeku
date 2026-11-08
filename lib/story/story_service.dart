@@ -195,8 +195,8 @@ class StoryService extends ChangeNotifier {
                   ai!.request(rules, input, maxOutputTokens: 8192)))(
           '''Write ONE substantial next chapter for a Ukrainian English-learning story.
 Follow canon, confirmed clues and choices strictly. Continue from the actual ending.
-Follow the most recent chapter's location and unresolved clues. After the return
-of the memories in Verba, follow the unnamed mountain stamp. Do not undo Lyra's
+Follow the most recent chapter's location and unresolved clues. Continue the
+actual timeline, including its latest authored season. Do not undo Lyra's
 freedom. Keep recurring allies, add at most one original
 character. Choices must reflect earlier consequences and change concrete events.
 Use the player's name naturally as {name}. Each scene: Ukrainian narration (100-180

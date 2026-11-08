@@ -3,6 +3,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/learning_exercise.dart';
+import '../models/mountain_grammar.dart';
 
 class LearnerService extends ChangeNotifier {
   late SharedPreferences _prefs;
@@ -59,7 +60,11 @@ class LearnerService extends ChangeNotifier {
   List<LearningExercise> due(String level, List<String> interests) {
     final now = DateTime.now();
     final rank = ['A1', 'A2', 'B1', 'B2', 'C1'].indexOf(level).clamp(0, 4);
-    final result = [...personal, ...practiceExercises].where((e) {
+    final result = [
+      ...personal,
+      ...practiceExercises,
+      ...mountainGrammar.where((e) => reviews.containsKey(e.id)),
+    ].where((e) {
       final next = DateTime.tryParse(reviews[e.id]?['next'] as String? ?? '');
       return next == null || !next.isAfter(now);
     }).toList();

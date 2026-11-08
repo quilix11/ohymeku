@@ -170,8 +170,8 @@ class _JourneyScreenState extends State<JourneyScreen>
             c = theme.colorScheme;
         final large = MediaQuery.textScalerOf(context).scale(16) > 21;
         final allDone = journey.completedCount == journeyLevels.length;
-        final seals =
-            journeyLevels.where((l) => l.boss && journey.completed(l)).length;
+        final bosses = journeyLevels.where((level) => level.boss);
+        final seals = bosses.where(journey.completed).length;
         return SingleChildScrollView(
             controller: _scroll,
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
@@ -210,7 +210,7 @@ class _JourneyScreenState extends State<JourneyScreen>
                                       children: [
                                     Text(
                                         allDone
-                                            ? 'Три печатки наші!'
+                                            ? 'Усі рівні пройдено!'
                                             : large
                                                 ? 'Meku поруч!'
                                                 : 'Ходімо рятувати історію!',
@@ -219,7 +219,7 @@ class _JourneyScreenState extends State<JourneyScreen>
                                             : theme.textTheme.titleLarge),
                                     const SizedBox(height: 6),
                                     Text(large
-                                        ? 'Слова · історії · 3 боси'
+                                        ? 'Рівні й сюжет окремо'
                                         : 'Проходь рівні, читай сюжет або поєднуй обидва маршрути. У кожного свій прогрес.'),
                                   ]))
                             ]),
@@ -231,7 +231,7 @@ class _JourneyScreenState extends State<JourneyScreen>
                             borderRadius: BorderRadius.circular(8)),
                         const SizedBox(height: 8),
                         Text(
-                            '${journey.completedCount}/${journeyLevels.length} рівнів · Печатки $seals/3'),
+                            '${journey.completedCount}/${journeyLevels.length} рівнів · Печатки $seals/${bosses.length}'),
                         const SizedBox(height: 12),
                         FilledButton.icon(
                             key: const Key('journey_continue'),
@@ -281,16 +281,18 @@ class _JourneyScreenState extends State<JourneyScreen>
                     }
 
                     final centers = <double>[], worldTops = <double>[];
-                    const worlds = [
-                      '01 · Долина подорожей',
-                      '02 · Місто команди',
-                      '03 · Сад історій'
-                    ];
+                    final worlds = <String>[];
+                    String? previousWorld;
                     var cursor = 0.0;
                     for (final level in journeyLevels) {
-                      if ((level.number - 1) % 4 == 0) {
+                      if (level.world != previousWorld) {
+                        previousWorld = level.world;
+                        final number = '${worlds.length + 1}'.padLeft(2, '0');
+                        final title =
+                            journeyWorldTitles[level.world] ?? level.world;
+                        worlds.add('$number · $title');
                         worldTops.add(cursor);
-                        cursor += measure(worlds[(level.number - 1) ~/ 4],
+                        cursor += measure(worlds.last,
                                 theme.textTheme.labelLarge, width - 28) +
                             16 +
                             62;
@@ -331,28 +333,26 @@ class _JourneyScreenState extends State<JourneyScreen>
                             width: width,
                             height: _mapHeight,
                             child: Stack(children: [
-                              for (var world = 0; world < 3; world++)
+                              for (var world = 0;
+                                  world < worlds.length;
+                                  world++)
                                 Positioned(
                                     top: _worldTops[world],
                                     left: 0,
                                     right: 0,
                                     child: Center(
                                         child: DecoratedBox(
-                                            decoration: AppVisuals.panelDecoration(
-                                                context,
-                                                radius:
-                                                    AppVisuals.radiusControl),
+                                            decoration:
+                                                AppVisuals.panelDecoration(
+                                                    context,
+                                                    radius: AppVisuals
+                                                        .radiusControl),
                                             child: Padding(
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                         horizontal: 14,
                                                         vertical: 8),
-                                                child: Text(
-                                                    [
-                                                      '01 · Долина подорожей',
-                                                      '02 · Місто команди',
-                                                      '03 · Сад історій'
-                                                    ][world],
+                                                child: Text(worlds[world],
                                                     key: Key(
                                                         'journey_world_$world'),
                                                     textAlign: TextAlign.center,

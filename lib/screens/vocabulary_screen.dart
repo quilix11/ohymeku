@@ -83,10 +83,12 @@ class _VocabularyScreenState extends State<VocabularyScreen> {
     _stop();
     setState(() {
       _queue = _deckCards.where((c) => all || _words.isDue(c.id)).toList();
+      final order = {for (final (index, card) in _queue.indexed) card: index};
       _queue.sort((a, b) {
         final aa = _words.reviews[a.id], bb = _words.reviews[b.id];
-        return ((bb?['lapses'] as int?) ?? 0)
+        final priority = ((bb?['lapses'] as int?) ?? 0)
             .compareTo((aa?['lapses'] as int?) ?? 0);
+        return priority == 0 ? order[a]!.compareTo(order[b]!) : priority;
       });
       _flipped = false;
       _previousQueue = null;

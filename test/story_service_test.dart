@@ -99,10 +99,37 @@ void main() {
     await story.load(preferences: prefs);
     final generated = story.generatedChapters.single;
     expect(story.unlocked(generated), true);
-    expect(story.unlocked(storySeasons.last.chapters.first), true);
+    final nextSeason = storyByJourneyLevel['j6']!;
+    expect(story.unlocked(nextSeason), true);
+    expect(story.unlocked(storyByJourneyLevel['j13']!), false);
     await story.choose(generated.id, 0, generated.scenes.first.answer, 0);
     expect(story.done(generated), 1);
-    expect(story.done(storySeasons.last.chapters.first), 0);
+    expect(story.done(nextSeason), 0);
+  });
+  test('a save after Verba opens the mountain story and preserves its AI route',
+      () async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        StoryService.storageKey,
+        jsonEncode({
+          'completed': {
+            for (final c in storyChapters.take(12)) c.id: c.scenes.length,
+          },
+          'continuation_anchor': 'letters_12',
+          'generated': [
+            {
+              ...storyChapters.first.toJson(),
+              'id': 'ai_saved',
+              'generated': true,
+            },
+          ],
+        }));
+    final story = StoryService();
+    await story.load(preferences: prefs);
+    expect(story.current.id, 'letters_13');
+    expect(story.unlocked(story.current), true);
+    expect(story.unlocked(story.generatedChapters.single), true);
+    expect(story.unlocked(storyByJourneyLevel['j14']!), false);
   });
   test('invalid model output never replaces the save or creates a chapter',
       () async {

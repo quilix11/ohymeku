@@ -98,7 +98,7 @@ void main() {
     expect(service.completedCount, 0);
   });
   test(
-      'all twelve levels can be completed; replays never remove progress or duplicate stars',
+      'all levels can be completed; replays never remove progress or duplicate stars',
       () async {
     final service = JourneyService();
     await service.load();
@@ -115,16 +115,35 @@ void main() {
             bossDialogues[level.id]!.map((q) => q.options[q.answer]).toList());
       }
     }
-    expect(service.completedCount, 12);
-    expect(service.totalStars, 36);
+    final maxStars = journeyLevels.length * 3;
+    expect(service.completedCount, journeyLevels.length);
+    expect(service.totalStars, maxStars);
     final questions = journeyLevels.first.questions();
     await service.finishTest('j1', questions,
         questions.map((q) => (q.answer + 1) % q.options.length).toList());
-    expect(service.totalStars, 36);
+    expect(service.totalStars, maxStars);
     expect(service.best(journeyLevels.first), 5);
     final restored = JourneyService();
     await restored.load();
-    expect(restored.totalStars, 36);
+    expect(restored.totalStars, maxStars);
+  });
+  test('a completed pre-expansion save opens the first mountain level',
+      () async {
+    SharedPreferences.setMockInitialValues({
+      'journey_v2': jsonEncode({
+        for (final level in journeyLevels.take(12))
+          level.id: {
+            'words': level.wordIds,
+            'best': 5,
+            if (level.boss) 'boss': 'dialogue',
+          }
+      })
+    });
+    final service = JourneyService();
+    await service.load();
+    expect(service.current.id, 'j13');
+    expect(service.totalStars, 36);
+    expect(service.unlocked(journeyLevels[13]), false);
   });
   test(
       'failed persistence does not award words or unlock a level and can be retried',

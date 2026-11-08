@@ -1,6 +1,7 @@
 import 'story_model.dart';
 
 part 'story_across_river.dart';
+part 'story_echo_pass.dart';
 
 const storyCanon =
     '''World: Lumen, a cozy town where letters preserve shared memories.
@@ -40,6 +41,7 @@ StoryScene _scene(
 final storySeasons = List<StorySeason>.unmodifiable([
   StorySeason('lumen', 'Листи Люмена', _lumenChapters),
   StorySeason('across_river', 'Місто за річкою', _acrossRiverChapters),
+  StorySeason('echo_pass', 'Перевал відлунь', _echoPassChapters),
 ]);
 
 final storyChapters = List<StoryChapter>.unmodifiable(
