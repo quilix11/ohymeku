@@ -26,6 +26,8 @@ class _AppStartupState extends State<AppStartup> {
   late Future<DialectDuelApp> _startup = _loadApp();
   final _lightTheme = buildAppTheme();
   final _darkTheme = buildDarkTheme();
+  bool _introFinished = false;
+  bool _speaking = false;
 
   Future<DialectDuelApp> _loadApp() async {
     final settings = SettingsService();
@@ -47,20 +49,31 @@ class _AppStartupState extends State<AppStartup> {
   @override
   Widget build(BuildContext context) => FutureBuilder<DialectDuelApp>(
         future: _startup,
-        builder: (context, snapshot) =>
-            snapshot.data ??
-            MaterialApp(
-              title: 'Ohymeku',
-              debugShowCheckedModeBanner: false,
-              theme: _lightTheme,
-              darkTheme: _darkTheme,
-              home: SplashScreen(
-                onRetry: snapshot.connectionState == ConnectionState.done &&
-                        snapshot.hasError
-                    ? () => setState(() => _startup = _loadApp())
-                    : null,
-              ),
+        builder: (context, snapshot) {
+          final app = snapshot.data;
+          if (app != null && _introFinished && !_speaking) return app;
+          return MaterialApp(
+            title: 'Ohymeku',
+            debugShowCheckedModeBanner: false,
+            theme: _lightTheme,
+            darkTheme: _darkTheme,
+            themeMode: switch (app?.settings.themeMode) {
+              AppThemeMode.light => ThemeMode.light,
+              AppThemeMode.dark => ThemeMode.dark,
+              _ => ThemeMode.system,
+            },
+            home: SplashScreen(
+              animationsEnabled: app?.settings.animationsEnabled ?? true,
+              onIntroFinished: () => setState(() => _introFinished = true),
+              onSpeakingChanged: (speaking) =>
+                  setState(() => _speaking = speaking),
+              onRetry: snapshot.connectionState == ConnectionState.done &&
+                      snapshot.hasError
+                  ? () => setState(() => _startup = _loadApp())
+                  : null,
             ),
+          );
+        },
       );
 }
 

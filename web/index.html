@@ -14,30 +14,101 @@
   <script src="install.js" defer></script>
   <title>Ohymeku</title>
   <style>
-    body { margin: 0; background: #F7F6FF; color: #281968; }
+    body {
+      --splash-bg: #F7F6FF;
+      --splash-ink: #281968;
+      --splash-stage: #EEEAFB;
+      --splash-bubble: #E9E3FA;
+      margin: 0;
+      background: var(--splash-bg);
+      color: var(--splash-ink);
+    }
     #startup {
       position: fixed;
       inset: 0;
-      display: grid;
-      place-content: center;
-      justify-items: center;
-      padding: 24px;
-      text-align: center;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow: auto;
       font: 1rem system-ui, sans-serif;
     }
-    #startup img { width: 132px; height: 132px; object-fit: contain; }
-    #startup h1 { margin: 16px 0 0; }
-    #startup p { margin: 12px 0 0; }
+    .startup-layout {
+      width: min(100%, 744px);
+      margin: auto;
+      display: grid;
+      gap: 22px;
+      align-items: center;
+    }
+    .startup-stage {
+      height: 224px;
+      display: grid;
+      place-items: center;
+      border-radius: 26px;
+      background: var(--splash-stage);
+    }
+    .startup-stage > * { grid-area: 1 / 1; }
+    .startup-halo {
+      width: 162px;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--splash-bg);
+      opacity: .6;
+    }
+    .startup-stage picture { z-index: 1; }
+    .startup-stage img { display: block; width: 186px; height: 186px; object-fit: contain; }
+    .startup-copy h1 { margin: 0; font-size: 2rem; }
+    .startup-copy p { margin: 4px 0 0; }
+    .startup-copy .startup-status { margin-top: 16px; font-size: .875rem; }
+    .startup-bubble {
+      position: relative;
+      margin-top: 16px;
+      padding: 12px 16px;
+      border-radius: 18px;
+      background: var(--splash-bubble);
+    }
+    .startup-bubble::before {
+      content: "";
+      position: absolute;
+      top: -5px;
+      left: 22px;
+      width: 14px;
+      height: 14px;
+      transform: rotate(45deg);
+      background: inherit;
+    }
+    @media (min-width: 640px) {
+      .startup-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; }
+    }
     @media (prefers-color-scheme: dark) {
-      body { background: #191334; color: #F7F6FF; }
+      body {
+        --splash-bg: #191334;
+        --splash-ink: #F7F6FF;
+        --splash-stage: #2F2452;
+        --splash-bubble: #3B2C63;
+      }
     }
   </style>
 </head>
 <body>
   <div id="startup" role="status">
-    <img src="assets/assets/images/meku/meku_happy.png" alt="">
-    <h1>Ohymeku</h1>
-    <p>Завантажуємо пригоду…</p>
+    <div class="startup-layout">
+      <div class="startup-stage" aria-hidden="true">
+        <div class="startup-halo"></div>
+        <picture>
+          <source media="(prefers-reduced-motion: reduce)" srcset="assets/assets/images/meku/meku_happy.png">
+          <img src="assets/assets/images/meku/meku_playful.png" width="186" height="186" alt="">
+        </picture>
+      </div>
+      <div class="startup-copy">
+        <h1>Ohymeku</h1>
+        <p>Англійська з Meku</p>
+        <div class="startup-bubble">
+          <strong lang="en">Hi! Ready for an adventure?</strong>
+          <p>Привіт! Готовий до пригоди?</p>
+        </div>
+        <p class="startup-status">Завантажуємо пригоду…</p>
+      </div>
+    </div>
   </div>
   <script>
     window.addEventListener('flutter-first-frame', () => {
