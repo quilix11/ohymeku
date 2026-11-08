@@ -4,7 +4,7 @@
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#F6F2EA">
+  <meta name="theme-color" content="#160F29">
   <meta name="description" content="Ohymeku — практика англійської у розмовах з персонажами.">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="favicon.png">
@@ -14,95 +14,112 @@
   <script src="install.js" defer></script>
   <title>Ohymeku</title>
   <style>
-    body {
-      --splash-bg: #F7F6FF;
-      --splash-ink: #281968;
-      --splash-stage: #EEEAFB;
-      --splash-bubble: #E9E3FA;
-      margin: 0;
-      background: var(--splash-bg);
-      color: var(--splash-ink);
-    }
+    body { margin: 0; background: #160F29; color: #FFF3E1; }
     #startup {
+      --splash-art: url("assets/assets/images/meku_splash_pass_portrait.webp");
       position: fixed;
       inset: 0;
       display: flex;
       flex-direction: column;
-      padding: 20px;
+      padding: 24px;
       overflow: auto;
       font: 1rem system-ui, sans-serif;
+      background:
+        linear-gradient(#160F2999, #160F2916 48%, #160F29E6),
+        var(--splash-art) center / cover no-repeat,
+        #160F29;
     }
     .startup-layout {
-      width: min(100%, 744px);
+      width: min(100%, 824px);
       margin: auto;
       display: grid;
-      gap: 22px;
+      grid-template-areas: "brand" "stage" "copy";
+      gap: 18px 32px;
       align-items: center;
     }
     .startup-stage {
-      height: 224px;
+      grid-area: stage;
+      height: 246px;
       display: grid;
       place-items: center;
-      border-radius: 26px;
-      background: var(--splash-stage);
     }
     .startup-stage > * { grid-area: 1 / 1; }
     .startup-halo {
-      width: 162px;
+      width: min(100%, 246px);
       aspect-ratio: 1;
       border-radius: 50%;
-      background: var(--splash-bg);
-      opacity: .6;
+      background: radial-gradient(#FFB3726D, transparent 69%);
     }
     .startup-stage picture { z-index: 1; }
-    .startup-stage img { display: block; width: 186px; height: 186px; object-fit: contain; }
-    .startup-copy h1 { margin: 0; font-size: 2rem; }
-    .startup-copy p { margin: 4px 0 0; }
-    .startup-copy .startup-status { margin-top: 16px; font-size: .875rem; }
+    .startup-stage img { display: block; width: 231px; height: 231px; object-fit: contain; }
+    .startup-brand { grid-area: brand; text-align: center; }
+    .startup-brand h1 {
+      margin: 4px 0 0;
+      font: 700 2.625rem Georgia, serif;
+    }
+    .startup-tag {
+      display: block;
+      color: #FFCB88;
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .15em;
+    }
+    .startup-copy { grid-area: copy; }
+    .startup-copy p { margin: 5px 0 0; color: #E5D8F4; }
+    .startup-copy .startup-status { margin-top: 16px; font-size: .875rem; text-align: center; }
     .startup-bubble {
       position: relative;
-      margin-top: 16px;
-      padding: 12px 16px;
-      border-radius: 18px;
-      background: var(--splash-bubble);
+      padding: 14px 18px;
+      border: 1px solid #FFCB8842;
+      border-radius: 20px;
+      background: #261B3CF2;
     }
+    .startup-bubble strong { display: block; margin-top: 5px; font-size: 1.2rem; }
     .startup-bubble::before {
       content: "";
       position: absolute;
-      top: -5px;
-      left: 22px;
+      top: -6px;
+      left: calc(50% - 7px);
       width: 14px;
       height: 14px;
       transform: rotate(45deg);
-      background: inherit;
+      background: #261B3C;
     }
-    @media (min-width: 640px) {
-      .startup-layout { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; }
-    }
-    @media (prefers-color-scheme: dark) {
-      body {
-        --splash-bg: #191334;
-        --splash-ink: #F7F6FF;
-        --splash-stage: #2F2452;
-        --splash-bubble: #3B2C63;
+    @media (min-width: 680px) {
+      #startup { --splash-art: url("assets/assets/images/meku_splash_pass.webp"); }
+      .startup-layout {
+        grid-template: "stage brand" auto "stage copy" auto / repeat(2, minmax(0, 1fr));
       }
+      .startup-brand { text-align: left; align-self: end; }
+      .startup-brand h1 { font-size: 3.375rem; }
+      .startup-copy { align-self: start; }
+      .startup-copy .startup-status { text-align: left; }
+      .startup-bubble::before { top: calc(50% - 7px); left: -7px; }
+    }
+    @media (max-height: 599px) {
+      .startup-stage { height: 180px; }
+      .startup-halo { width: min(100%, 180px); }
+      .startup-stage img { width: 169px; height: 169px; }
     }
   </style>
 </head>
 <body>
   <div id="startup" role="status">
     <div class="startup-layout">
+      <div class="startup-brand">
+        <span class="startup-tag">АНГЛІЙСЬКА ПРИГОДА</span>
+        <h1>Ohymeku</h1>
+      </div>
       <div class="startup-stage" aria-hidden="true">
         <div class="startup-halo"></div>
         <picture>
           <source media="(prefers-reduced-motion: reduce)" srcset="assets/assets/images/meku/meku_happy.png">
-          <img src="assets/assets/images/meku/meku_playful.png" width="186" height="186" alt="">
+          <img src="assets/assets/images/meku/meku_playful.png" width="231" height="231" alt="">
         </picture>
       </div>
       <div class="startup-copy">
-        <h1>Ohymeku</h1>
-        <p>Англійська з Meku</p>
         <div class="startup-bubble">
+          <span class="startup-tag">MEKU</span>
           <strong lang="en">Hi! Ready for an adventure?</strong>
           <p>Привіт! Готовий до пригоди?</p>
         </div>

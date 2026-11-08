@@ -84,4 +84,33 @@ void main() {
     expect(changes, [true, false]);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('splash uses separate artwork for portrait and wide layouts',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 820);
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(MaterialApp(
+      home: SplashScreen(
+        animationsEnabled: false,
+        onIntroFinished: () {},
+        onSpeakingChanged: (_) {},
+      ),
+    ));
+
+    Finder artwork(String file) => find.byWidgetPredicate((widget) =>
+        widget is Image &&
+        widget.image is AssetImage &&
+        (widget.image as AssetImage).assetName == 'assets/images/$file');
+    expect(artwork('meku_splash_pass_portrait.webp'), findsOneWidget);
+    expect(tester.getCenter(find.text('Ohymeku')).dy,
+        lessThan(tester.getCenter(find.byKey(pose)).dy));
+
+    tester.view.physicalSize = const Size(1100, 700);
+    await tester.pumpAndSettle();
+    expect(artwork('meku_splash_pass.webp'), findsOneWidget);
+    expect(tester.getCenter(find.byKey(pose)).dx,
+        lessThan(tester.getCenter(find.text('Ohymeku')).dx));
+    expect(tester.takeException(), isNull);
+  });
 }
