@@ -30,6 +30,16 @@ class _Portrait extends CustomPainter {
         ],
       'Iris' => const [Color(0xFF4C8277), Color(0xFFB06E49), Color(0xFFF3C3A1)],
       'Sol' => const [Color(0xFF7E729B), Color(0xFFDAD2E5), Color(0xFFB88062)],
+      'Orest' => const [
+          Color(0xFF42685E),
+          Color(0xFF3B342A),
+          Color(0xFFE0AD88)
+        ],
+      'Marta' => const [
+          Color(0xFF916047),
+          Color(0xFF452C29),
+          Color(0xFFDCA878)
+        ],
       _ => const [Color(0xFF8F68A7), Color(0xFF4F355F), Color(0xFFE6BDA4)],
     };
     final p = Paint()..color = palette[0].withValues(alpha: .15);

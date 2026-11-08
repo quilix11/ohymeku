@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dialect_duel/models/journey_level.dart';
 import 'package:dialect_duel/screens/journey_screen.dart';
 import 'package:dialect_duel/screens/journey_level_screen.dart';
+import 'package:dialect_duel/screens/chronicles_screen.dart';
+import 'package:dialect_duel/story/story_catalog.dart';
 import 'package:dialect_duel/services/settings_service.dart';
 import 'package:dialect_duel/services/progress_service.dart';
 
@@ -60,7 +62,7 @@ void main() {
     await tapText(tester, 'Друге слово');
     await tapText(tester, 'Перевірити слово');
     await tapText(tester, level.words.last.translation);
-    await tapText(tester, 'До квестів');
+    await tapText(tester, 'Додаткова вправа');
     for (final q in level.story.questions) {
       await tapText(tester, q.options[q.answer]);
       final next = find.text('Наступний квест').hitTestable();
@@ -80,7 +82,8 @@ void main() {
     }
     await tapText(tester, 'Перевірити міст');
     await tapText(tester, 'Забрати знахідку');
-    await tapText(tester, 'До перевірки');
+    await tapText(tester, 'До рівня');
+    await tapText(tester, 'Почати тест');
     for (final q in level.questions()) {
       await tapText(tester, q.options[q.answer]);
       final next = find
@@ -92,6 +95,7 @@ void main() {
     }
     expect(find.text('5 із 5 правильно'), findsOneWidget);
     expect(settings.journey.totalStars, 3);
+    expect(settings.story.done(storyChapters.first), 0);
     expect(settings.vocabulary.known, containsAll(level.wordIds));
     await tapText(tester, 'На карту');
     expect(
@@ -103,6 +107,50 @@ void main() {
     expect(restored.journey.current.id, 'j2');
     expect(restored.journey.totalStars, 3);
     expect(tester.takeException(), isNull);
+  });
+  testWidgets('map opens story independently and unlocks its next chapter',
+      (tester) async {
+    tester.view.physicalSize = const Size(375, 812);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final (settings, progress) = await setup();
+    await settings.setAnimationsEnabled(false);
+    addTearDown(settings.dispose);
+    await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+            body: JourneyScreen(settings: settings, progress: progress))));
+    await tester.pumpAndSettle();
+    final level = find.byKey(const Key('journey_level_j1'));
+    final story = find.byKey(const Key('journey_story_j1'));
+    expect(tester.getCenter(level).dx, lessThan(tester.getCenter(story).dx));
+    expect(tester.getTopLeft(level).dy, tester.getTopLeft(story).dy);
+    await tester.ensureVisible(story);
+    await tester.tap(story);
+    await tester.pumpAndSettle();
+    expect(find.byType(StoryReaderScreen), findsOneWidget);
+    final chapter = storyChapters.first;
+    for (final (index, scene) in chapter.scenes.indexed) {
+      await tapText(tester, scene.options[scene.answer]);
+      await tapText(tester, scene.choices.first);
+      final next = find
+          .text(index == chapter.scenes.length - 1
+              ? 'Завершити розділ'
+              : 'Наступна сцена')
+          .hitTestable();
+      expect(next, findsOneWidget);
+      await tester.tap(next);
+      await tester.pumpAndSettle();
+    }
+    expect(settings.story.finished(chapter), true);
+    expect(settings.journey.completedCount, 0);
+    expect(settings.journey.unlocked(journeyLevels[1]), false);
+    await tapText(tester, 'Сюжет 2');
+    expect(
+        tester
+            .widget<StoryReaderScreen>(find.byType(StoryReaderScreen))
+            .chapter
+            .id,
+        storyChapters[1].id);
   });
   testWidgets(
       'map and lesson fit small phones with large text and reduced motion',

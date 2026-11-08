@@ -3,11 +3,27 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dialect_duel/story/story_service.dart';
 import 'package:dialect_duel/story/story_catalog.dart';
+import 'package:dialect_duel/story/story_model.dart';
+import 'package:dialect_duel/models/journey_level.dart';
 import 'package:dialect_duel/services/progress_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => SharedPreferences.setMockInitialValues({}));
+  test('each level has one valid authored chapter across stable seasons', () {
+    expect(storySeasons.map((season) => season.id).toSet().length,
+        storySeasons.length);
+    expect(storyChapters.map((chapter) => chapter.id).toSet().length,
+        storyChapters.length);
+    expect(storyByJourneyLevel.keys,
+        unorderedEquals(journeyLevels.map((l) => l.id)));
+    expect(
+        storyChapters.where((chapter) => chapter.journeyLevelId != null).length,
+        storyByJourneyLevel.length);
+    for (final chapter in storyChapters) {
+      expect(StoryChapter.fromJson(chapter.toJson()).id, chapter.id);
+    }
+  });
   test(
       'authored story is sequential; wrong answers and duplicate choices do not advance',
       () async {
@@ -44,8 +60,8 @@ void main() {
         String rules, Map<String, dynamic> input) async {
       calls++;
       expect(input['player_name'], 'Лис');
-      expect((input['player_choices'] as Map).length, 15);
-      expect((input['confirmed_clues'] as List).length, 15);
+      expect((input['player_choices'] as Map).length, s.decisions.length);
+      expect((input['confirmed_clues'] as List).length, s.clues.length);
       expect(rules, contains('Lyra'));
       return {...storyChapters.first.toJson(), 'title': 'Новий берег'};
     }
@@ -56,13 +72,64 @@ void main() {
     expect(calls, 0);
     await s.generate(
         name: 'Лис', level: 'A2', offline: false, request: request);
-    expect(s.chapters.length, 6);
+    expect(s.chapters.length, storyChapters.length + 1);
     expect(s.current.title, 'Новий берег');
     final restored = StoryService();
     await restored.load();
     expect(restored.chapters.last.title, 'Новий берег');
     expect(restored.chapters.last.generated, isTrue);
-    expect(restored.clues.length, 15);
+    expect(restored.clues, s.clues);
+  });
+  test('saved AI continuation stays playable after the new season is added',
+      () async {
+    final prefs = await SharedPreferences.getInstance();
+    final oldArc = storySeasons.first.chapters;
+    final saved = {
+      ...oldArc.first.toJson(),
+      'id': 'generated_6',
+      'generated': true,
+    };
+    await prefs.setString(
+        StoryService.storageKey,
+        jsonEncode({
+          'completed': {for (final c in oldArc) c.id: c.scenes.length},
+          'generated': [saved],
+        }));
+    final story = StoryService();
+    await story.load(preferences: prefs);
+    final generated = story.generatedChapters.single;
+    expect(story.unlocked(generated), true);
+    final nextSeason = storyByJourneyLevel['j6']!;
+    expect(story.unlocked(nextSeason), true);
+    expect(story.unlocked(storyByJourneyLevel['j13']!), false);
+    await story.choose(generated.id, 0, generated.scenes.first.answer, 0);
+    expect(story.done(generated), 1);
+    expect(story.done(nextSeason), 0);
+  });
+  test('a save after Verba opens the mountain story and preserves its AI route',
+      () async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+        StoryService.storageKey,
+        jsonEncode({
+          'completed': {
+            for (final c in storyChapters.take(12)) c.id: c.scenes.length,
+          },
+          'continuation_anchor': 'letters_12',
+          'generated': [
+            {
+              ...storyChapters.first.toJson(),
+              'id': 'ai_saved',
+              'generated': true,
+            },
+          ],
+        }));
+    final story = StoryService();
+    await story.load(preferences: prefs);
+    expect(story.current.id, 'letters_13');
+    expect(story.unlocked(story.current), true);
+    expect(story.unlocked(story.generatedChapters.single), true);
+    expect(story.unlocked(storyByJourneyLevel['j14']!), false);
   });
   test('invalid model output never replaces the save or creates a chapter',
       () async {
@@ -85,7 +152,7 @@ void main() {
             offline: false,
             request: (_, __) async => {'title': 'Broken', 'scenes': []}),
         throwsException);
-    expect(s.chapters.length, 5);
+    expect(s.chapters.length, storyChapters.length);
     expect(s.busy, isFalse);
     expect(prefs.getString(StoryService.storageKey), before);
   });

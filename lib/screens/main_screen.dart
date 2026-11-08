@@ -14,6 +14,7 @@ import '../widgets/profile_avatar.dart';
 import '../widgets/ohymeku_design.dart';
 import 'settings_screen.dart';
 import 'practice_screen.dart';
+import 'phrase_delivery_screen.dart';
 import 'placement_screen.dart';
 import 'generation_screen.dart';
 import '../services/meku_service.dart';
@@ -104,6 +105,8 @@ class _MainScreenState extends State<MainScreen>
       case 'practice':
         screen = PracticeScreen(
             settings: widget.settings, progress: widget.progress);
+      case 'phrase_delivery':
+        screen = PhraseDeliveryScreen(settings: widget.settings);
       case 'placement':
         screen = PlacementScreen(
             settings: widget.settings, progress: widget.progress, retake: true);

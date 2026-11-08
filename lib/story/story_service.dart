@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import '../services/learning_service.dart';
 import '../services/ai_service.dart';
 import 'story_catalog.dart';
@@ -16,8 +17,9 @@ class StoryService extends ChangeNotifier {
   final Map<String, int> _completed = {};
   final Map<String, String> _decisions = {};
   final Set<String> _clues = {};
+  String? _continuationAnchor;
   bool busy = false;
-  bool autoContinue = true;
+  bool autoContinue = false;
   Future<void> setAutoContinue(bool value) async {
     if (!await _prefs.setBool('story_auto_continue', value)) {
       throw StateError('Не вдалося зберегти налаштування.');
@@ -30,20 +32,35 @@ class StoryService extends ChangeNotifier {
   bool _disposed = false;
   List<StoryChapter> get chapters =>
       List.unmodifiable([...storyChapters, ..._generated]);
+  List<StoryChapter> get generatedChapters => List.unmodifiable(_generated);
   int done(StoryChapter c) => (_completed[c.id] ?? 0).clamp(0, c.scenes.length);
   bool finished(StoryChapter c) => done(c) == c.scenes.length;
   List<String> get clues => List.unmodifiable(_clues);
   Map<String, String> get decisions => Map.unmodifiable(_decisions);
-  bool unlocked(int index) => index == 0 || finished(chapters[index - 1]);
+  // Keep the authored ending that started this AI timeline across releases.
+  List<StoryChapter> get _continuationArc {
+    final anchor = storyChapters.indexWhere((c) => c.id == _continuationAnchor);
+    return anchor < 0 ? storyChapters : storyChapters.sublist(0, anchor + 1);
+  }
+
+  bool unlocked(StoryChapter chapter) {
+    final arc = chapter.generated ? _generated : storyChapters;
+    final index = arc.indexWhere((c) => c.id == chapter.id);
+    if (index < 0) return false;
+    if (index > 0) return finished(arc[index - 1]);
+    return !chapter.generated || _continuationArc.every(finished);
+  }
+
   StoryChapter get current =>
       chapters.firstWhere((c) => !finished(c), orElse: () => chapters.last);
-  bool get caughtUp => chapters.every(finished);
+  bool get caughtUp =>
+      _continuationArc.every(finished) && _generated.every(finished);
   String? consequence(StoryChapter c, int scene) =>
       _decisions['${c.id}:$scene'];
 
   Future<void> load({SharedPreferences? preferences}) async {
     _prefs = preferences ?? await SharedPreferences.getInstance();
-    autoContinue = _prefs.getBool('story_auto_continue') ?? true;
+    autoContinue = _prefs.getBool('story_auto_continue') ?? false;
     final raw = _prefs.getString(storageKey);
     if (raw == null) return;
     try {
@@ -54,6 +71,12 @@ class StoryService extends ChangeNotifier {
         if (c.generated && !chapters.any((old) => old.id == c.id)) {
           _generated.add(c);
         }
+      }
+      if (_generated.isNotEmpty) {
+        final anchor = j['continuation_anchor'];
+        _continuationAnchor = storyChapters.any((c) => c.id == anchor)
+            ? anchor as String
+            : 'letters_5';
       }
       for (final e in (j['completed'] as Map? ?? {}).entries) {
         if (e.value is int && chapters.any((c) => c.id == e.key)) {
@@ -71,6 +94,8 @@ class StoryService extends ChangeNotifier {
 
   Map<String, dynamic> snapshot() => {
         'generated': _generated.map((c) => c.toJson()).toList(),
+        if (_continuationAnchor != null)
+          'continuation_anchor': _continuationAnchor,
         'completed': _completed,
         'decisions': _decisions,
         'clues': _clues.toList()
@@ -82,12 +107,20 @@ class StoryService extends ChangeNotifier {
     }
   }
 
+  Future<void> _write(Future<void> Function() save) {
+    final operation = _writes.then((_) => save());
+    _writes = operation.catchError((Object _) {});
+    return operation;
+  }
+
   Future<void> choose(
       String chapterId, int sceneIndex, int answer, int choice) {
-    final operation = _writes.then((_) async {
+    return _write(() async {
       final catalog = chapters;
       final index = catalog.indexWhere((c) => c.id == chapterId);
-      if (index < 0 || !unlocked(index)) throw StateError('Розділ ще закрито.');
+      if (index < 0 || !unlocked(catalog[index])) {
+        throw StateError('Розділ ще закрито.');
+      }
       final c = catalog[index];
       if (sceneIndex != done(c) || finished(c)) {
         throw StateError('Сцена вже змінилася.');
@@ -116,8 +149,6 @@ class StoryService extends ChangeNotifier {
       _clues.addAll(clues);
       notifyListeners();
     });
-    _writes = operation.catchError((Object _) {});
-    return operation;
   }
 
   Future<void> generate(
@@ -136,25 +167,37 @@ class StoryService extends ChangeNotifier {
     notifyListeners();
     final ai = request == null ? LearningService() : null;
     try {
+      final arc = _continuationArc;
+      final history = [...arc, ..._generated];
       final input = {
         'canon': storyCanon,
         'player_name': name,
         'level': level,
         'interests': interests,
-        'confirmed_clues': _clues.toList(),
-        'player_choices': _decisions,
-        'previous_chapters': chapters
+        'confirmed_clues': {
+          for (final chapter in history)
+            for (final scene in chapter.scenes)
+              if (_clues.contains(scene.clue)) scene.clue,
+        }.toList(),
+        'player_choices': {
+          for (final chapter in history)
+            for (var i = 0; i < chapter.scenes.length; i++)
+              if (consequence(chapter, i) case final choice?)
+                '${chapter.id}:$i': choice,
+        },
+        'previous_chapters': history
             .map((c) => {'title': c.title, 'summary': c.summary})
             .toList(),
-        'chapter_number': chapters.length + 1
+        'chapter_number': history.length + 1
       };
       final json = await (request ??
               ((rules, input) =>
                   ai!.request(rules, input, maxOutputTokens: 8192)))(
           '''Write ONE substantial next chapter for a Ukrainian English-learning story.
 Follow canon, confirmed clues and choices strictly. Continue from the actual ending.
-After the authored Lumen arc, explore the unmapped city beyond the river with a new
-mystery; do not undo Lyra's freedom. Keep recurring allies, add at most one original
+Follow the most recent chapter's location and unresolved clues. Continue the
+actual timeline, including its latest authored season. Do not undo Lyra's
+freedom. Keep recurring allies, add at most one original
 character. Choices must reflect earlier consequences and change concrete events.
 Use the player's name naturally as {name}. Each scene: Ukrainian narration (100-180
 words), an English dialogue (2-4 sentences) at requested CEFR, and a comprehension
@@ -168,12 +211,19 @@ Return {"title":"...","location":"...","summary":"accurate summary of events int
 "consequences":["...","..."]}]} with 4 scenes. All fields required.''', input);
       if (_disposed) return;
       final chapter =
-          StoryChapter.fromJson(json, id: 'generated_${chapters.length + 1}');
-      await _persist({
-        ...snapshot(),
-        'generated': [..._generated, chapter].map((c) => c.toJson()).toList()
+          StoryChapter.fromJson(json, id: 'ai_${const Uuid().v4()}');
+      await _write(() async {
+        if (_disposed) return;
+        final anchor = _continuationAnchor ?? arc.last.id;
+        await _persist({
+          ...snapshot(),
+          'continuation_anchor': anchor,
+          'generated': [..._generated, chapter].map((c) => c.toJson()).toList(),
+        });
+        if (_disposed) return;
+        _continuationAnchor = anchor;
+        _generated.add(chapter);
       });
-      if (!_disposed) _generated.add(chapter);
     } on FormatException {
       throw const AiException(
           'Продовження вийшло неповним. Історію збережено — спробуй ще раз.');

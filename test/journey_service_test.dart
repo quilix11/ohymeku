@@ -24,7 +24,6 @@ Future<void> learn(JourneyService service, JourneyLevel level) async {
   for (final word in level.words) {
     await service.verifyWord(level.id, word.id, word.translation);
   }
-  await quests(service, level);
 }
 
 Future<void> quests(JourneyService service, JourneyLevel level) async {
@@ -99,7 +98,7 @@ void main() {
     expect(service.completedCount, 0);
   });
   test(
-      'all twelve levels can be completed; replays never remove progress or duplicate stars',
+      'all levels can be completed; replays never remove progress or duplicate stars',
       () async {
     final service = JourneyService();
     await service.load();
@@ -116,16 +115,35 @@ void main() {
             bossDialogues[level.id]!.map((q) => q.options[q.answer]).toList());
       }
     }
-    expect(service.completedCount, 12);
-    expect(service.totalStars, 36);
+    final maxStars = journeyLevels.length * 3;
+    expect(service.completedCount, journeyLevels.length);
+    expect(service.totalStars, maxStars);
     final questions = journeyLevels.first.questions();
     await service.finishTest('j1', questions,
         questions.map((q) => (q.answer + 1) % q.options.length).toList());
-    expect(service.totalStars, 36);
+    expect(service.totalStars, maxStars);
     expect(service.best(journeyLevels.first), 5);
     final restored = JourneyService();
     await restored.load();
-    expect(restored.totalStars, 36);
+    expect(restored.totalStars, maxStars);
+  });
+  test('a completed pre-expansion save opens the first mountain level',
+      () async {
+    SharedPreferences.setMockInitialValues({
+      'journey_v2': jsonEncode({
+        for (final level in journeyLevels.take(12))
+          level.id: {
+            'words': level.wordIds,
+            'best': 5,
+            if (level.boss) 'boss': 'dialogue',
+          }
+      })
+    });
+    final service = JourneyService();
+    await service.load();
+    expect(service.current.id, 'j13');
+    expect(service.totalStars, 36);
+    expect(service.unlocked(journeyLevels[13]), false);
   });
   test(
       'failed persistence does not award words or unlock a level and can be retried',
@@ -160,7 +178,7 @@ void main() {
     final restored = JourneyService();
     await restored.load();
     expect(restored.wordsReady(level), true);
-    expect(restored.readyForTest(level), false);
+    expect(restored.readyForTest(level), true);
   });
   test(
       'unknown save fields, malformed values and orphaned completion do not open the path',
@@ -184,8 +202,7 @@ void main() {
     expect(service.current.id, 'j1');
     expect(service.unlocked(journeyLevels.last), false);
   });
-  test(
-      'story and sentence challenges gate tests and persist only verified answers',
+  test('optional reading and sentence practice persists only verified answers',
       () async {
     final prefs = FailingPrefs(), service = JourneyService();
     await service.load(preferences: prefs);
@@ -197,9 +214,8 @@ void main() {
       await service.verifyWord(level.id, w.id, w.translation);
     }
     expect(await service.verifyChallenge(level.id, 'read:0', 'wrong'), false);
-    await expectLater(
-        service.finishTest(level.id, level.questions(), [0, 0, 0, 0, 0]),
-        throwsStateError);
+    expect(service.readyForTest(level), true);
+    expect(service.questsDone(level), false);
     prefs.fail = true;
     await expectLater(
         service.verifyChallenge(
@@ -261,8 +277,7 @@ void main() {
     await service.finishDialogue(boss.id, replies);
     expect(service.bossMode(boss), 'ai');
   });
-  test(
-      'v1 completed levels migrate without resetting stars; partial saves still require new quests',
+  test('v1 completed levels keep their stars and partial saves can start tests',
       () async {
     SharedPreferences.setMockInitialValues({
       'journey_v1': jsonEncode({
@@ -279,6 +294,7 @@ void main() {
     expect(service.current.id, 'j5');
     expect(service.wordsReady(journeyLevels[4]), true);
     expect(service.questsDone(journeyLevels[4]), false);
+    expect(service.readyForTest(journeyLevels[4]), true);
     await quests(service, journeyLevels[4]);
     final restored = JourneyService();
     await restored.load();

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'learning_exercise.dart';
+import 'mountain_grammar.dart';
 import 'journey_story.dart';
 import 'scenario.dart';
 import '../services/vocabulary_service.dart';
@@ -18,13 +19,16 @@ class JourneyLevel {
   final String id, title, world, guide;
   final int number, difficulty;
   final List<String> wordIds;
+  final List<LearningExercise>? grammar;
   final bool boss;
   const JourneyLevel(this.id, this.number, this.title, this.world, this.guide,
       this.wordIds, this.difficulty,
-      {this.boss = false});
+      {this.boss = false, this.grammar});
   JourneyStory get story => journeyStories[id]!;
   Scenario? get opponent => journeyBosses[id];
-  List<String> get challengeIds => ['read:0', 'read:1', 'order'];
+  bool get hasExtraPractice => journeyStories.containsKey(id);
+  List<String> get challengeIds =>
+      hasExtraPractice ? const ['read:0', 'read:1', 'order'] : const [];
   List<WordCard> get worldWords => journeyLevels
       .where((l) => l.world == world)
       .expand((l) => l.words)
@@ -49,8 +53,8 @@ class JourneyLevel {
             choices(word),
             0,
             '${word.word} — ${word.translation}. ${word.example}'),
-      for (final e
-          in practiceExercises.where((e) => e.difficulty == difficulty).take(3))
+      for (final e in grammar ??
+          practiceExercises.where((e) => e.difficulty == difficulty).take(3))
         JourneyQuestion(e.id, e.question, e.options, e.answer, e.explanation,
             grammar: e),
     ];
@@ -67,6 +71,13 @@ class JourneyLevel {
     }).toList();
   }
 }
+
+const journeyWorldTitles = {
+  'Подорож': 'Долина подорожей',
+  'Робота': 'Місто команди',
+  'Школа': 'Сад історій',
+  'Гори': 'Перевал відлунь',
+};
 
 const journeyLevels = [
   JourneyLevel(
@@ -162,4 +173,40 @@ const journeyLevels = [
       ['s7', 's8'],
       3,
       boss: true),
+  JourneyLevel(
+      'j13',
+      13,
+      'Маршрут до перевалу',
+      'Гори',
+      'Потренуйся питати дорогу й перевіряти, куди веде стежка.',
+      ['m1', 'm2'],
+      1,
+      grammar: mountainDirections),
+  JourneyLevel('j14', 14, 'Ніч у притулку', 'Гори',
+      'Попроси теплу ковдру й домовся про нічліг.', ['m3', 'm4'], 1,
+      grammar: mountainShelter),
+  JourneyLevel('j15', 15, 'Зміна погоди', 'Гори',
+      'Склади план на випадок туману та попередь друзів.', ['m5', 'm6'], 2,
+      grammar: mountainWeather),
+  JourneyLevel(
+      'j16',
+      16,
+      'Сигнал для команди',
+      'Гори',
+      'Передай почуте англійською, зберігши зміст і час події.',
+      ['m7', 'm8'],
+      2,
+      grammar: mountainSignal),
+  JourneyLevel('j17', 17, 'Майстерня годинників', 'Гори',
+      'Поясни, що вже полагодили, а що ще треба перевірити.', ['m9', 'm10'], 3,
+      grammar: mountainWorkshop),
+  JourneyLevel(
+      'j18',
+      18,
+      'Голос із долини',
+      'Гори',
+      'Уточни, чи правильно тебе почули, та підсумуй домовленість.',
+      ['m11', 'm12'],
+      3,
+      grammar: mountainBroadcast),
 ];

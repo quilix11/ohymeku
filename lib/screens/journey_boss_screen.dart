@@ -151,7 +151,7 @@ class _JourneyBossScreenState extends State<JourneyBossScreen> {
                                         color: theme.colorScheme.error)),
                               if (!journey.bossReady(level))
                                 const Text(
-                                    'Спершу заверши квести й тест цього рівня.')
+                                    'Спершу перевір слова й пройди тест цього рівня.')
                               else if (defeated) ...[
                                 Icon(Icons.workspace_premium_rounded,
                                     size: 72, color: theme.colorScheme.primary),

@@ -50,7 +50,7 @@ class SectionTitle extends StatelessWidget {
 class LearningTile extends StatelessWidget {
   final String title, subtitle;
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final bool rose;
   const LearningTile(
       {super.key,

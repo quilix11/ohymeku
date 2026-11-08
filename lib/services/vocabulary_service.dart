@@ -315,4 +315,26 @@ const starterCards = [
       's7', 'explain', 'пояснювати', 'Can you explain your answer?', 'Школа'),
   WordCard('s8', 'curious', 'допитливий', 'Meku is curious about everything.',
       'Школа'),
+  WordCard(
+      'm1', 'trail', 'стежка', 'The trail starts behind the station.', 'Гори'),
+  WordCard('m2', 'signpost', 'вказівник', 'Turn left at the wooden signpost.',
+      'Гори'),
+  WordCard('m3', 'shelter', 'притулок',
+      'We found shelter before it started to snow.', 'Гори'),
+  WordCard('m4', 'blanket', 'ковдра', 'Could I have an extra blanket?', 'Гори'),
+  WordCard('m5', 'forecast', 'прогноз', 'The forecast says it will rain later.',
+      'Гори'),
+  WordCard('m6', 'fog', 'туман', 'Dense fog covered the trail.', 'Гори'),
+  WordCard(
+      'm7', 'signal', 'сигнал', 'Wait for my signal before crossing.', 'Гори'),
+  WordCard('m8', 'relay', 'передавати далі',
+      'Can you relay the message to the next team?', 'Гори'),
+  WordCard('m9', 'repair', 'ремонтувати', 'We need to repair the old receiver.',
+      'Гори'),
+  WordCard(
+      'm10', 'spare', 'запасний', 'I carry a spare battery in my bag.', 'Гори'),
+  WordCard('m11', 'confirm', 'підтвердити', 'Please confirm the meeting time.',
+      'Гори'),
+  WordCard('m12', 'broadcast', 'транслювати',
+      'They broadcast the report every morning.', 'Гори'),
 ];

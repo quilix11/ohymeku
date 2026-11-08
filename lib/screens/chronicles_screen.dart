@@ -4,6 +4,7 @@ import '../services/settings_service.dart';
 import '../services/progress_service.dart';
 import '../services/api_credentials.dart';
 import '../story/story_service.dart';
+import '../story/story_catalog.dart';
 import '../story/story_model.dart';
 import '../widgets/ohymeku_design.dart';
 import '../widgets/meku_avatar.dart';
@@ -39,6 +40,7 @@ class _ChroniclesScreenState extends State<ChroniclesScreen> {
   }
 
   Future<void> _open(StoryChapter c) async {
+    final wasCaughtUp = story.caughtUp;
     await Navigator.push(
         context,
         MaterialPageRoute<void>(
@@ -47,12 +49,36 @@ class _ChroniclesScreenState extends State<ChroniclesScreen> {
                 progress: widget.progress,
                 chapter: c)));
     if (mounted &&
+        !wasCaughtUp &&
         story.caughtUp &&
         story.autoContinue &&
         ApiCredentials.available &&
         !widget.settings.offlineMode) {
       await _generate();
     }
+  }
+
+  Widget _chapterTile(StoryChapter chapter, int number) {
+    final read = story.finished(chapter);
+    final unlocked = story.unlocked(chapter);
+    final status = read
+        ? 'Прочитано · відкрити знову'
+        : unlocked
+            ? '${story.done(chapter)}/${chapter.scenes.length} сцен'
+            : 'Після попереднього розділу';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: LearningTile(
+        title: '$number. ${chapter.title}',
+        subtitle: '${chapter.location} · $status',
+        icon: read
+            ? CupertinoIcons.checkmark_seal
+            : unlocked
+                ? CupertinoIcons.envelope_open
+                : CupertinoIcons.lock,
+        onTap: unlocked ? () => _open(chapter) : null,
+      ),
+    );
   }
 
   @override
@@ -126,22 +152,18 @@ class _ChroniclesScreenState extends State<ChroniclesScreen> {
                             Chip(label: Text('${story.clues.length} доказів'))
                           ]),
                         ]))),
-                    const SectionTitle('Твоя книжка пригод'),
-                    for (var i = 0; i < story.chapters.length; i++)
-                      Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: LearningTile(
-                              title: '${i + 1}. ${story.chapters[i].title}',
-                              subtitle:
-                                  '${story.chapters[i].location} · ${story.finished(story.chapters[i]) ? "Прочитано · відкрити знову" : story.unlocked(i) ? "${story.done(story.chapters[i])}/${story.chapters[i].scenes.length} сцен" : "Після попереднього розділу"}${story.chapters[i].generated ? " · AI-історія" : ""}',
-                              icon: story.finished(story.chapters[i])
-                                  ? CupertinoIcons.checkmark_seal
-                                  : story.unlocked(i)
-                                      ? CupertinoIcons.envelope_open
-                                      : CupertinoIcons.lock,
-                              onTap: () {
-                                if (story.unlocked(i)) _open(story.chapters[i]);
-                              })),
+                    for (final season in storySeasons) ...[
+                      SectionTitle(season.title, key: ValueKey(season.id)),
+                      for (final chapter in season.chapters)
+                        _chapterTile(
+                            chapter, storyChapters.indexOf(chapter) + 1),
+                    ],
+                    if (story.generatedChapters.isNotEmpty) ...[
+                      const SectionTitle('Продовження від ШІ'),
+                      for (final (index, chapter)
+                          in story.generatedChapters.indexed)
+                        _chapterTile(chapter, index + 1),
+                    ],
                     const SectionTitle('Друзі Люмена'),
                     const Text(
                         'Вільні розмови поза сюжетом. Тут можна практикуватись без зміни доказів і рішень.'),
@@ -168,7 +190,7 @@ class _ChroniclesScreenState extends State<ChroniclesScreen> {
                     SwitchListTile.adaptive(
                         title: const Text('Автопродовження'),
                         subtitle: const Text(
-                            'Після останнього розділу AI напише наступний. Потрібне підключення Gemini.'),
+                            'Після завершення історії в Хроніках Gemini напише продовження.'),
                         value: story.autoContinue,
                         onChanged: (v) async {
                           try {
@@ -261,6 +283,19 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
     }
   }
 
+  void _advance() {
+    if (_scene + 1 == widget.chapter.scenes.length) {
+      Navigator.pop(context);
+    } else {
+      setState(() {
+        _scene++;
+        _answer = null;
+        _result = null;
+        _error = null;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = widget.chapter;
@@ -280,6 +315,20 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                 const SizedBox(height: 8),
                 Text('${c.location} · Сцена ${_scene + 1}/${c.scenes.length}')
               ])),
+          if (read || _result != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _saving ? null : _advance,
+                  icon: const Icon(CupertinoIcons.arrow_right),
+                  label: Text(_scene + 1 == c.scenes.length
+                      ? 'Завершити розділ'
+                      : 'Наступна сцена'),
+                ),
+              ),
+            ),
           Expanded(
               child: SingleChildScrollView(
                   key: ValueKey('scene_$_scene'),
@@ -356,56 +405,24 @@ class _StoryReaderScreenState extends State<StoryReaderScreen> {
                                   style: TextStyle(
                                       color:
                                           Theme.of(context).colorScheme.error)),
-                            AnimatedSize(
-                                duration:
-                                    MediaQuery.disableAnimationsOf(context)
-                                        ? Duration.zero
-                                        : const Duration(milliseconds: 420),
-                                curve: Curves.easeOutCubic,
-                                child: result == null
-                                    ? const SizedBox.shrink()
-                                    : StoryArrival(
-                                        child: SilkPanel(
-                                            child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                            Text(personalized(result),
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodyLarge),
-                                            const SizedBox(height: 16),
-                                            const Text('ЗАПИС У ЩОДЕННИКУ',
-                                                style: TextStyle(
-                                                    fontSize: 11,
-                                                    letterSpacing: 1)),
-                                            const SizedBox(height: 8),
-                                            Text(scene.clue),
-                                          ])))),
-                            if (read || _result != null)
-                              Padding(
-                                  padding: const EdgeInsets.only(top: 20),
-                                  child: FilledButton.icon(
-                                      onPressed: _saving
-                                          ? null
-                                          : () {
-                                              if (_scene + 1 ==
-                                                  c.scenes.length) {
-                                                Navigator.pop(context);
-                                              } else {
-                                                setState(() {
-                                                  _scene++;
-                                                  _answer = null;
-                                                  _result = null;
-                                                  _error = null;
-                                                });
-                                              }
-                                            },
-                                      icon: const Icon(
-                                          CupertinoIcons.arrow_right),
-                                      label: Text(_scene + 1 == c.scenes.length
-                                          ? 'До книжки пригод'
-                                          : 'Наступна сцена'))),
+                            if (result != null)
+                              StoryArrival(
+                                  child: SilkPanel(
+                                      child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                    Text(personalized(result),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyLarge),
+                                    const SizedBox(height: 16),
+                                    const Text('ЗАПИС У ЩОДЕННИКУ',
+                                        style: TextStyle(
+                                            fontSize: 11, letterSpacing: 1)),
+                                    const SizedBox(height: 8),
+                                    Text(scene.clue),
+                                  ]))),
                             if (_scene > 0)
                               TextButton(
                                   onPressed: _saving
