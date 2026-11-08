@@ -6,6 +6,7 @@ import '../services/settings_service.dart';
 import '../widgets/dictionary_sheet.dart';
 import '../widgets/meku_avatar.dart';
 import '../widgets/sentence_builder.dart';
+import '../widgets/exercise_layout.dart';
 import '../widgets/ohymeku_design.dart';
 
 class JourneyQuestScreen extends StatefulWidget {
@@ -74,6 +75,25 @@ class _JourneyQuestScreenState extends State<JourneyQuestScreen> {
     final story = widget.level.story,
         theme = Theme.of(context),
         c = theme.colorScheme;
+    final Widget? action;
+    if (_step == 3) {
+      action = FilledButton(
+        onPressed: () => Navigator.pop(context, true),
+        child: const Text('До перевірки'),
+      );
+    } else if (_correct == true) {
+      action = FilledButton(
+        onPressed: _busy
+            ? null
+            : () => setState(() {
+                  _step++;
+                  _prepare();
+                }),
+        child: Text(_step == 2 ? 'Забрати знахідку' : 'Наступний квест'),
+      );
+    } else {
+      action = null;
+    }
     return PopScope(
         canPop: !_busy,
         child: Scaffold(
@@ -83,8 +103,9 @@ class _JourneyQuestScreenState extends State<JourneyQuestScreen> {
                 child: Center(
                     child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 620),
-                        child: ListView(
-                            padding: const EdgeInsets.all(20),
+                        child: ExerciseLayout(
+                            step: _step,
+                            action: action,
                             children: [
                               SilkPanel(
                                   rose: true,
@@ -115,11 +136,6 @@ class _JourneyQuestScreenState extends State<JourneyQuestScreen> {
                                 Text('Знахідка: ${story.reward}',
                                     style: theme.textTheme.headlineSmall,
                                     textAlign: TextAlign.center),
-                                const SizedBox(height: 20),
-                                FilledButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: const Text('До перевірки')),
                               ] else ...[
                                 Text(
                                     _step < 2
@@ -209,17 +225,6 @@ class _JourneyQuestScreenState extends State<JourneyQuestScreen> {
                                       child: Text(_step < 2
                                           ? story.questions[_step].explanation
                                           : 'Міст готовий! ${story.sentence}')),
-                                  const SizedBox(height: 12),
-                                  FilledButton(
-                                      onPressed: _busy
-                                          ? null
-                                          : () => setState(() {
-                                                _step++;
-                                                _prepare();
-                                              }),
-                                      child: Text(_step == 2
-                                          ? 'Забрати знахідку'
-                                          : 'Наступний квест')),
                                 ],
                               ],
                             ]))))));

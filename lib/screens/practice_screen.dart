@@ -1,3 +1,4 @@
+import '../widgets/exercise_layout.dart';
 import '../widgets/ohymeku_design.dart';
 import 'package:flutter/material.dart';
 import '../models/learning_exercise.dart';
@@ -83,8 +84,19 @@ class _PracticeScreenState extends State<PracticeScreen> {
                 child: Center(
                   child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 620),
-                      child: ListView(
-                          padding: const EdgeInsets.all(20),
+                      child: ExerciseLayout(
+                          step: _index,
+                          action: _answer != null
+                              ? FilledButton.icon(
+                                  onPressed: () => setState(() {
+                                    _index++;
+                                    _answer = null;
+                                    _error = null;
+                                  }),
+                                  icon: const Icon(Icons.arrow_forward_rounded),
+                                  label: const Text('Далі'),
+                                )
+                              : null,
                           children: [
                             ScreenIntro(
                                 title: 'Коротка практика',
@@ -184,15 +196,6 @@ class _PracticeScreenState extends State<PracticeScreen> {
                                       const SizedBox(height: 12),
                                       Text(e.explanation),
                                     ])),
-                                const SizedBox(height: 16),
-                                FilledButton.icon(
-                                    onPressed: () => setState(() {
-                                          _index++;
-                                          _answer = null;
-                                        }),
-                                    icon:
-                                        const Icon(Icons.arrow_forward_rounded),
-                                    label: const Text('Далі')),
                               ],
                               if (_saving) const LinearProgressIndicator(),
                               if (_error != null)

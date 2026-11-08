@@ -13,9 +13,37 @@
   <meta name="apple-mobile-web-app-title" content="Ohymeku">
   <script src="install.js" defer></script>
   <title>Ohymeku</title>
-  <style>body { margin: 0; background: #F6F2EA; }</style>
+  <style>
+    body { margin: 0; background: #F7F6FF; color: #281968; }
+    #startup {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      justify-items: center;
+      padding: 24px;
+      text-align: center;
+      font: 1rem system-ui, sans-serif;
+    }
+    #startup img { width: 132px; height: 132px; object-fit: contain; }
+    #startup h1 { margin: 16px 0 0; }
+    #startup p { margin: 12px 0 0; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #191334; color: #F7F6FF; }
+    }
+  </style>
 </head>
 <body>
+  <div id="startup" role="status">
+    <img src="assets/assets/images/meku/meku_happy.png" alt="">
+    <h1>Ohymeku</h1>
+    <p>Завантажуємо пригоду…</p>
+  </div>
+  <script>
+    window.addEventListener('flutter-first-frame', () => {
+      document.getElementById('startup')?.remove();
+    }, { once: true });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

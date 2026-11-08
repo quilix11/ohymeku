@@ -63,7 +63,16 @@ void main() {
     await tapText(tester, 'До квестів');
     for (final q in level.story.questions) {
       await tapText(tester, q.options[q.answer]);
-      await tapText(tester, 'Наступний квест');
+      final next = find.text('Наступний квест').hitTestable();
+      expect(next, findsOneWidget);
+      await tester.tap(next);
+      await tester.pumpAndSettle();
+      expect(
+          tester
+              .state<ScrollableState>(find.byType(Scrollable).last)
+              .position
+              .pixels,
+          0);
     }
     for (final token in level.story.tokens) {
       await tester.tap(find.widgetWithText(ActionChip, token).first);
@@ -74,8 +83,12 @@ void main() {
     await tapText(tester, 'До перевірки');
     for (final q in level.questions()) {
       await tapText(tester, q.options[q.answer]);
-      await tapText(tester,
-          q.id == level.questions().last.id ? 'Завершити тест' : 'Далі');
+      final next = find
+          .text(q.id == level.questions().last.id ? 'Завершити тест' : 'Далі')
+          .hitTestable();
+      expect(next, findsOneWidget);
+      await tester.tap(next);
+      await tester.pumpAndSettle();
     }
     expect(find.text('5 із 5 правильно'), findsOneWidget);
     expect(settings.journey.totalStars, 3);
